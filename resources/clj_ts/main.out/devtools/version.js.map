@@ -1,0 +1,1 @@
+{"version":3,"file":"\/media\/phil\/54AE4F563BCE86E8\/DATA\/projects\/thoughtstorms-wiki\/clj-ts\/clj-ts2\/resources\/clj_ts\/main.out\/devtools\/version.js","sources":["version.cljs"],"lineCount":9,"mappings":";AAAA;;AAGA,AAAKA,mCAAgB;AAErB,uCAAA,vCAAMC;AAAN,AACED","names":["devtools.version\/current-version","devtools.version\/get-current-version"]}

@@ -1,0 +1,1 @@
+{"version":3,"file":"\/media\/phil\/54AE4F563BCE86E8\/DATA\/projects\/thoughtstorms-wiki\/clj-ts\/clj-ts2\/resources\/clj_ts\/main.out\/devtools\/context.js","sources":["context.cljs"],"lineCount":11,"mappings":";AAAA;;AAGA,4BAAA,5BAAgBA;AAAhB,AACEC;;AAEF,+BAAA,\/BAAgBC;AAAhB,AACE,OAAW,AAACF","names":["devtools.context\/get-root","goog\/global","devtools.context\/get-console"]}
