@@ -1,22 +1,22 @@
 (ns clj-ts.client
-  (:require 
+  (:require
             [reagent.core :as r]
             [clojure.string :refer [lower-case replace]]
             [cljs.core.async :refer [<! timeout]]
             [cljs.reader :refer [read-string]])
   (:import goog.net.XhrIo)
   (:require-macros [cljs.core.async.macros :refer [go]]))
-  
-  
 
-    
+
+
+
 ;; State
 (defonce db (r/atom
               {:current-page ""
                :current-data ""
                :edited-data ""
                :editing false}))
-                             
+
 
 ;; PageStore
 
@@ -31,20 +31,20 @@
                    data (-> e .-target .getResponseText .toString)
                    page (-> data
                             double-bracket-links)]
-               (swap! db assoc 
-                      :current-data (str page) 
-                      :current-page (str page-name)))) 
-           
+               (swap! db assoc
+                      :current-data (str page)
+                      :current-page (str page-name))))
+
            "GET")
     (.send XhrIo
            (str "/clj_ts/raw?page=" lcpn)
            (fn [e]
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)]
-               (swap! db assoc 
+               (swap! db assoc
                       :edited-data data)
                (js/console.log @db)))
-           
+
            "GET")))
 
 (defn generate-form-data [params]
@@ -57,15 +57,15 @@
 (defn save-page! []
   (let [page-name (-> @db :current-page)
         new-data (-> js/document
-                     (.getElementById "edit-field") 
+                     (.getElementById "edit-field")
                      .-value)
-        form-data (generate-form-data 
+        form-data (generate-form-data
                     {"page" page-name
-                     "data" new-data})] 
+                     "data" new-data})]
     (.send XhrIo
       "/clj_ts/save"
-      (fn [e] 
-        (go 
+      (fn [e]
+        (go
           (<! (timeout 1000))
           (load-page! page-name)
           (r/force-update-all)))
@@ -81,7 +81,7 @@
 (defn double-bracket-links [page]
   (replace page #"\[\[(.+?)\]\]"
     (str "<span class=\"wikilink\" data=\"$1\" >$1</span>")))
- 
+
 
 (defn nav-input [value]
   [:input {:type "text"
@@ -89,21 +89,21 @@
            :on-change #(reset! value (-> % .-target .-value))}])
 
 (defn nav-bar []
-  (let [current (r/atom "ThoughtStorms")] 
-    (fn []       
+  (let [current (r/atom "ThoughtStorms")]
+    (fn []
        (let [editing (-> @db :editing)]
-         [:div 
+         [:div
           [:a {:on-click (fn [] (load-page! "HelloWorld")) } "HelloWorld"]
-          " | " 
-          [nav-input current] 
-          [:button 
-           {:on-click (fn [] (load-page! @current))} ">"]
-          " | "    
-          (if editing 
+          " | "
+          [nav-input current]
+          [:button
+           {:on-click (fn [] (load-page! @current))} "=>>"]
+          " | "
+          (if editing
             [:span
-             [:button {:on-click 
-                       (fn [] 
-                         (do 
+             [:button {:on-click
+                       (fn []
+                         (do
                            (swap! db assoc :editing (not editing))
                            (load-page! (-> @db :current-page ))))}  "Cancel"]
              [:button {:on-click
@@ -112,9 +112,9 @@
                            (swap! db assoc :editing (not editing))
                            (save-page!)
                            (load-page! (-> @db :current-page ))))} "Save"]]
-             
+
             [:span [:button {:on-click #(swap! db assoc :editing (not editing))} "Edit"]])]))))
-    
+
 
 (defn main-container []
   [:div {:class "main-container"}
@@ -122,10 +122,10 @@
      [:div
       [:textarea {:id "edit-field" :cols 80 :rows 40}
        (-> @db :edited-data)]]
-       
-      
+
+
      [:div
-      {:on-click 
+      {:on-click
        (fn [e]
          (let [tag (-> e .-target)
                classname (.getAttribute tag "class")
@@ -134,22 +134,20 @@
            (if (= classname "wikilink")
              (load-page! data))))
        :dangerouslySetInnerHTML {:__html (-> @db :current-data)}}])])
-   
- 
-  
-;; 
+
+
+
+;;
 
 ; Main page
 (defn content []
-  [:div 
+  [:div
    [:div
     [:h2 (-> @db :current-page)]
-    [:div [nav-bar]] 
+    [:div [nav-bar]]
     [main-container]]])
 
 
 ; tells reagent to begin rendering
 (r/render-component [content]
   (.querySelector js/document "#app"))
-
-
