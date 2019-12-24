@@ -9,7 +9,6 @@
 
 
 
-
 ;; State
 (defonce db (r/atom
               {:current-page ""

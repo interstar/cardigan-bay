@@ -14,7 +14,6 @@
 
 (def page-dir (atom "./pages/"))
 
-
 (defn page-name-to-file-name [page-name]
   (str @page-dir (string/lower-case page-name) ".md"))
 
@@ -24,15 +23,18 @@
 
 (defn page-request [request]
   (let [qs (:query-string request)
-        p-name (second (string/split qs #"="))]
-    {:p-name p-name :raw (get-page-from-file p-name)}))
+        p-name (second (string/split qs #"="))
+        file-exists? (.exists (io/file (page-name-to-file-name p-name)))
+        raw (if file-exists? (get-page-from-file p-name) "PAGE DOES NOT EXIST")]
+    {:p-name p-name :raw raw}))
 
 (defn get-page [request]
   (let [{:keys [p-name raw]} (page-request request)]
     (println "GET PAGE :: " p-name)
     {:status 200
      :headers {"Content-Type" "text/html"}
-     :body (md/md-to-html-string raw)}))
+     :body (md/md-to-html-string raw)}
+    ))
 
 (defn get-raw [request]
   (let [{:keys [p-name raw]} (page-request request)]
