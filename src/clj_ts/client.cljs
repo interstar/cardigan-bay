@@ -14,14 +14,16 @@
               {:current-page ""
                :current-data ""
                :edited-data ""
-               :editing false}))
+               :editing false
+               :past ["HelloWorld"]
+               :future []}))
 
 
 ;; PageStore
 
 (declare double-bracket-links)
 
-(defn load-page! [page-name]
+(defn load-page! [page-name update-fn]
   (let [lcpn (lower-case page-name)]
     (.send XhrIo
            (str "/clj_ts/view?page=" lcpn)
@@ -30,9 +32,8 @@
                    data (-> e .-target .getResponseText .toString)
                    page (-> data
                             double-bracket-links)]
-               (swap! db assoc
-                      :current-data (str page)
-                      :current-page (str page-name))))
+               (update-fn page-name page)
+               ))
 
            "GET")
     (.send XhrIo
@@ -66,13 +67,59 @@
       (fn [e]
         (go
           (<! (timeout 1000))
-          (load-page! page-name)
+          (reload!)
           (r/force-update-all)))
       "POST"
       (pr-str {:page page-name
                :data new-data}))))
 
-(load-page! "HelloWorld")
+
+
+;; Nav and History
+
+(defn go-new! [p-name]
+  (let [update-fn
+        (fn [page-name page]
+          (swap! db assoc
+                 :current-data (str page)
+                 :current-page (str page-name)
+                 :past (conj (-> @db :past) (-> @db :current-page))
+                 :future [])) ]
+    (load-page! p-name update-fn)))
+
+(defn forward! [p-name]
+  (let [update-fn
+        (fn [page-name page]
+          (swap! db assoc
+                 :current-data (str page)
+                 :current-page (str page-name)
+                 :past (conj (-> @db :past) (-> @db :current-page))
+                 :future (pop (-> @db :future)))) ]
+    (load-page! p-name update-fn)))
+
+(defn reload! []
+  (let [update-fn
+        (fn [page-name page]
+          (swap! db assoc
+                 :current-page (str page-name)
+                 :current-data (str page)))]
+    (load-page! (:current-page @db))))
+
+(defn back! []
+  (let [update-fn
+        (fn [page-name page]
+          (swap! db assoc
+                 :current-data (str page)
+                 :current-page (str page-name)
+                 :past (pop (-> @db :past))
+                 :future (conj (-> @db :future) (-> @db :current-page)) ))
+        destination (-> @db :past last)]
+    (load-page! destination update-fn)))
+
+
+;; RUN
+
+(go-new! "HelloWorld")
 
 
 ;; Rendering Views
@@ -84,19 +131,24 @@
 
 (defn nav-input [value]
   [:input {:type "text"
+           :id navinputbox
            :value @value
            :on-change #(reset! value (-> % .-target .-value))}])
 
 (defn nav-bar []
-  (let [current (r/atom "ThoughtStorms")]
+  (let [current (r/atom (-> @db :future last))]
     (fn []
        (let [editing (-> @db :editing)]
          [:div
-          [:a {:on-click (fn [] (load-page! "HelloWorld")) } "HelloWorld"]
+          [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
           " | "
+          [:button
+           {:on-click (fn [] (back!))} "<"]
+          [:button
+           {:on-click (fn [] (forward! (-> @db :future last)))} ">" ]
           [nav-input current]
           [:button
-           {:on-click (fn [] (load-page! @current))} ">"]
+           {:on-click (fn [] (go-new! @current))} "Go!"]
           " | "
           (if editing
             [:span
@@ -104,19 +156,19 @@
                        (fn []
                          (do
                            (swap! db assoc :editing (not editing))
-                           (load-page! (-> @db :current-page ))))}  "Cancel"]
+                           (reload!)))}  "Cancel"]
              [:button {:on-click
                        (fn []
                          (do
                            (swap! db assoc :editing (not editing))
-                           (save-page!)
-                           (load-page! (-> @db :current-page ))))} "Save"]]
+                           (save-page!)) )} "Save"]]
 
             [:span [:button {:on-click #(swap! db assoc :editing (not editing))} "Edit"]])]))))
 
 
 (defn main-container []
   [:div {:class "main-container"}
+
    (if (-> @db :editing)
      [:div
       [:textarea {:id "edit-field" :cols 80 :rows 40}
@@ -131,7 +183,7 @@
                data (.getAttribute tag "data")
                x (-> @db :dirty)]
            (if (= classname "wikilink")
-             (load-page! data))))
+             (go-new! data))))
        :dangerouslySetInnerHTML {:__html (-> @db :current-data)}}])])
 
 
