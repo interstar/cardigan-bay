@@ -1,4 +1,4 @@
-var CLOSURE_UNCOMPILED_DEFINES = {"figwheel.repl.connect_url":"ws:\/\/localhost:9500\/figwheel-connect?fwprocess=abe2b2&fwbuild=dev"};
+var CLOSURE_UNCOMPILED_DEFINES = {"figwheel.repl.connect_url":"ws:\/\/localhost:9500\/figwheel-connect?fwprocess=b762c0&fwbuild=dev"};
 var CLOSURE_NO_DEPS = true;
 if(typeof goog == "undefined") document.write('<script src="/main.out/goog/base.js"></script>');
 document.write('<script src="/main.out/goog/deps.js"></script>');
@@ -9,4 +9,4 @@ document.write('<script>goog.require("figwheel.main");</script>');
 document.write('<script>goog.require("figwheel.repl.preload");</script>');
 document.write('<script>goog.require("devtools.preload");</script>');
 document.write('<script>goog.require("process.env");</script>');
-document.write('<script>goog.require("clj_ts.dev");</script>');
+document.write('<script>goog.require("clj_ts.client");</script>');

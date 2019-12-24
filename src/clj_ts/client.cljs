@@ -97,7 +97,7 @@
           " | "
           [nav-input current]
           [:button
-           {:on-click (fn [] (load-page! @current))} "=>>"]
+           {:on-click (fn [] (load-page! @current))} ">"]
           " | "
           (if editing
             [:span

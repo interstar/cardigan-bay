@@ -1,0 +1,5 @@
+{:main          clj-ts.client
+ :optimizations :none
+ :output-to     "resources/clj_ts/main.js"
+ :output-dir    "resources/clj_ts/main.out"
+ :asset-path    "/main.out"}
