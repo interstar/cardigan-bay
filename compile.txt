@@ -1,0 +1,2 @@
+clj -A:prod:app
+clj -A:dev:app
