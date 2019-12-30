@@ -29,6 +29,13 @@
     {:p-name p-name :raw raw}))
 
 
+(defn raw->cards [p-name raw]
+  (let [cards (string/split raw #"----")
+        card (fn [c]
+               [:div {:class "card"
+                      :dangerouslySetInnerHTML {:__html (md/md-to-html-string c)  }
+                      }]) ]
+    (into vector (concat [:div] (map card cards)))))
 
 (defn render-page [p-name raw]
   (let [cards (string/split raw #"----")
@@ -50,6 +57,17 @@
      :headers {"Content-Type" "text/html"}
      :body raw}))
 
+(defn get-edn-cards [request]
+  (let [{:keys [p-name raw]} (page-request request)
+        cards (raw->cards p-name raw)]
+    (println "GET RAW :: " p-name)
+    (println raw)
+    (println cards)
+    {:status 200
+     :headers {"Content-Type" "text/html"}
+     :body cards})
+  )
+
 (defn save-page [request]
   (let [form-body (-> request :body .bytes slurp edn/read-string)
         p-name (:page form-body)
@@ -68,6 +86,9 @@
 
       (= uri "/clj_ts/raw")
       (get-raw request)
+
+      (= uri "/clj_ts/cards")
+      (get-edn-cards request)
 
       (= uri "/clj_ts/save")
       (save-page request)

@@ -14,6 +14,7 @@
               {:current-page ""
                :current-data ""
                :edited-data ""
+               :cards ""
                :editing false
                :past ["HelloWorld"]
                :future []}))
@@ -45,7 +46,17 @@
                       :edited-data data)
                (js/console.log @db)))
 
-           "GET")))
+           "GET")
+    (.send XhrIo
+           (str "/clj_ts/cards?page=" lcpn)
+           (fn [e]
+             (let [status (-> e .-target .getStatusText)
+                   data (-> e .-target .getResponseText .toString)]
+               (swap! db assoc
+                      :cards (read-string data))
+               (js/console.log @db)))
+
+           "GET")) )
 
 (defn generate-form-data [params]
   (let [form-data (js/FormData.)]
@@ -187,9 +198,15 @@
                        (stamp! "==FIX==")) } "Fix"]] ] ))))
 
 
+
+(defn card-list []
+  [:div
+   [:div (-> @db :cards str)]
+   ])
+
 (defn main-container []
   [:div {:class "main-container"}
-
+   (card-list)
    (if (-> @db :editing)
      [:div
       [:textarea {:id "edit-field" :cols 80 :rows 40}
@@ -205,7 +222,9 @@
                x (-> @db :dirty)]
            (if (= classname "wikilink")
              (go-new! data))))
-       :dangerouslySetInnerHTML {:__html (-> @db :current-data)}}])])
+       :dangerouslySetInnerHTML {:__html (-> @db :current-data)}}]
+
+     )])
 
 
 
