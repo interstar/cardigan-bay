@@ -28,12 +28,19 @@
         raw (if file-exists? (get-page-from-file p-name) "PAGE DOES NOT EXIST")]
     {:p-name p-name :raw raw}))
 
+
+
+(defn render-page [p-name raw]
+  (let [cards (string/split raw #"----")
+        card #(str "<div class='card'>" (md/md-to-html-string %) "</div>")]
+    (apply str  (map card  cards))))
+
 (defn get-page [request]
   (let [{:keys [p-name raw]} (page-request request)]
     (println "GET PAGE :: " p-name)
     {:status 200
      :headers {"Content-Type" "text/html"}
-     :body (md/md-to-html-string raw)}
+     :body (render-page p-name  raw)}
     ))
 
 (defn get-raw [request]

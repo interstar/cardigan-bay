@@ -53,6 +53,7 @@
       (.append form-data (name k) v))
     form-data))
 
+(declare reload!)
 
 (defn save-page! []
   (let [page-name (-> @db :current-page)
@@ -103,7 +104,7 @@
           (swap! db assoc
                  :current-page (str page-name)
                  :current-data (str page)))]
-    (load-page! (:current-page @db))))
+    (load-page! (:current-page @db) update-fn )))
 
 (defn back! []
   (let [update-fn
@@ -116,6 +117,14 @@
         destination (-> @db :past last)]
     (load-page! destination update-fn)))
 
+
+;; Process page
+
+(defn stamp! [stamp]
+  (do
+    (swap! db assoc
+           :editing true
+           :edited-data (str (-> @db :edited-data) "\n\n" stamp ))))
 
 ;; RUN
 
@@ -131,7 +140,7 @@
 
 (defn nav-input [value]
   [:input {:type "text"
-           :id navinputbox
+           :id "navinputbox"
            :value @value
            :on-change #(reset! value (-> % .-target .-value))}])
 
@@ -163,7 +172,19 @@
                            (swap! db assoc :editing (not editing))
                            (save-page!)) )} "Save"]]
 
-            [:span [:button {:on-click #(swap! db assoc :editing (not editing))} "Edit"]])]))))
+            [:span
+             [:button {:on-click
+                       #(swap! db assoc :editing (not editing))} "Edit"]])
+
+
+          [:div "Stamps :: "
+           [:button {:on-click
+                     (fn []
+                       (stamp! "==DELETE==" ))} "Delete"]
+           " | "
+           [:button {:on-click
+                     (fn []
+                       (stamp! "==FIX==")) } "Fix"]] ] ))))
 
 
 (defn main-container []
