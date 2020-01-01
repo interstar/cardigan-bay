@@ -53,8 +53,10 @@
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)]
                (swap! db assoc
-                      :cards (read-string data))
-               (js/console.log @db)))
+                      :cards (read-string (str "[" data "]")))
+               (js/console.log @db)
+               (js/alert data)
+               (js/alert (-> @db :cards str))))
 
            "GET")) )
 
@@ -201,7 +203,8 @@
 
 (defn card-list []
   [:div
-   [:div (-> @db :cards str)]
+   [:pre
+    [:div (-> @db :cards str)]]
    ])
 
 (defn main-container []

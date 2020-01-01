@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.edn :as edn]
-            [clj-ts.markdown.core :as md]
+            [clojure.pprint :as pp]
+            [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -31,11 +32,13 @@
 
 (defn raw->cards [p-name raw]
   (let [cards (string/split raw #"----")
-        card (fn [c]
+        card (fn [c i]
                [:div {:class "card"
-                      :dangerouslySetInnerHTML {:__html (md/md-to-html-string c)  }
+                      :id i
+                      :dangerouslySetInnerHTML
+                      {:__html (md/md-to-html-string c)}
                       }]) ]
-    (into vector (concat [:div] (map card cards)))))
+    (apply vector (concat [:div] (map card cards (iterate inc 0))))))
 
 (defn render-page [p-name raw]
   (let [cards (string/split raw #"----")
@@ -60,9 +63,9 @@
 (defn get-edn-cards [request]
   (let [{:keys [p-name raw]} (page-request request)
         cards (raw->cards p-name raw)]
-    (println "GET RAW :: " p-name)
-    (println raw)
-    (println cards)
+    (println "GET EDN :: " p-name)
+
+    (pp/pprint cards)
     {:status 200
      :headers {"Content-Type" "text/html"}
      :body cards})
@@ -108,14 +111,13 @@
 ; runs when the server starts
 (defn -main [& args]
   (let [port 4545
-        pd (-> "pagedir.edn" slurp (edn/read-string) :page-dir)]
+        pdx (-> "pagedir.edn" slurp (edn/read-string) :page-dir)
+        pd "/home/interstar/repos/personal_wiki_pages/"]
     (if (nil? pd)
       (do
         (println "Welcome to Clj-TS
 
-Please give a directory where your pages are stored
-
-lein run ~/Documents/pages/ ")
+Please give a directory where your pages are stored in pagedir.edn ")
         (System/exit 0))
       (do
         (reset! page-dir pd )
