@@ -33,12 +33,12 @@
 (defn raw->cards [p-name raw]
   (let [cards (string/split raw #"----")
         card (fn [c i]
-               [:div {:class "card"
-                      :id i
-                      :dangerouslySetInnerHTML
-                      {:__html (md/md-to-html-string c)}
-                      }]) ]
-    (apply vector (concat [:div] (map card cards (iterate inc 0))))))
+               {:type :html
+                :id (str "card " i)
+                :data
+                (md/md-to-html-string c)
+                }) ]
+    (apply vector (map card cards (iterate inc 0)))))
 
 (defn render-page [p-name raw]
   (let [cards (string/split raw #"----")

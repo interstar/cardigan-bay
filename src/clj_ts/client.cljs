@@ -54,11 +54,10 @@
                    data (-> e .-target .getResponseText .toString)]
                (swap! db assoc
                       :cards (read-string (str "[" data "]")))
-               (js/console.log @db)
-               (js/alert data)
-               (js/alert (-> @db :cards str))))
-
+               ))
            "GET")) )
+
+
 
 (defn generate-form-data [params]
   (let [form-data (js/FormData.)]
@@ -203,33 +202,31 @@
 
 (defn card-list []
   [:div
-   [:pre
-    [:div (-> @db :cards str)]]
+   (for [card (-> @db :cards)]
+     [:div
+      [:div (-> card :id)]
+      [:div
+       {:class "card"
+        :on-click
+        (fn [e]
+          (let [tag (-> e .-target)
+                classname (.getAttribute tag "class")
+                data (.getAttribute tag "data")
+                x (-> @db :dirty)]
+
+            (if (= classname "wikilink")
+              (go-new! data))))
+        :dangerouslySetInnerHTML
+        {:__html (-> card :data double-bracket-links )}} ]])
    ])
 
 (defn main-container []
   [:div {:class "main-container"}
-   (card-list)
    (if (-> @db :editing)
      [:div
       [:textarea {:id "edit-field" :cols 80 :rows 40}
        (-> @db :edited-data)]]
-
-
-     [:div
-      {:on-click
-       (fn [e]
-         (let [tag (-> e .-target)
-               classname (.getAttribute tag "class")
-               data (.getAttribute tag "data")
-               x (-> @db :dirty)]
-           (if (= classname "wikilink")
-             (go-new! data))))
-       :dangerouslySetInnerHTML {:__html (-> @db :current-data)}}]
-
-     )])
-
-
+     (card-list))])
 
 ;;
 
