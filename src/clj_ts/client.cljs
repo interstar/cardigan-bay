@@ -160,41 +160,49 @@
   (let [current (r/atom (-> @db :future last))]
     (fn []
        (let [editing (-> @db :editing)]
-         [:div
+         [:div {:classs "navbar"}
           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
           " | "
           [:button
-           {:on-click (fn [] (back!))} "<"]
+           {:class "big-btn"
+            :on-click (fn [] (back!))} "<"]
           [:button
-           {:on-click (fn [] (forward! (-> @db :future last)))} ">" ]
+           {:class "big-btn"
+            :on-click (fn [] (forward! (-> @db :future last)))} ">" ]
           [nav-input current]
           [:button
-           {:on-click (fn [] (go-new! @current))} "Go!"]
+           {:class "big-btn"
+            :on-click (fn [] (go-new! @current))} "Go!"]
           " | "
           (if editing
             [:span
-             [:button {:on-click
+             [:button {:class "big-btn"
+                       :on-click
                        (fn []
                          (do
                            (swap! db assoc :editing (not editing))
                            (reload!)))}  "Cancel"]
-             [:button {:on-click
+             [:button {:class "big-btn"
+                       :on-click
                        (fn []
                          (do
                            (swap! db assoc :editing (not editing))
                            (save-page!)) )} "Save"]]
 
             [:span
-             [:button {:on-click
+             [:button {:class "big-btn"
+                       :on-click
                        #(swap! db assoc :editing (not editing))} "Edit"]])
 
 
           [:div "Stamps :: "
-           [:button {:on-click
+           [:button {:class "big-btn"
+                     :on-click
                      (fn []
                        (stamp! "==DELETE==" ))} "Delete"]
            " | "
-           [:button {:on-click
+           [:button {:class "big-btn"
+                     :on-click
                      (fn []
                        (stamp! "==FIX==")) } "Fix"]] ] ))))
 
@@ -234,9 +242,11 @@
 (defn content []
   [:div
    [:div
-    [:h2 (-> @db :current-page)]
-    [:div [nav-bar]]
-    [main-container]]])
+    [:div
+     [:h2 (-> @db :current-page)]
+     [:div [nav-bar]]]
+    [main-container]
+    ]])
 
 
 ; tells reagent to begin rendering
