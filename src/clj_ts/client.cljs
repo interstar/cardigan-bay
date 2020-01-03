@@ -15,9 +15,7 @@
 ;; State
 (defonce db (r/atom
               {:current-page "HelloWorld"
-
                :raw ""
-
                :editing false
                :past ["HelloWorld"]
                :future []}))
@@ -25,19 +23,20 @@
 
 ;; PageStore
 
-
-
-(defn load-page! [page-name update-fn]
+(defn load-page! [page-name new-past new-future]
   (let [lcpn (lower-case page-name)]
-
     (.send XhrIo
            (str "/clj_ts/raw?page=" lcpn)
            (fn [e]
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)]
-               (swap! db assoc :raw data)))
-           "GET")
-    ) )
+               (swap! db assoc
+                      :current-page page-name
+                      :raw data
+                      :past new-past
+                      :future new-future)
+               ))
+           "GET")))
 
 
 
@@ -73,43 +72,17 @@
 ;; Nav and History
 
 (defn go-new! [p-name]
-  (let [update-fn
-        (fn [page-name page]
-          (swap! db assoc
-
-                 :current-page (str page-name)
-                 :past (conj (-> @db :past) (-> @db :current-page))
-                 :future [])) ]
-    (load-page! p-name update-fn)))
+  (load-page! p-name (conj (-> @db :past) (-> @db :current-page))  []))
 
 (defn forward! [p-name]
-  (let [update-fn
-        (fn [page-name page]
-          (swap! db assoc
-
-                 :current-page (str page-name)
-                 :past (conj (-> @db :past) (-> @db :current-page))
-                 :future (pop (-> @db :future)))) ]
-    (load-page! p-name update-fn)))
+  (load-page! p-name (conj (-> @db :past) (-> @db :current-page)) (pop (-> @db :future)) )
+  )
 
 (defn reload! []
-  (let [update-fn
-        (fn [page-name page]
-          (swap! db assoc
-                 :current-page (str page-name)
-))]
-    (load-page! (:current-page @db) update-fn )))
+  (load-page! (:current-page @db) (-> @db :past) (-> @db :future)))
 
 (defn back! []
-  (let [update-fn
-        (fn [page-name page]
-          (swap! db assoc
-
-                 :current-page (str page-name)
-                 :past (pop (-> @db :past))
-                 :future (conj (-> @db :future) (-> @db :current-page)) ))
-        destination (-> @db :past last)]
-    (load-page! destination update-fn)))
+  (load-page! (-> @db :past last) (pop (-> @db :past)) (conj (-> @db :future) (-> @db :current-page))  ))
 
 
 ;; Process page
@@ -126,7 +99,6 @@
 
 
 ;; Rendering Views
-
 
 
 (defn nav-input [value]
@@ -185,22 +157,7 @@
                      (fn []
                        (stamp! "==FIX==")) } "Fix"]] ] ))))
 
-(comment
-  (defn raw->cards [raw]
-    (let [cards (string/split raw #"----")
-          card (fn [c i]
-                 {:type :html
-                  :id (str "card " i)
-                  :data c
-                  }) ]
-      (map card cards (iterate inc 0))))
 
-  (defn double-bracket-links [page]
-    (string/replace page #"\[\[(.+?)\]\]"
-                    (str "<span class=\"wikilink\" data=\"$1\" >$1</span>")))
-
-  (defn card->html [card]
-    (-> card :data (md/md->html) (double-bracket-links))))
 
 
 (defn one-card [card]
@@ -228,8 +185,7 @@
    (try
      (let [cards (-> @db :raw str (raw->cards))]
        (for [card cards]
-         (one-card card)
-         ))
+         (one-card card) ))
      (catch :default e
        (js/alert e)))
    ])
