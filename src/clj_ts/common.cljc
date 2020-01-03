@@ -2,20 +2,22 @@
   (:require [clojure.string :as string]
             [markdown.core :as md]) )
 
-(defn raw->cards [p-name raw]
+(defn raw->cards [raw]
   (let [cards (string/split raw #"----")
         card (fn [c i]
                {:type :html
                 :id (str "card " i)
-                :data
-                (md/md-to-html-string c)
+                :data c
                 }) ]
-    (apply vector (map card cards (iterate inc 0)))))
+    (map card cards (iterate inc 0))))
 
 
 (defn double-bracket-links [page]
-  (replace page #"\[\[(.+?)\]\]"
+  (string/replace page #"\[\[(.+?)\]\]"
            (str "<span class=\"wikilink\" data=\"$1\" >$1</span>")))
 
 (defn card->html [card]
-  (-> card :data (md/md-to-html-string) (double-bracket-links)))
+  (-> card :data
+      #?(:clj (md/md-to-html-string)
+         :cljs (md/md->html))
+      (double-bracket-links)))

@@ -2,8 +2,10 @@
   (:require
             [reagent.core :as r]
             [clojure.string :refer [lower-case replace]]
+            [clojure.string :as string]
             [cljs.core.async :refer [<! timeout]]
             [cljs.reader :refer [read-string]]
+            [markdown.core :as md]
             [clj-ts.common :refer [raw->cards card->html]])
   (:import goog.net.XhrIo)
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -12,10 +14,10 @@
 
 ;; State
 (defonce db (r/atom
-              {:current-page ""
-               :current-data ""
-               :edited-data ""
-               :cards ""
+              {:current-page "HelloWorld"
+
+               :raw ""
+
                :editing false
                :past ["HelloWorld"]
                :future []}))
@@ -33,14 +35,7 @@
            (fn [e]
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)]
-
-               (swap! db assoc
-                      :edited-data data
-                      :cards (-> data (raw->cards))
-                      )
-
-               (js/console.log @db)))
-
+               (swap! db assoc :raw data)))
            "GET")
     ) )
 
@@ -81,7 +76,7 @@
   (let [update-fn
         (fn [page-name page]
           (swap! db assoc
-                 :current-data (str page)
+
                  :current-page (str page-name)
                  :past (conj (-> @db :past) (-> @db :current-page))
                  :future [])) ]
@@ -91,7 +86,7 @@
   (let [update-fn
         (fn [page-name page]
           (swap! db assoc
-                 :current-data (str page)
+
                  :current-page (str page-name)
                  :past (conj (-> @db :past) (-> @db :current-page))
                  :future (pop (-> @db :future)))) ]
@@ -102,14 +97,14 @@
         (fn [page-name page]
           (swap! db assoc
                  :current-page (str page-name)
-                 :current-data (str page)))]
+))]
     (load-page! (:current-page @db) update-fn )))
 
 (defn back! []
   (let [update-fn
         (fn [page-name page]
           (swap! db assoc
-                 :current-data (str page)
+
                  :current-page (str page-name)
                  :past (pop (-> @db :past))
                  :future (conj (-> @db :future) (-> @db :current-page)) ))
@@ -123,7 +118,7 @@
   (do
     (swap! db assoc
            :editing true
-           :edited-data (str (-> @db :edited-data) "\n\n" stamp ))))
+           :raw (str (-> @db :raw) "\n\n" stamp ))))
 
 ;; RUN
 
@@ -190,6 +185,23 @@
                      (fn []
                        (stamp! "==FIX==")) } "Fix"]] ] ))))
 
+(comment
+  (defn raw->cards [raw]
+    (let [cards (string/split raw #"----")
+          card (fn [c i]
+                 {:type :html
+                  :id (str "card " i)
+                  :data c
+                  }) ]
+      (map card cards (iterate inc 0))))
+
+  (defn double-bracket-links [page]
+    (string/replace page #"\[\[(.+?)\]\]"
+                    (str "<span class=\"wikilink\" data=\"$1\" >$1</span>")))
+
+  (defn card->html [card]
+    (-> card :data (md/md->html) (double-bracket-links))))
+
 
 (defn one-card [card]
 [:div
@@ -206,14 +218,20 @@
             (if (= classname "wikilink")
               (go-new! data))))
         :dangerouslySetInnerHTML
-        {:__html (-> card card->html )}} ]]
+        {:__html (card->html card)}} ]]
   )
+
+
 
 (defn card-list []
   [:div
-   (for [card (-> @db :cards)]
-     (one-card card)
-     )
+   (try
+     (let [cards (-> @db :raw str (raw->cards))]
+       (for [card cards]
+         (one-card card)
+         ))
+     (catch :default e
+       (js/alert e)))
    ])
 
 (defn main-container []
@@ -221,7 +239,7 @@
    (if (-> @db :editing)
      [:div
       [:textarea {:id "edit-field" :cols 80 :rows 40}
-       (-> @db :edited-data)]]
+       (-> @db :raw)]]
      (card-list))])
 
 ;;
