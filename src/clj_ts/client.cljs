@@ -3,7 +3,8 @@
             [reagent.core :as r]
             [clojure.string :refer [lower-case replace]]
             [cljs.core.async :refer [<! timeout]]
-            [cljs.reader :refer [read-string]])
+            [cljs.reader :refer [read-string]]
+            [clj-ts.common :refer [raw->cards card->html]])
   (:import goog.net.XhrIo)
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -22,40 +23,26 @@
 
 ;; PageStore
 
-(declare double-bracket-links)
+
 
 (defn load-page! [page-name update-fn]
   (let [lcpn (lower-case page-name)]
-    (.send XhrIo
-           (str "/clj_ts/view?page=" lcpn)
-           (fn [e]
-             (let [status (-> e .-target .getStatusText)
-                   data (-> e .-target .getResponseText .toString)
-                   page (-> data
-                            double-bracket-links)]
-               (update-fn page-name page)
-               ))
 
-           "GET")
     (.send XhrIo
            (str "/clj_ts/raw?page=" lcpn)
            (fn [e]
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)]
+
                (swap! db assoc
-                      :edited-data data)
+                      :edited-data data
+                      :cards (-> data (raw->cards))
+                      )
+
                (js/console.log @db)))
 
            "GET")
-    (.send XhrIo
-           (str "/clj_ts/cards?page=" lcpn)
-           (fn [e]
-             (let [status (-> e .-target .getStatusText)
-                   data (-> e .-target .getResponseText .toString)]
-               (swap! db assoc
-                      :cards (read-string (str "[" data "]")))
-               ))
-           "GET")) )
+    ) )
 
 
 
@@ -145,9 +132,6 @@
 
 ;; Rendering Views
 
-(defn double-bracket-links [page]
-  (replace page #"\[\[(.+?)\]\]"
-    (str "<span class=\"wikilink\" data=\"$1\" >$1</span>")))
 
 
 (defn nav-input [value]
@@ -207,11 +191,8 @@
                        (stamp! "==FIX==")) } "Fix"]] ] ))))
 
 
-
-(defn card-list []
-  [:div
-   (for [card (-> @db :cards)]
-     [:div
+(defn one-card [card]
+[:div
       [:div (-> card :id)]
       [:div
        {:class "card"
@@ -225,7 +206,14 @@
             (if (= classname "wikilink")
               (go-new! data))))
         :dangerouslySetInnerHTML
-        {:__html (-> card :data double-bracket-links )}} ]])
+        {:__html (-> card card->html )}} ]]
+  )
+
+(defn card-list []
+  [:div
+   (for [card (-> @db :cards)]
+     (one-card card)
+     )
    ])
 
 (defn main-container []

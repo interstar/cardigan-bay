@@ -10,7 +10,9 @@
             [ring.middleware.params :refer [wrap-params params-request]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
-            [ring.util.response :refer [not-found]])
+            [ring.util.response :refer [not-found]]
+            [clj-ts.common :refer [raw->cards]]
+            )
   (:gen-class))
 
 (def page-dir (atom "./pages/"))
@@ -30,15 +32,7 @@
     {:p-name p-name :raw raw}))
 
 
-(defn raw->cards [p-name raw]
-  (let [cards (string/split raw #"----")
-        card (fn [c i]
-               {:type :html
-                :id (str "card " i)
-                :data
-                (md/md-to-html-string c)
-                }) ]
-    (apply vector (map card cards (iterate inc 0)))))
+
 
 (defn render-page [p-name raw]
   (let [cards (string/split raw #"----")
