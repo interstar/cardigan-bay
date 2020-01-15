@@ -38,7 +38,7 @@
 
 (defn double-comma-table [raw]
   (loop [lines (string/split-lines raw) in-table false build [  ] ]
-    (if (empty? lines) (apply str build)
+    (if (empty? lines) (string/join "\n" build)
         (let [line (first lines)]
           (if (string/includes? line ",,")
             (let [items (string/split line #",,")
