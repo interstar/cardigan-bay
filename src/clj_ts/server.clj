@@ -15,7 +15,7 @@
             )
   (:gen-class))
 
-(def page-dir (atom "./pages/"))
+(def page-dir (atom "/home/interstar/repos/personal_wiki_pages/"))
 
 (defn page-name-to-file-name [page-name]
   (str @page-dir (string/lower-case page-name) ".md"))
@@ -105,8 +105,8 @@
 ; runs when the server starts
 (defn -main [& args]
   (let [port 4545
-        pdx (-> "pagedir.edn" slurp (edn/read-string) :page-dir)
-        pd "/home/interstar/repos/personal_wiki_pages/"]
+        pd (-> "pagedir.edn" slurp (edn/read-string) :page-dir)
+        ]
     (if (nil? pd)
       (do
         (println "Welcome to Clj-TS

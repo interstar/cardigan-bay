@@ -1,0 +1,1 @@
+clj -A:dev:app

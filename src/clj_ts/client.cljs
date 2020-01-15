@@ -111,9 +111,9 @@
   (let [current (r/atom (-> @db :future last))]
     (fn []
        (let [editing (-> @db :editing)]
-         [:div {:classs "navbar"}
+         [:div {:class "navbar"}
           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
-          " | "
+          " || "
           [:button
            {:class "big-btn"
             :on-click (fn [] (back!))} "<"]
@@ -162,20 +162,22 @@
 
 (defn one-card [card]
 [:div
-      [:div (-> card :id)]
-      [:div
-       {:class "card"
-        :on-click
-        (fn [e]
-          (let [tag (-> e .-target)
-                classname (.getAttribute tag "class")
-                data (.getAttribute tag "data")
-                x (-> @db :dirty)]
+ [:div
+  [:span (-> card :id)]
+  [:span (-> card :hash)]]
+ [:div
+  {:class "card"
+   :on-click
+   (fn [e]
+     (let [tag (-> e .-target)
+           classname (.getAttribute tag "class")
+           data (.getAttribute tag "data")
+           x (-> @db :dirty)]
 
-            (if (= classname "wikilink")
-              (go-new! data))))
-        :dangerouslySetInnerHTML
-        {:__html (card->html card)}} ]]
+       (if (= classname "wikilink")
+         (go-new! data))))
+   :dangerouslySetInnerHTML
+   {:__html (card->html card)}} ]]
   )
 
 
@@ -196,7 +198,9 @@
      [:div
       [:textarea {:id "edit-field" :cols 80 :rows 40}
        (-> @db :raw)]]
-     (card-list))])
+     [:div
+
+      (card-list)])])
 
 ;;
 
@@ -213,4 +217,14 @@
 
 ; tells reagent to begin rendering
 (r/render-component [content]
-  (.querySelector js/document "#app"))
+                   (.querySelector js/document "#app"))
+
+(js/document.addEventListener
+ "keypress"
+ (fn [e]
+   (let [kc (.-charCode e)]
+     (if (= 69 kc)
+       (swap! db assoc
+              :editing true))
+     (-> js/document (.getElementById "edit-field") (.focus) )
+     )))
