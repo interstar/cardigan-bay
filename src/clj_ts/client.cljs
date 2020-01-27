@@ -113,6 +113,8 @@
        (let [editing (-> @db :editing)]
          [:div {:class "navbar"}
           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
+         " || "
+          [:a {:href "/clj_ts/all"} "All Pages"]
           " || "
           [:button
            {:class "big-btn"
@@ -124,29 +126,31 @@
           [:button
            {:class "big-btn"
             :on-click (fn [] (go-new! @current))} "Go!"]
-          " | "
-          (if editing
-            [:span
-             [:button {:class "big-btn"
-                       :on-click
-                       (fn []
-                         (do
-                           (swap! db assoc :editing (not editing))
-                           (reload!)))}  "Cancel"]
-             [:button {:class "big-btn"
-                       :on-click
-                       (fn []
-                         (do
-                           (swap! db assoc :editing (not editing))
-                           (save-page!)) )} "Save"]]
-
-            [:span
-             [:button {:class "big-btn"
-                       :on-click
-                       #(swap! db assoc :editing (not editing))} "Edit"]])
+          " || "
 
 
-          [:div "Stamps :: "
+
+          [:div
+           (if editing
+             [:span
+              [:button {:class "big-btn"
+                        :on-click
+                        (fn []
+                          (do
+                            (swap! db assoc :editing (not editing))
+                            (reload!)))}  "Cancel"]
+              [:button {:class "big-btn"
+                        :on-click
+                        (fn []
+                          (do
+                            (swap! db assoc :editing (not editing))
+                            (save-page!)) )} "Save"]]
+
+             [:span
+              [:button {:class "big-btn"
+                        :on-click
+                        #(swap! db assoc :editing (not editing))} "Edit"]])
+           "Stamps :: "
            [:button {:class "big-btn"
                      :on-click
                      (fn []

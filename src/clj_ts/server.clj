@@ -3,6 +3,10 @@
             [clojure.string :as string]
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
+
+            [clojure.core.logic :as logic]
+            [clojure.core.logic.pldb :as pldb]
+
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
             [ring.middleware.content-type :refer [wrap-content-type]]
@@ -15,10 +19,14 @@
             )
   (:gen-class))
 
-(def page-dir (atom "/home/interstar/repos/personal_wiki_pages/"))
+(def all-state (atom
+            {:page-dir "/home/interstar/repos/personal_wiki_pages/"
+             :logic-db "/home/interstar/repos/db.clj"}))
+
 
 (defn page-name-to-file-name [page-name]
-  (str @page-dir (string/lower-case page-name) ".md"))
+  (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
+    (-> @all-state :page-dir mkname)))
 
 (defn get-page-from-file [p-name]
   (slurp (page-name-to-file-name p-name)))
@@ -73,6 +81,25 @@
     (spit (page-name-to-file-name p-name) body)
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}))
 
+
+; Logic using pages
+
+(declare facts0 page link)
+
+(defn all-pages [request]
+  (do
+    (load-file (-> @all-state :logic-db))
+    (let [pages
+          (pldb/with-db facts0
+            (logic/run* [p]
+              (page p))
+            ) ]
+
+      {:status 200
+       :headers {"Content-Type" "text/html"}
+       :body (str pages)}))
+  )
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
   (let []
@@ -90,6 +117,10 @@
       (= uri "/clj_ts/save")
       (save-page request)
 
+
+      (= uri "/clj_ts/all")
+      (all-pages request)
+
       :otherwise
 
       (or
@@ -104,21 +135,26 @@
 
 ; runs when the server starts
 (defn -main [& args]
-  (let [port 4545
-        pd (-> "pagedir.edn" slurp (edn/read-string) :page-dir)
+  (let [
+        config (-> "config.edn" slurp (edn/read-string))
+        port (if (nil? (:post config)) 4545 (:port config))
         ]
-    (if (nil? pd)
+    (print "Welcome to Cardigan Bay")
+    (cond
+      (nil? (:page-dir config))
       (do
-        (println "Welcome to Clj-TS
-
-Please give a directory where your pages are stored in pagedir.edn ")
+        (println "Please give a directory where your pages are stored, as the page-dir in config.edn ")
         (System/exit 0))
+      (nil? (:logic-db config))
       (do
-        (reset! page-dir pd )
+        (println "Please give a logic db file, as logic-db in config.edn"))
+      :otherwise
+      (do
+        (reset! all-state config)
         (println
-         (str "CLJ-TS Started.
+         (str "Cardigan Bay Started.
 
-Page Directory is " @page-dir "
+Page Directory is " (-> @all-state :page-dir) "
 
 Port is " port))
         (-> #'handler
