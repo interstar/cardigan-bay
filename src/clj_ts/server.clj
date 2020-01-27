@@ -4,8 +4,7 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
 
-            [clojure.core.logic :as logic]
-            [clojure.core.logic.pldb :as pldb]
+            [clj-ts.logic :as ldb]
 
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
@@ -15,7 +14,7 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
-            [clj-ts.common :refer [raw->cards]]
+            [clj-ts.common :refer [raw->cards card->html] ]
             )
   (:gen-class))
 
@@ -84,21 +83,39 @@
 
 ; Logic using pages
 
-(declare facts0 page link)
+(defn wrap-results-as-list [res]
+  (str
+   "<div>"
+   (apply str
+          "<ul>"
+          (for [p res]
+            (apply str "<li>"
+                   (if (symbol? p) (str "<a href=''>" p "</a>")
+                       (string/join ",," (for [q p]  (str "<a href=''>" q "</a>"))))
+                   "</li>") ))
+   "</ul></div>")
+  )
+
+
+(defn retn [res]
+  {:status 200
+   :headers {"Content-Type" "text/html"}
+   :body (wrap-results-as-list res)})
 
 (defn all-pages [request]
-  (do
-    (load-file (-> @all-state :logic-db))
-    (let [pages
-          (pldb/with-db facts0
-            (logic/run* [p]
-              (page p))
-            ) ]
+  (retn (ldb/all-pages)))
 
-      {:status 200
-       :headers {"Content-Type" "text/html"}
-       :body (str pages)}))
-  )
+(defn all-links [request]
+  (retn (ldb/links)))
+
+(defn broken-links [request]
+  (retn (ldb/broken-links)))
+
+(defn orphans [request]
+  (retn (ldb/orphans)))
+
+
+
 
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
@@ -120,6 +137,15 @@
 
       (= uri "/clj_ts/all")
       (all-pages request)
+
+      (= uri "/clj_ts/links")
+      (all-links request)
+
+      (= uri "/clj_ts/broken-links")
+      (broken-links request)
+
+      (= uri "/clj_ts/orphans")
+      (orphans request)
 
       :otherwise
 

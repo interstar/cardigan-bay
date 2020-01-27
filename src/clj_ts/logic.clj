@@ -15,6 +15,7 @@
    [link 'tablestuff 'pagetype]
    [link 'tablestuff 'tablename]
    [page 'wikisandxml]
+   [page 'tablename]
    [link 'wikisandxml 'topicmaps]
    [page 'cds]
    [page 'toscratch]
@@ -27,3 +28,32 @@
    [page 'guideforhackers]
    [link 'guideforhackers 'sdideskcodeorganization]
    ))
+
+(defn all-pages []
+  (pldb/with-db facts0
+            (logic/run* [p]
+              (page p))
+            ) )
+
+
+(defn links []
+  (pldb/with-db facts0
+    (logic/run* [p q]
+      (link p q)
+      (page p)
+      (page q)
+      )))
+
+(defn broken-links []
+  (pldb/with-db facts0
+    (logic/run* [p q]
+      (link p q)
+      (logic/nafc page q)
+      )))
+
+(defn orphans []
+  (pldb/with-db facts0
+    (logic/run* [p q]
+      (link p q)
+      (logic/nafc page p)
+      )))
