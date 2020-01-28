@@ -90,8 +90,10 @@
           "<ul>"
           (for [p res]
             (apply str "<li>"
-                   (if (symbol? p) (str "<a href=''>" p "</a>")
-                       (string/join ",," (for [q p]  (str "<a href=''>" q "</a>"))))
+                   (if (coll? p)
+                     (string/join ",," (for [q p]  (str "<a href=''>" q "</a>")))
+                     (str "<a href=''>" p "</a>")
+                     )
                    "</li>") ))
    "</ul></div>")
   )
@@ -103,7 +105,9 @@
    :body (wrap-results-as-list res)})
 
 (defn all-pages [request]
-  (retn (ldb/all-pages)))
+  (do
+    (ldb/regenerate-db! (:page-dir @all-state) )
+    (retn (ldb/all-pages))))
 
 (defn all-links [request]
   (retn (ldb/links)))
