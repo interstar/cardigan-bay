@@ -104,6 +104,11 @@
    :headers {"Content-Type" "text/html"}
    :body (wrap-results-as-list res)})
 
+(defn raw-db [request]
+  {:status 200
+   :headers {"Content-Type" "text/html"}
+   :body (str "<pre>" (with-out-str (pp/pprint (ldb/raw-db))) "</pre>" )})
+
 (defn all-pages [request]
   (do
     (ldb/regenerate-db! (:page-dir @all-state) )
@@ -138,6 +143,9 @@
       (= uri "/clj_ts/save")
       (save-page request)
 
+
+      (= uri "/clj_ts/db")
+      (raw-db request)
 
       (= uri "/clj_ts/all")
       (all-pages request)

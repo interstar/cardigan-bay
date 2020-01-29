@@ -116,6 +116,14 @@
          " || "
           [:a {:href "/clj_ts/all"} "All Pages"]
           " || "
+          [:a {:href "/clj_ts/db"} "Database"]
+          " || "
+          [:a {:href "/clj_ts/links"} "Links"]
+          " || "
+          [:a {:href "/clj_ts/broken-links"} "Broken Links"]
+          " || "
+          [:a {:href "/clj_ts/orphans"} "Orphans"]
+          " || "
           [:button
            {:class "big-btn"
             :on-click (fn [] (back!))} "<"]
@@ -211,9 +219,11 @@
 ; Main page
 (defn content []
   [:div
-   [:div
+   [:div {:class "headerbar"}
     [:div
-     [:h2 (-> @db :current-page)]
+     [:h2 (-> @db :current-page)
+      [:span
+       [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
      [:div [nav-bar]]]
     [main-container]
     ]])

@@ -51,8 +51,8 @@
         extract-page-name (fn [n] (-> n :abs (string/split #"/") last (string/split #"\." ) first))
 
         extract-links
-        (fn [page-name n]
-          (map #(vector page-name (last %))
+        (fn [page-node n]
+          (map #(vector (-> page-node :relative (string/split #"\.") first ) (-> % last (string/lower-case)))
                (re-seq #"\[\[(.+?)\]\]" (fsquery/slurp-it n))))
 
         all-page-names (map extract-page-name (fsquery/start-walk fsq))
@@ -66,10 +66,13 @@
          ((fn [db] (reduce add-page db all-page-names)))
          ((fn [db] (reduce add-link db all-links)))
          )]
-    (println new-db)
+    (println "DB recreated")
 
     (reset! facts new-db)
     ))
+
+
+(defn raw-db [] @facts)
 
 (defn all-pages []
   (sort
