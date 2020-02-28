@@ -1,0 +1,66 @@
+body {
+	font-family: Inconsolata;
+	margin: 0;
+	width:100%;
+		} 
+
+.wikiname {color: #555555; text-align: right;}
+
+.headerbar {
+	padding:10px; 
+	margin: 0;
+/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#a7cfdf+0,331554+100 */
+background: #a7cfdf; /* Old browsers */
+background: -moz-linear-gradient(45deg, #a7cfdf  0%, #331554 100% ); /* FF3.6-15 */
+background: -webkit-linear-gradient(45deg, #a7cfdf  0%, #331554 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(45deg, #a7cfdf  0%, #331554 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#331554',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+	width:100%;
+	 
+}
+
+.headerbar a {color:black;}
+
+.serviceheaderbar {
+	padding:10px; 
+	margin: 0;
+/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#a7cfdf+0,331554+100 */
+background: #dfa7cf; /* Old browsers */
+background: -moz-linear-gradient(0deg, #a7cfdf 0%, #fada96 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(0deg, #a7cfdf 0%,#fada96 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(0deg, #a7cfdf 0%,#fada96 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#fada96',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+	width:100%;
+}
+
+.menubar {
+	padding:10px; 
+	margin: 0 auto;
+	background-color:#fada96;
+	width:100%;
+	position:sticky;
+	top:0px;
+	left:0px;
+}
+
+h2 { 
+	font-size:xx-large;
+}
+
+#content {
+	margin: 10px;
+	padding: 50px;
+}
+
+blockquote {
+  background: #f9f9f9;
+  border-left: 10px solid #fada96;
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  quotes: "\201C""\201D""\2018""\2019";
+}
+
+.transcluded {
+  background-color: #eeeeff;
+  padding:10px;
+}
