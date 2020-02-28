@@ -1,0 +1,36 @@
+{:enums
+ {:cardtype
+  {:description "A type that is attached to each card"
+   :values [:RAW :MARKDOWN :CALCULATED :SERVER-EVAL]}}
+
+ :objects
+ {:Card
+  {:description "A card within the system"
+   :fields
+   {}}
+  :RawPage
+  {:description "A page always has a representation whose body is nothing but a string of plaintext"
+   :fields
+   {:page-name {:type String}
+    :body {:type String}}}
+  :Page
+  {:description "A Page is a named page within the wiki. It is made of a series of cards"
+   :fields
+   {:page-name {:type String}
+    :cards {:type (list :Card)}} }}
+
+
+ :queries
+ {:raw-page
+  {:type :RawPage
+   :description "Retrieve the raw version of a single page by its name"
+   :args {:page-name {:type (non-null String)}}
+   :resolve :resolve-raw-page}
+
+  :cooked-page
+  {:type :Page
+   :description "Retrieve the cooked version of a single page by its name"
+   :args {:page-name {:type (non-null String)}}
+   :resolve :resolve-cooked-page}
+  }
+ }
