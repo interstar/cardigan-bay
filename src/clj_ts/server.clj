@@ -4,7 +4,8 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
 
-            [clj-ts.logic :as ldb]
+
+            [clj-ts.pagestore :as pagestore]
 
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
@@ -14,31 +15,30 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
-            [clj-ts.common :refer [raw->cards card->html] ]
+            [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
             )
   (:gen-class))
 
-(def all-state (atom
-            {:page-dir "/home/interstar/repos/personal_wiki_pages/"
-             :logic-db "/home/interstar/repos/db.clj"}))
+(comment  (def all-state (atom
+                          {:page-dir "/home/interstar/repos/personal_wiki_pages/"
+                           :logic-db "/home/interstar/repos/db.clj"})))
 
 
-(defn page-name-to-file-name [page-name]
-  (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
-    (-> @all-state :page-dir mkname)))
 
-(defn get-page-from-file [p-name]
-  (slurp (page-name-to-file-name p-name)))
+
+
 
 
 (defn page-request [request]
   (let [qs (:query-string request)
         p-name (second (string/split qs #"="))
-        file-exists? (.exists (io/file (page-name-to-file-name p-name)))
-        raw (if file-exists? (get-page-from-file p-name) "PAGE DOES NOT EXIST")]
+        raw (if (pagestore/page-exists? p-name)
+              (pagestore/get-page-from-file p-name)
+              "PAGE DOES NOT EXIST")]
     {:p-name p-name :raw raw}))
 
 
+(declare raw->cards)
 
 
 (defn render-page [p-name raw]
@@ -63,7 +63,7 @@
 
 (defn get-edn-cards [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (raw->cards p-name raw)]
+        cards (raw->cards raw)]
     (println "GET EDN :: " p-name)
 
     (pp/pprint cards)
@@ -77,8 +77,43 @@
         p-name (:page form-body)
         body (:data form-body)]
     (println "SAVE PAGE :: " p-name)
-    (spit (page-name-to-file-name p-name) body)
+    (pagestore/write-page-to-file! p-name body)
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}))
+
+
+(defn process-card [i card]
+  (let [[type, data] (card->type-and-card card)]
+    (condp = type
+      :markdown (package-card i type data)
+      :raw (package-card i type data)
+      :server-eval
+      (let [val (-> data read-string eval)]
+        (println "EVALUATED " data)
+        (println val)
+        (package-card i :server-dynamic (str val "\n"))
+       )
+      (package-card i type data)
+      )))
+
+(defn raw->cards [raw]
+  (let [cards (string/split  raw #"----")]
+    (map process-card (iterate inc 0) cards)))
+
+(defn card->raw [{:keys [id type data]}]
+  (if  (=  type :markdown)
+    (str "----\n" data)
+    (str "----\n" type "\n" data )))
+
+(defn get-flattened [request]
+  (let [{:keys [p-name raw]} (page-request request)
+        cards (apply str (map card->raw (raw->cards raw)))]
+    (println "GET FLATTENED :: " p-name)
+
+    (pp/pprint cards)
+    {:status 200
+     :headers {"Content-Type" "text/html"}
+     :body cards})
+  )
 
 
 ; Logic using pages
@@ -98,30 +133,29 @@
    "</ul></div>")
   )
 
-
 (defn retn [res]
   {:status 200
    :headers {"Content-Type" "text/html"}
    :body (wrap-results-as-list res)})
 
 (defn raw-db [request]
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body (str "<pre>" (with-out-str (pp/pprint (ldb/raw-db))) "</pre>" )})
+  (do
+    (pagestore/regenerate-db!)
+    {:status 200
+     :headers {"Content-Type" "text/html"}
+     :body (str "<pre>" (with-out-str (pp/pprint (pagestore/raw-db))) "</pre>" )}))
 
 (defn all-pages [request]
-  (do
-    (ldb/regenerate-db! (:page-dir @all-state) )
-    (retn (ldb/all-pages))))
+  (retn (pagestore/all-pages)))
 
 (defn all-links [request]
-  (retn (ldb/links)))
+  (retn (pagestore/links)))
 
 (defn broken-links [request]
-  (retn (ldb/broken-links)))
+  (retn (pagestore/broken-links)))
 
 (defn orphans [request]
-  (retn (ldb/orphans)))
+  (retn (pagestore/orphans)))
 
 
 
@@ -139,6 +173,9 @@
 
       (= uri "/clj_ts/cards")
       (get-edn-cards request)
+
+      (= uri "/clj_ts/flattened")
+      (get-flattened request)
 
       (= uri "/clj_ts/save")
       (save-page request)
@@ -183,16 +220,13 @@
       (do
         (println "Please give a directory where your pages are stored, as the page-dir in config.edn ")
         (System/exit 0))
-      (nil? (:logic-db config))
-      (do
-        (println "Please give a logic db file, as logic-db in config.edn"))
       :otherwise
       (do
-        (reset! all-state config)
+        (pagestore/update-pagedir! (-> config :page-dir))
         (println
          (str "Cardigan Bay Started.
 
-Page Directory is " (-> @all-state :page-dir) "
+Page Directory is " (pagestore/cwd) "
 
 Port is " port))
         (-> #'handler

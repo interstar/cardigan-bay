@@ -12,15 +12,23 @@
 (defn extract-data [c]
   )
 
-(defn raw->cards [raw]
-  (let [cards (string/split raw #"----")
-        card (fn [c i]
-               {:type :markdown
-                :id (str "card " i)
-                :data c
-                :hash (-> c (edn-hash) (uuid5))
-                }) ]
-    (map card cards (iterate inc 0))))
+
+
+(defn card->type-and-card [c]
+  (let [card (string/trim c)
+        rex #"^\s+:(\S+)" ]
+    (if
+      (not (re-find rex c))
+      [:markdown c]
+      [(->> c (re-find rex) second keyword)
+       (string/replace-first c rex "")] ) ))
+
+(defn package-card [id, type, data]
+  {:type type
+   :id (str "card " id)
+   :data data
+   :hash (-> data (edn-hash) (uuid5))})
+
 
 (defn auto-links [raw]
   (string/replace raw #"\s+(http(s)?://(\S))\s+"

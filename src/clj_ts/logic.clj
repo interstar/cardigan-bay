@@ -13,25 +13,7 @@
 (def facts
   (atom
    (pldb/db
-    [link 'grupoadalberto 'altamiraraujojunior]
-    [link 'grupoadalberto 'viniciussilvadelima]
-    [page 'tablestuff]
-    [link 'tablestuff 'pagetype]
-    [link 'tablestuff 'tablename]
-    [page 'wikisandxml]
-    [page 'tablename]
-    [link 'wikisandxml 'topicmaps]
-    [page 'cds]
-    [page 'arttoycafe]
-    [page 'toscratch]
-    [page 'coolhunterdiagram]
-    [page 'geekcoffee]
-    [link 'geekcoffee 'arttoycafe]
-    [page 'linksfromconferenceinbrasilia]
-    [link 'linksfromconferenceinbrasilia 'posthumanism]
-    [link 'linksfromconferenceinbrasilia 'integratedarts]
-    [page 'guideforhackers]
-    [link 'guideforhackers 'sdideskcodeorganization]
+
     )))
 
 (defn regenerate-db! [path]
@@ -54,6 +36,7 @@
         (fn [page-node n]
           (map #(vector (-> page-node :relative (string/split #"\.") first ) (-> % last (string/lower-case)))
                (re-seq #"\[\[(.+?)\]\]" (fsquery/slurp-it n))))
+
 
         all-page-names (map extract-page-name (fsquery/start-walk fsq))
         all-links (-> (fsquery/start-walk fsq)

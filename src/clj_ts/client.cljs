@@ -6,7 +6,7 @@
             [cljs.core.async :refer [<! timeout]]
             [cljs.reader :refer [read-string]]
             [markdown.core :as md]
-            [clj-ts.common :refer [raw->cards card->html]])
+            [clj-ts.common :refer [card->type-and-card package-card  card->html]])
   (:import goog.net.XhrIo)
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -23,7 +23,7 @@
 
 ;; PageStore
 
-(defn load-page! [page-name new-past new-future]
+(defn Xload-page! [page-name new-past new-future]
   (let [lcpn (lower-case page-name)]
     (.send XhrIo
            (str "/clj_ts/raw?page=" lcpn)
@@ -39,6 +39,22 @@
            "GET")))
 
 
+
+(defn load-page! [page-name new-past new-future]
+  (let [lcpn (lower-case page-name)]
+    (.send XhrIo
+           (str "/clj_ts/flattened?page=" lcpn)
+           (fn [e]
+             (let [status (-> e .-target .getStatusText)
+                   data (-> e .-target .getResponseText .toString)
+                   ]
+               (swap! db assoc
+                      :current-page page-name
+                      :raw  data
+                      :past new-past
+                      :future new-future)
+               ))
+           "GET")))
 
 (defn generate-form-data [params]
   (let [form-data (js/FormData.)]
@@ -99,6 +115,21 @@
 
 
 ;; Rendering Views
+
+
+(defn process-card [i card]
+  (let [[type, data] (card->type-and-card card)]
+    (condp = type
+      :markdown (package-card i type data)
+      :raw (package-card i type data)
+      :server-dynamic (package-card i type data)
+      (package-card i type data)
+      )))
+
+(defn raw->cards [raw]
+  (let [cards (string/split  raw #"----")]
+    (map process-card (iterate inc 0) cards)))
+
 
 
 (defn nav-input [value]
@@ -173,23 +204,34 @@
 
 
 (defn one-card [card]
-[:div
- [:div
-  [:span (-> card :id)]
-  [:span (-> card :hash)]]
- [:div
-  {:class "card"
-   :on-click
-   (fn [e]
-     (let [tag (-> e .-target)
-           classname (.getAttribute tag "class")
-           data (.getAttribute tag "data")
-           x (-> @db :dirty)]
+  (let [inner-html
+        (condp = (-> card :type)
+          :raw
+          (str "<pre>" (->  card :data) "</pre>")
+          :markdown (card->html card)
+          (str "UNKNOWN TYPE(" (:type card) ") " (-> card :data)))
+        ]
+    (js/console.log card)
 
-       (if (= classname "wikilink")
-         (go-new! data))))
-   :dangerouslySetInnerHTML
-   {:__html (card->html card)}} ]]
+    [:div
+     [:div
+      [:span (-> card :id)] " | "
+      [:span (-> card :hash)] " | "
+      [:span (-> card :type)]
+      ]
+     [:div
+      {:class "card"
+       :on-click
+       (fn [e]
+         (let [tag (-> e .-target)
+               classname (.getAttribute tag "class")
+               data (.getAttribute tag "data")
+               x (-> @db :dirty)]
+
+           (if (= classname "wikilink")
+             (go-new! data))))
+       :dangerouslySetInnerHTML
+       {:__html inner-html}} ]])
   )
 
 
@@ -197,7 +239,7 @@
 (defn card-list []
   [:div
    (try
-     (let [cards (-> @db :raw str (raw->cards))]
+     (let [cards (-> @db :raw raw->cards  )]
        (for [card cards]
          (one-card card) ))
      (catch :default e
