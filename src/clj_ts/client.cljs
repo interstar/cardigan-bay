@@ -40,6 +40,23 @@
 
 
 
+(defn Yload-page! [page-name new-past new-future]
+  (let [lcpn (lower-case page-name)]
+    (.send XhrIo
+           (str "/clj_ts/flattened?page=" lcpn)
+           (fn [e]
+             (let [status (-> e .-target .getStatusText)
+                   data (-> e .-target .getResponseText .toString)
+                   ]
+               (swap! db assoc
+                      :current-page page-name
+                      :raw  data
+                      :past new-past
+                      :future new-future)
+               ))
+           "GET")))
+
+
 (defn load-page! [page-name new-past new-future]
   (let [lcpn (lower-case page-name)]
     (.send XhrIo
@@ -48,6 +65,7 @@
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)
                    ]
+               ()
                (swap! db assoc
                       :current-page page-name
                       :raw  data

@@ -16,6 +16,9 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
             [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
+
+            [com.walmartlabs.lacinia :refer [execute]]
+            [clojure.data.json :as json]
             )
   (:gen-class))
 
@@ -38,7 +41,7 @@
     {:p-name p-name :raw raw}))
 
 
-(declare raw->cards)
+
 
 
 (defn render-page [p-name raw]
@@ -63,7 +66,7 @@
 
 (defn get-edn-cards [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (raw->cards raw)]
+        cards (pagestore/raw->cards raw)]
     (println "GET EDN :: " p-name)
 
     (pp/pprint cards)
@@ -81,24 +84,6 @@
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}))
 
 
-(defn process-card [i card]
-  (let [[type, data] (card->type-and-card card)]
-    (condp = type
-      :markdown (package-card i type data)
-      :raw (package-card i type data)
-      :server-eval
-      (let [val (-> data read-string eval)]
-        (println "EVALUATED " data)
-        (println val)
-        (package-card i :server-dynamic (str val "\n"))
-       )
-      (package-card i type data)
-      )))
-
-(defn raw->cards [raw]
-  (let [cards (string/split  raw #"----")]
-    (map process-card (iterate inc 0) cards)))
-
 (defn card->raw [{:keys [id type data]}]
   (if  (=  type :markdown)
     (str "----\n" data)
@@ -106,7 +91,7 @@
 
 (defn get-flattened [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (apply str (map card->raw (raw->cards raw)))]
+        cards (apply str (map card->raw (pagestore/raw->cards raw)))]
     (println "GET FLATTENED :: " p-name)
 
     (pp/pprint cards)
@@ -158,6 +143,38 @@
   (retn (pagestore/orphans)))
 
 
+;; GraphQL handler
+
+(defn extract-query
+  "Reads the `query` query parameters, which contains a JSON string
+  for the GraphQL query associated with this request. Returns a
+  string.  Note that this differs from the PersistentArrayMap returned
+  by variable-map. e.g. The variable map is a hashmap whereas the
+  query is still a plain string."
+  [request]
+  (let [body (-> request :body .bytes slurp (json/read-str :key-fn keyword) :query )]
+    (case (:request-method request)
+      :get  (get-in request [:query-params "query"])
+      ;; Additional error handling because the clojure ring server still
+      ;; hasn't handed over the values of the request to lacinia GraphQL
+      ;; (-> request :body .bytes slurp edn/read-string)
+      :post (try (-> request
+                     :body
+                     .bytes
+                     slurp
+                     (json/read-str :key-fn keyword)
+                     :query)
+                 (catch Exception e ""))
+      :else "")))
+
+(defn graphql-handler [request]
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (let [query (extract-query request)
+               result (execute pagestore/pagestore-schema query nil nil)]
+           (println "CCC " query)
+           (println "DDD " result)
+           (json/write-str result))})
 
 
 ; runs when any request is received
@@ -180,6 +197,9 @@
       (= uri "/clj_ts/save")
       (save-page request)
 
+
+      (= uri "/clj_ts/graphql")
+      (graphql-handler request)
 
       (= uri "/clj_ts/db")
       (raw-db request)

@@ -3,7 +3,13 @@
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clj-ts.logic :as ldb]
+
+            [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
+            [com.walmartlabs.lacinia.schema :as schema]
+
+            [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
             ))
+
 
 
 
@@ -40,6 +46,12 @@
 
 (defn cwd [] (-> @page-store-state :page-dir))
 
+
+
+
+
+;; Logic delegation
+
 (defn raw-db [] (ldb/raw-db))
 
 (defn all-pages [] (ldb/all-pages))
@@ -49,3 +61,50 @@
 (defn broken-links [] (ldb/broken-links))
 
 (defn orphans [] (ldb/orphans))
+
+
+;; Card Processing
+
+
+(defn process-card [i card]
+  (let [[type, data] (card->type-and-card card)]
+    (condp = type
+      :markdown (package-card i type data)
+      :raw (package-card i type data)
+      :server-eval
+      (let [val (-> data read-string eval)]
+        (println "EVALUATED " data)
+        (println val)
+        (package-card i :server-dynamic (str val "\n"))
+       )
+      (package-card i type data)
+      )))
+
+(defn raw->cards [raw]
+  (let [cards (string/split  raw #"----")]
+    (map process-card (iterate inc 0) cards)))
+
+
+;; GraphQL resolvers
+
+(defn resolve-raw-page [context arguments value]
+  (let [{:keys [page_name]} arguments]
+    {:page_name page_name
+     :body (get-page-from-file page_name)}))
+
+
+(defn resolve-cooked-page [context arguments value]
+  (let [{:keys [page_name]} arguments]
+    {:page_name page_name
+     :cards (-> page_name get-page-from-file raw->cards)}))
+
+
+
+(def pagestore-schema
+  (-> "gql_schema.edn"
+      slurp
+      edn/read-string
+      (attach-resolvers {:resolve-raw-page resolve-raw-page
+                         :resolve-cooked-page resolve-cooked-page
+                         })
+      schema/compile))
