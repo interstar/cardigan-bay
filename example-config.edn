@@ -1,3 +1,2 @@
 {:page-dir "ROUTE TO YOUR PAGES DIRECTORY (with trailing /)"
- :all "IGNORE THIS"
- :logic-db "ROUTE TO CLOJURE FILE CONTAINING CORE.LOGIC DB "}
+}
