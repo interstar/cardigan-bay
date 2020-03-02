@@ -33,7 +33,6 @@
     fsquery {:local/root "/home/phil/Documents/projects/future-office-labs/smarter-file-system/fsquery-cl/fsquery"}
 
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
-    vincit/venia {:mvn/version "0.2.5"}
 
 
     org.clojure/data.json #:mvn{:version "0.2.6"},

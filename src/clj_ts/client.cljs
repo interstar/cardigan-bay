@@ -4,10 +4,10 @@
             [clojure.string :refer [lower-case replace]]
             [clojure.string :as string]
             [cljs.core.async :refer [<! timeout]]
-            [cljs.core :refer [clj->js]]
+            [cljs.core :refer [js->clj]]
             [cljs.reader :refer [read-string]]
 
-            [venia.core :as venia]
+
 
             [markdown.core :as md]
             [clj-ts.common :refer [card->type-and-card package-card  card->html]])
@@ -46,13 +46,13 @@
 
 (defn load-page! [page-name new-past new-future]
   (let [lcpn (lower-case page-name)
-        xxx
-        "query GetPage($pn: String!) {
-  raw_page(page_name: $pn) {
+
+        query (str "{\"query\" : \"query GetPage {
+  raw_page(page_name: \\\"" lcpn "\\\" ) {
     page_name
     body
   }
-  cooked_page(page_name: $pn) {
+  cooked_page(page_name:  \\\"" lcpn "\\\") {
     page_name
     cards {
       type
@@ -61,38 +61,30 @@
       hash
     }
   }
-}"
-        query (venia/graphql-query
-                 {:venia/operation {:operation/type :query
-                                    :operation/name "GetPage"}
-                  :venia/variables [{:variable/name "pagename"
-                                     :variable/type :String}]
-                  :venia/queries
-                  [{:query/data
-                    [:raw_page {:page_name lcpn}
-                     [:page_name :body]
-                     ]}
-                   {:query/data
-                    [:cooked_page {:page_name lcpn}
-                     [:page_name [:cards [:type :id :data :hash]]]]}
-                  ]
-                  })]
-    (js/console.log (str  " MMMM " query))
+} \",\"variables\":null, \"operationName\":\"GetPage\"}")]
     (.send XhrIo
            "/clj_ts/graphql"
            (fn [e]
              (let [status (-> e .-target .getStatusText)
-                   data (-> e .-target .getResponseText .toString)
+                   edn (-> e .-target .getResponseText .toString
+                            (#(.parse js/JSON %)) js->clj )
+                   raw (-> edn (get "data") (get "raw_page") (get "body"))
+                   cooked (-> edn (get "data") (get "cooked_page") (get "cards"))
                    ]
-               (js/console.log "DDDDDD " data)
+               (js/console.log "DDDDDD " (pr-str edn))
+               (js/console.log "DDD " (str (type edn)) )
+               (js/console.log "EEE " (-> edn (get "data") (get "raw_page") (get "page_name") ))
+               (js/console.log "FFF " (str cooked))
+               (js/console.log "GGG " (str "HLHLH " raw))
                (swap! db assoc
                       :current-page page-name
-                      :raw  data
+                      :raw  raw
+                      :cooked cooked
                       :past new-past
                       :future new-future)
                ))
            "POST",
-           (str "{" query "}") )))
+           query )))
 
 (defn generate-form-data [params]
   (let [form-data (js/FormData.)]
