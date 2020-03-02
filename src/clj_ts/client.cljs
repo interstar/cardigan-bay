@@ -4,7 +4,11 @@
             [clojure.string :refer [lower-case replace]]
             [clojure.string :as string]
             [cljs.core.async :refer [<! timeout]]
+            [cljs.core :refer [clj->js]]
             [cljs.reader :refer [read-string]]
+
+            [venia.core :as venia]
+
             [markdown.core :as md]
             [clj-ts.common :refer [card->type-and-card package-card  card->html]])
   (:import goog.net.XhrIo)
@@ -22,23 +26,6 @@
 
 
 ;; PageStore
-
-(defn Xload-page! [page-name new-past new-future]
-  (let [lcpn (lower-case page-name)]
-    (.send XhrIo
-           (str "/clj_ts/raw?page=" lcpn)
-           (fn [e]
-             (let [status (-> e .-target .getStatusText)
-                   data (-> e .-target .getResponseText .toString)]
-               (swap! db assoc
-                      :current-page page-name
-                      :raw data
-                      :past new-past
-                      :future new-future)
-               ))
-           "GET")))
-
-
 
 (defn Yload-page! [page-name new-past new-future]
   (let [lcpn (lower-case page-name)]
@@ -58,21 +45,54 @@
 
 
 (defn load-page! [page-name new-past new-future]
-  (let [lcpn (lower-case page-name)]
+  (let [lcpn (lower-case page-name)
+        xxx
+        "query GetPage($pn: String!) {
+  raw_page(page_name: $pn) {
+    page_name
+    body
+  }
+  cooked_page(page_name: $pn) {
+    page_name
+    cards {
+      type
+      id
+      data
+      hash
+    }
+  }
+}"
+        query (venia/graphql-query
+                 {:venia/operation {:operation/type :query
+                                    :operation/name "GetPage"}
+                  :venia/variables [{:variable/name "pagename"
+                                     :variable/type :String}]
+                  :venia/queries
+                  [{:query/data
+                    [:raw_page {:page_name lcpn}
+                     [:page_name :body]
+                     ]}
+                   {:query/data
+                    [:cooked_page {:page_name lcpn}
+                     [:page_name [:cards [:type :id :data :hash]]]]}
+                  ]
+                  })]
+    (js/console.log (str  " MMMM " query))
     (.send XhrIo
-           (str "/clj_ts/flattened?page=" lcpn)
+           "/clj_ts/graphql"
            (fn [e]
              (let [status (-> e .-target .getStatusText)
                    data (-> e .-target .getResponseText .toString)
                    ]
-               ()
+               (js/console.log "DDDDDD " data)
                (swap! db assoc
                       :current-page page-name
                       :raw  data
                       :past new-past
                       :future new-future)
                ))
-           "GET")))
+           "POST",
+           (str "{" query "}") )))
 
 (defn generate-form-data [params]
   (let [form-data (js/FormData.)]

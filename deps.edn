@@ -1,12 +1,20 @@
 {:paths ["src" "resources"],
  :aliases
- {:dev
+
+ {
+
+  :eastwood
+  {:main-opts ["-m" "eastwood.lint" {:source-paths ["src"]}]
+   :extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}}
+
+  :dev
   {:extra-deps
    {orchestra #:mvn{:version "2018.12.06-2"},
     expound #:mvn{:version "0.7.2"},
     nightlight #:mvn{:version "RELEASE"},
     com.bhauman/figwheel-main #:mvn{:version "0.2.0"}},
    :main-opts ["dev.clj"]},
+
   :prod
   {:extra-deps
    {leiningen #:mvn{:version "2.9.0"},
@@ -25,6 +33,8 @@
     fsquery {:local/root "/home/phil/Documents/projects/future-office-labs/smarter-file-system/fsquery-cl/fsquery"}
 
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
+    vincit/venia {:mvn/version "0.2.5"}
+
 
     org.clojure/data.json #:mvn{:version "0.2.6"},
     org.clojure/clojure #:mvn{:version "1.10.1"},
