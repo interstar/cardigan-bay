@@ -71,11 +71,6 @@
                    raw (-> edn (get "data") (get "raw_page") (get "body"))
                    cooked (-> edn (get "data") (get "cooked_page") (get "cards"))
                    ]
-               (js/console.log "DDDDDD " (pr-str edn))
-               (js/console.log "DDD " (str (type edn)) )
-               (js/console.log "EEE " (-> edn (get "data") (get "raw_page") (get "page_name") ))
-               (js/console.log "FFF " (str cooked))
-               (js/console.log "GGG " (str "HLHLH " raw))
                (swap! db assoc
                       :current-page page-name
                       :raw  raw
