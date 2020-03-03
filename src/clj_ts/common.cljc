@@ -23,8 +23,9 @@
       [(->> c (re-find rex) second keyword)
        (string/replace-first c rex "")] ) ))
 
-(defn package-card [id, type, data]
+(defn package-card [id, type, deltype, data]
   {:type type
+   :delivered_type deltype
    :id (str "card " id)
    :data data
    :hash (-> data (edn-hash) (uuid5))})

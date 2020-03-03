@@ -66,18 +66,28 @@
 ;; Card Processing
 
 
+(defn server-eval [data]
+  (-> data read-string eval (#(apply str %))) )
+
 (defn process-card [i card]
   (let [[type, data] (card->type-and-card card)]
     (condp = type
-      :markdown (package-card i type data)
-      :raw (package-card i type data)
-      :server-eval
-      (let [val (-> data read-string eval)]
-        (println "EVALUATED " data)
-        (println val)
-        (package-card i :server-dynamic (str val "\n"))
-       )
-      (package-card i type data)
+      :markdown (package-card i type :markdown data)
+      :raw (package-card i type :raw data)
+      :evalraw
+      (package-card i type :raw (server-eval data))
+
+      :evalmd
+      (package-card i type :markdown (server-eval data))
+
+      :allpages
+      (let [ap (all-pages)
+            items (map #(str "* [[" % "]]\n") ap) ]
+        (println (pr-str "KKKK " ap))
+        (package-card i type :markdown (apply str items)))
+
+      ;; not recognised
+      (package-card i type type data)
       )))
 
 (defn raw->cards [raw]
@@ -89,14 +99,20 @@
 
 (defn resolve-raw-page [context arguments value]
   (let [{:keys [page_name]} arguments]
-    {:page_name page_name
-     :body (get-page-from-file page_name)}))
+    (if (page-exists? page_name)
+      {:page_name page_name
+       :body (get-page-from-file page_name)}
+      {:page_name page_name
+       :body "PAGE DOES NOT EXIST"})))
 
 
 (defn resolve-cooked-page [context arguments value]
   (let [{:keys [page_name]} arguments]
-    {:page_name page_name
-     :cards (-> page_name get-page-from-file raw->cards)}))
+    (if (page-exists? page_name)
+      {:page_name page_name
+       :cards (-> page_name get-page-from-file raw->cards)}
+      {:page_name page_name
+       :cards (raw->cards "PAGE DOES NOT EXIST")})))
 
 
 

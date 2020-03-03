@@ -10,7 +10,11 @@
 
 
             [markdown.core :as md]
-            [clj-ts.common :refer [card->type-and-card package-card  card->html]])
+            [clj-ts.common :refer [card->type-and-card package-card
+                                   double-comma-table
+                                   double-bracket-links auto-links ]]
+            ;;[clj-ts.common :refer [card->html ]]
+            )
   (:import goog.net.XhrIo)
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -20,6 +24,7 @@
 (defonce db (r/atom
               {:current-page "HelloWorld"
                :raw ""
+               :cooked []
                :editing false
                :past ["HelloWorld"]
                :future []}))
@@ -27,21 +32,6 @@
 
 ;; PageStore
 
-(defn Yload-page! [page-name new-past new-future]
-  (let [lcpn (lower-case page-name)]
-    (.send XhrIo
-           (str "/clj_ts/flattened?page=" lcpn)
-           (fn [e]
-             (let [status (-> e .-target .getStatusText)
-                   data (-> e .-target .getResponseText .toString)
-                   ]
-               (swap! db assoc
-                      :current-page page-name
-                      :raw  data
-                      :past new-past
-                      :future new-future)
-               ))
-           "GET")))
 
 
 (defn load-page! [page-name new-past new-future]
@@ -59,6 +49,7 @@
       id
       data
       hash
+      delivered_type
     }
   }
 } \",\"variables\":null, \"operationName\":\"GetPage\"}")]
@@ -145,10 +136,10 @@
 (defn process-card [i card]
   (let [[type, data] (card->type-and-card card)]
     (condp = type
-      :markdown (package-card i type data)
-      :raw (package-card i type data)
-      :server-dynamic (package-card i type data)
-      (package-card i type data)
+      :markdown (package-card i type :markdown data)
+      :raw (package-card i type :raw data)
+      :server-eval (package-card i type :calculated data)
+      (package-card i type type data)
       )))
 
 (defn raw->cards [raw]
@@ -170,7 +161,7 @@
          [:div {:class "navbar"}
           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
          " || "
-          [:a {:href "/clj_ts/all"} "All Pages"]
+          [:span {:on-click (fn [] (go-new! "AllPages"))} "AllPages"]
           " || "
           [:a {:href "/clj_ts/db"} "Database"]
           " || "
@@ -228,21 +219,35 @@
 
 
 
+
+(defn card->html [card]
+  (-> (get card "data")
+      (double-comma-table)
+      (md/md->html)
+      (auto-links)
+      (double-bracket-links)))
+
+
 (defn one-card [card]
-  (let [inner-html
-        (condp = (-> card :type)
-          :raw
-          (str "<pre>" (->  card :data) "</pre>")
-          :markdown (card->html card)
-          (str "UNKNOWN TYPE(" (:type card) ") " (-> card :data)))
+  (let [type (get card "delivered_type")
+        data (get card "data")
+        dummy (js/console.log (str " == " type " == " data))
+        inner-html
+        (condp = type
+          ":raw"
+          (str "<pre>" data "</pre>")
+          ":markdown"
+          (card->html card)
+          (str "UNKNOWN TYPE(" type ") " data))
         ]
-    (js/console.log card)
+    (js/console.log (pr-str card))
 
     [:div
      [:div
-      [:span (-> card :id)] " | "
-      [:span (-> card :hash)] " | "
-      [:span (-> card :type)]
+      [:span (get card "id")] " | "
+      [:span (get card "hash")] " | Original type: "
+      [:span (get card "type")] " | Delivered type: "
+      [:span (get card "delivered_type")]
       ]
      [:div
       {:class "card"
@@ -264,8 +269,9 @@
 (defn card-list []
   [:div
    (try
-     (let [cards (-> @db :raw raw->cards  )]
+     (let [cards (-> @db :cooked  )]
        (for [card cards]
+
          (one-card card) ))
      (catch :default e
        (js/alert e)))

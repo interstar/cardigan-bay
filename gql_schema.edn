@@ -8,6 +8,7 @@
   {:description "A card within the system"
    :fields
    {:type {:type String}
+    :delivered_type {:type String}
     :data {:type String}
     :id {:type String}
     :hash {:type String}

@@ -145,11 +145,6 @@
 
 ;; GraphQL handler
 
-(defn P [x]
-  (do
-    (println "PRINT IT :: " x)
-    x))
-
 (defn extract-query
   "Reads the `query` query parameters, which contains a JSON string
   for the GraphQL query associated with this request. Returns a
@@ -157,7 +152,7 @@
   by variable-map. e.g. The variable map is a hashmap whereas the
   query is still a plain string."
   [request]
-  (let [body (-> request :body .bytes slurp P (json/read-str :key-fn keyword) :query )]
+  (let [body (-> request :body .bytes slurp (json/read-str :key-fn keyword) :query )]
     (case (:request-method request)
       :get  (get-in request [:query-params "query"])
       ;; Additional error handling because the clojure ring server still
@@ -190,14 +185,6 @@
       (= uri "/clj_ts/view")
       (get-page request)
 
-      (= uri "/clj_ts/raw")
-      (get-raw request)
-
-      (= uri "/clj_ts/cards")
-      (get-edn-cards request)
-
-      (= uri "/clj_ts/flattened")
-      (get-flattened request)
 
       (= uri "/clj_ts/save")
       (save-page request)
