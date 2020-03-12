@@ -1,7 +1,7 @@
 (ns clj-ts.client
   (:require
             [reagent.core :as r]
-            [clojure.string :refer [lower-case replace]]
+            [clojure.string :refer [lower-case]]
             [clojure.string :as string]
             [cljs.core.async :refer [<! timeout]]
             [cljs.core :refer [js->clj]]
@@ -163,14 +163,15 @@
          " || "
           [:span {:on-click (fn [] (go-new! "AllPages"))} "AllPages"]
           " || "
-          [:a {:href "/clj_ts/db"} "Database"]
+          [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]
           " || "
-          [:a {:href "/clj_ts/links"} "Links"]
+          [:span {:on-click (fn [] (go-new! "AllLinks"))} "AllLinks"]
           " || "
-          [:a {:href "/clj_ts/broken-links"} "Broken Links"]
+          [:span {:on-click (fn [] (go-new! "BrokenLinks"))} "BrokenLinks"]
           " || "
-          [:a {:href "/clj_ts/orphans"} "Orphans"]
-          " || "
+          [:span {:on-click (fn [] (go-new! "OrphanPages"))} "OrphanPages"]
+
+          " ||| "
           [:button
            {:class "big-btn"
             :on-click (fn [] (back!))} "<"]
@@ -214,7 +215,7 @@
            [:button {:class "big-btn"
                      :on-click
                      (fn []
-                       (stamp! "==FIX==")) } "Fix"]] ] ))))
+                       (stamp! "==FIX==")) } "Fix"]]] ))))
 
 
 

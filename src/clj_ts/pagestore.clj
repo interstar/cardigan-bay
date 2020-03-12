@@ -67,7 +67,19 @@
 
 
 (defn server-eval [data]
-  (-> data read-string eval (#(apply str %))) )
+  (-> data read-string
+      eval
+      (#(apply str %))
+      ))
+
+(defn ldb-query->mdlist-card [i result qname f]
+  (let [items (apply str (map f result))]
+    (println " HJJH " (pr-str result))
+    (package-card i qname :markdown
+                  (str "*" (count result) " items*\n\n" items ) )))
+
+(defn item1 [s] (str "* [[" s "]]\n"))
+
 
 (defn process-card [i card]
   (let [[type, data] (card->type-and-card card)]
@@ -81,10 +93,22 @@
       (package-card i type :markdown (server-eval data))
 
       :allpages
-      (let [ap (all-pages)
-            items (map #(str "* [[" % "]]\n") ap) ]
-        (println (pr-str "KKKK " ap))
-        (package-card i type :markdown (apply str items)))
+      (ldb-query->mdlist-card i (all-pages) :allpages item1)
+
+      :alllinks
+      (ldb-query->mdlist-card
+       i (links) :alllinks
+       (fn [[a b]] (str "* [[" a "]] **->** [[" b "]]\n")))
+
+
+      :brokenlinks
+      (ldb-query->mdlist-card
+       i (broken-links) :brokenlinks
+       (fn [[a b]] (str "* [[" a "]] **X->** [[" b "]]\n")))
+
+      :orphanpages
+      (ldb-query->mdlist-card
+       i (orphans) :orphanpages item1)
 
       ;; not recognised
       (package-card i type type data)

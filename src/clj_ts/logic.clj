@@ -4,6 +4,7 @@
    [clojure.core.logic.pldb :as pldb]
    [clojure.string :as string]
    [fsquery.core :as fsquery]
+   [fsquery.fsnode :as fsnode]
 ))
 
 (pldb/db-rel link from to)
@@ -12,15 +13,22 @@
 
 (def facts
   (atom
-   (pldb/db
+   (pldb/db )))
 
-    )))
+
+
+(defn extract-links [page-node n]
+  (map #(vector (-> page-node fsnode/relative (string/split #"\.") first )
+                        (-> % last (string/lower-case)))
+               (re-seq #"\[\[(.+?)\]\]" (fsnode/slurp-it n)))
+  )
 
 (defn regenerate-db! [path]
   (let [
         fsq (-> (fsquery/make-fsquery path)
                 (fsquery/ext "md")
-                (fsquery/files-only))
+                (fsquery/files-only)
+                (fsquery/no-follow #"\.work"))
 
         add-page
         (fn [db page-name]
@@ -31,11 +39,6 @@
           (-> db (pldb/db-fact link from to)))
 
         extract-page-name (fn [n] (-> n :abs (string/split #"/") last (string/split #"\." ) first))
-
-        extract-links
-        (fn [page-node n]
-          (map #(vector (-> page-node :relative (string/split #"\.") first ) (-> % last (string/lower-case)))
-               (re-seq #"\[\[(.+?)\]\]" (fsquery/slurp-it n))))
 
 
         all-page-names (map extract-page-name (fsquery/start-walk fsq))
@@ -50,6 +53,7 @@
          ((fn [db] (reduce add-link db all-links)))
          )]
     (println "DB recreated")
+
 
     (reset! facts new-db)
     ))
@@ -73,6 +77,15 @@
       (page q)
       )))
 
+(defn links-to [target]
+  (pldb/with-db @facts
+    (logic/run* [p q]
+      (link p q)
+      (page p)
+      (page q)
+      (= target q)
+      )))
+
 (defn broken-links []
   (pldb/with-db @facts
     (logic/run* [p q]
@@ -80,9 +93,18 @@
       (logic/nafc page q)
       )))
 
-(defn orphans []
+(defn xorphans []
   (pldb/with-db @facts
     (logic/run* [p q]
-      (link p q)
-      (logic/nafc page p)
+      (logic/nafc link p q)
+      (page q)
       )))
+
+(defn orphans []
+  (pldb/with-db @facts
+    (logic/run* [q]
+      (logic/fresh [p]
+        (page q)
+        (logic/conda
+         [(link p q) logic/fail]
+         [logic/succeed])))))

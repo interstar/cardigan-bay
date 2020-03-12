@@ -130,17 +130,6 @@
      :headers {"Content-Type" "text/html"}
      :body (str "<pre>" (with-out-str (pp/pprint (pagestore/raw-db))) "</pre>" )}))
 
-(defn all-pages [request]
-  (retn (pagestore/all-pages)))
-
-(defn all-links [request]
-  (retn (pagestore/links)))
-
-(defn broken-links [request]
-  (retn (pagestore/broken-links)))
-
-(defn orphans [request]
-  (retn (pagestore/orphans)))
 
 
 ;; GraphQL handler
@@ -181,7 +170,7 @@
 (defn handler [{:keys [uri request-method] :as request}]
   (let []
     (cond
-      ; view a page
+
       (= uri "/clj_ts/view")
       (get-page request)
 
@@ -196,17 +185,6 @@
       (= uri "/clj_ts/db")
       (raw-db request)
 
-      (= uri "/clj_ts/all")
-      (all-pages request)
-
-      (= uri "/clj_ts/links")
-      (all-links request)
-
-      (= uri "/clj_ts/broken-links")
-      (broken-links request)
-
-      (= uri "/clj_ts/orphans")
-      (orphans request)
 
       :otherwise
 
