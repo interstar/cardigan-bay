@@ -22,13 +22,6 @@
             )
   (:gen-class))
 
-(comment  (def all-state (atom
-                          {:page-dir "/home/interstar/repos/personal_wiki_pages/"
-                           :logic-db "/home/interstar/repos/db.clj"})))
-
-
-
-
 
 
 
@@ -201,7 +194,7 @@
 ; runs when the server starts
 (defn -main [& args]
   (let [
-        config (-> "config.edn" slurp (edn/read-string))
+        config {:page-dir "./bedrock/"}
         port (if (nil? (:post config)) 4545 (:port config))
         ]
     (print "Welcome to Cardigan Bay")
