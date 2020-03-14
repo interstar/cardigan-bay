@@ -15,7 +15,7 @@
 
 
 (def page-store-state
-  (atom {:page-dir "/home/interstar/repos/personal_wiki_pages/" }))
+  (atom {:page-dir "./bedrock/"}))
 
 (defn page-name-to-file-name [page-name]
   (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
@@ -65,16 +65,21 @@
 
 ;; Card Processing
 
-
 (defn server-eval [data]
-  (-> data read-string
-      eval
-      (#(apply str %))
-      ))
+  (let [code (read-string data)
+        evaluated
+        (try
+          (#(apply str (eval code)))
+          (catch Exception e
+            (let [sw (new java.io.StringWriter)
+                  pw (new java.io.PrintWriter sw) ]
+              (.printStackTrace e pw)
+              (str "Exception :: " (.getMessage e) (-> sw .toString) ))))]
+    evaluated
+    ))
 
 (defn ldb-query->mdlist-card [i result qname f]
   (let [items (apply str (map f result))]
-    (println " HJJH " (pr-str result))
     (package-card i qname :markdown
                   (str "*" (count result) " items*\n\n" items ) )))
 
