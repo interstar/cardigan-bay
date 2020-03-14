@@ -18,10 +18,11 @@
 
 
 (defn extract-links [page-node n]
-  (map #(vector (-> page-node fsnode/relative (string/split #"\.") first )
-                        (-> % last (string/lower-case)))
-               (re-seq #"\[\[(.+?)\]\]" (fsnode/slurp-it n)))
-  )
+  (map #(vector (-> page-node
+                    ((fn [x] (-> x :java-file .getName)))
+                    (string/split #"\.") first )
+                (-> % last (string/lower-case)))
+       (re-seq #"\[\[(.+?)\]\]" (fsnode/slurp-it n))))
 
 (defn regenerate-db! [path]
   (let [
