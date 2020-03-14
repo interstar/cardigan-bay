@@ -44,12 +44,15 @@ We will be adding more types over time, but the current types are
 * :raw
 * :evalraw
 * :evalmd
+* :system
 
 See [[EvalExamples]] for more on evaluating code in your pages.
+
+:system cards are calls to specific system functions. At the moment these include queries such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]] and  [[OrphanPages]]
+
 ----
 
 ### Future Types
-* :system
 * :hiccup
 * :transclude
 * :transcludemd

@@ -1,4 +1,6 @@
 All pages in the wiki
 
 ----
-:allpages
+:system
+
+{:command :allpages}

@@ -78,6 +78,8 @@
     evaluated
     ))
 
+
+
 (defn ldb-query->mdlist-card [i result qname f]
   (let [items (apply str (map f result))]
     (package-card i qname :markdown
@@ -86,17 +88,10 @@
 (defn item1 [s] (str "* [[" s "]]\n"))
 
 
-(defn process-card [i card]
-  (let [[type, data] (card->type-and-card card)]
-    (condp = type
-      :markdown (package-card i type :markdown data)
-      :raw (package-card i type :raw data)
-      :evalraw
-      (package-card i type :raw (server-eval data))
-
-      :evalmd
-      (package-card i type :markdown (server-eval data))
-
+(defn system-card [i data]
+  (let [info (read-string data)
+        cmd (:command info)]
+    (condp = cmd
       :allpages
       (ldb-query->mdlist-card i (all-pages) :allpages item1)
 
@@ -114,6 +109,24 @@
       :orphanpages
       (ldb-query->mdlist-card
        i (orphans) :orphanpages item1)
+
+      ;; not recognised
+      (package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
+    ))
+
+(defn process-card [i card]
+  (let [[type, data] (card->type-and-card card)]
+    (condp = type
+      :markdown (package-card i type :markdown data)
+      :raw (package-card i type :raw data)
+      :evalraw
+      (package-card i type :raw (server-eval data))
+
+      :evalmd
+      (package-card i type :markdown (server-eval data))
+
+      :system
+      (system-card i data)
 
       ;; not recognised
       (package-card i type type data)

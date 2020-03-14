@@ -1,4 +1,6 @@
 Broken links
 
 ----
-:brokenlinks
+:system
+
+{:command :brokenlinks}
