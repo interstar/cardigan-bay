@@ -7,3 +7,7 @@ And yes, I can edit in Windows!!!!
 ----
 
 [[EvalExamples]]
+
+----
+
+Editing after moving gqlschema

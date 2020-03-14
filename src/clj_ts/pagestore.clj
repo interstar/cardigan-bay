@@ -159,7 +159,7 @@
 
 
 (def pagestore-schema
-  (-> "gql_schema.edn"
+  (-> "resources/clj_ts/gql_schema.edn"
       slurp
       edn/read-string
       (attach-resolvers {:resolve-raw-page resolve-raw-page
