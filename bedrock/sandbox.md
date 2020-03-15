@@ -10,4 +10,4 @@ And yes, I can edit in Windows!!!!
 
 ----
 
-Editing after moving gqlschema
+Editing again and again after moving gqlschema

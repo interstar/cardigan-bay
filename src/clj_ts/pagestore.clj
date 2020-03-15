@@ -157,9 +157,10 @@
        :cards (raw->cards "PAGE DOES NOT EXIST")})))
 
 
-
+;; [schema-file (io/file (System/getProperty "user.dir") "clj_ts/gql_schema.edn")]
 (def pagestore-schema
-  (-> "resources/clj_ts/gql_schema.edn"
+  (-> "gql_schema.edn"
+      io/resource
       slurp
       edn/read-string
       (attach-resolvers {:resolve-raw-page resolve-raw-page
