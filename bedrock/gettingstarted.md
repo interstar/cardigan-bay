@@ -54,6 +54,7 @@ See [[EvalExamples]] for more on evaluating code in your pages.
 
 ### Future Types
 * :hiccup
+* :embed
 * :transclude
 * :transcludemd
 

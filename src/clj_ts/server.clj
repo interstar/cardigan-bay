@@ -194,28 +194,29 @@
 ; runs when the server starts
 (defn -main [& args]
   (let [
-        config {:page-dir "./bedrock/"}
-        port (if (nil? (:post config)) 4545 (:port config))
+        page-dir
+        (->  (drop-while nil? [(first *command-line-args*) (first args) "./bedrock/"]) first)
+
+
+        port
+        (-> (drop-while nil? [(second *command-line-args*) (second args) "4545"]) first (Integer/parseInt))
+
         ]
-    (print "Welcome to Cardigan Bay")
-    (cond
-      (nil? (:page-dir config))
-      (do
-        (println "Please give a directory where your pages are stored, as the page-dir in config.edn ")
-        (System/exit 0))
-      :otherwise
-      (do
-        (pagestore/update-pagedir! (-> config :page-dir))
-        (println
-         (str "Cardigan Bay Started.
+    (println "Welcome to Cardigan Bay")
+
+
+    (pagestore/update-pagedir! page-dir)
+
+    (println
+     (str "Cardigan Bay Started.
 
 Page Directory is " (pagestore/cwd) "
 
 Port is " port))
-        (-> #'handler
-            (wrap-content-type)
-            (wrap-keyword-params)
-            (wrap-params)
-            (wrap-reload)
-            (wrap-resource "clj_ts")
-            (run-server {:port port}))))) )
+    (-> #'handler
+        (wrap-content-type)
+        (wrap-keyword-params)
+        (wrap-params)
+        (wrap-reload)
+        (wrap-resource "clj_ts")
+        (run-server {:port port}))) )
