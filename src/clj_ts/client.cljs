@@ -33,7 +33,6 @@
 ;; PageStore
 
 
-
 (defn load-page! [page-name new-past new-future]
   (let [lcpn (lower-case page-name)
 
@@ -127,11 +126,14 @@
 
 ;; RUN
 
-(go-new! "HelloWorld")
+(let [start-page
+      (.send XhrIo
+      "/startpage"
+      (fn [e]
+        (-> e .-target .getResponseText .toString go-new!)))])
 
 
 ;; Rendering Views
-
 
 (defn process-card [i card]
   (let [[type, data] (card->type-and-card card)]
@@ -232,13 +234,14 @@
 (defn one-card [card]
   (let [type (get card "delivered_type")
         data (get card "data")
-        dummy (js/console.log (str " == " type " == " data))
         inner-html
         (condp = type
           ":raw"
           (str "<pre>" data "</pre>")
           ":markdown"
           (card->html card)
+          ":html"
+          (str data)
           (str "UNKNOWN TYPE(" type ") " data))
         ]
     (js/console.log (pr-str card))
@@ -295,15 +298,19 @@
   [:div
    [:div {:class "headerbar"}
     [:div
+     [:div [nav-bar]]
      [:h2 (-> @db :current-page)
       [:span
        [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
-     [:div [nav-bar]]]
-    [main-container]
-    ]])
+     ]]
+   [main-container]])
 
 
-; tells reagent to begin rendering
+;; tells reagent to begin rendering
+
+
+
+
 (r/render-component [content]
                    (.querySelector js/document "#app"))
 

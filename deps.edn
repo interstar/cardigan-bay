@@ -49,7 +49,8 @@
     rum
     {:mvn/version "0.11.3",
      :exclusions [cljsjs/react cljsjs/react-dom]},
-    http-kit #:mvn{:version "2.3.0"},
+    ;http-kit #:mvn{:version "2.3.0"},
+    http-kit #:mvn{:version "2.4.0-alpha6"},
     ring #:mvn{:version "1.7.1"},
     edna
     {:mvn/version "1.6.0",

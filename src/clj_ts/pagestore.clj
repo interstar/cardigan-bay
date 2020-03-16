@@ -3,6 +3,7 @@
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clj-ts.logic :as ldb]
+            [clj-ts.embed :as embed]
 
             [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
             [com.walmartlabs.lacinia.schema :as schema]
@@ -127,6 +128,9 @@
 
       :system
       (system-card i data)
+
+      :embed
+      (package-card i type :html (embed/process data))
 
       ;; not recognised
       (package-card i type type data)

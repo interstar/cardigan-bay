@@ -24,6 +24,13 @@
 
 
 
+(def all-state
+  (atom {:start-page "HelloWorld"}))
+
+(defn set-start-page! [pagename]
+  (swap! all-state assoc :start-page pagename))
+
+;; Requests
 
 (defn page-request [request]
   (let [qs (:query-string request)
@@ -34,9 +41,6 @@
     {:p-name p-name :raw raw}))
 
 
-
-
-
 (defn render-page [p-name raw]
   (let [cards (string/split raw #"----")
         card #(str "<div class='card'>" (md/md-to-html-string %) "</div>")]
@@ -44,7 +48,6 @@
 
 (defn get-page [request]
   (let [{:keys [p-name raw]} (page-request request)]
-    (println "GET PAGE :: " p-name)
     {:status 200
      :headers {"Content-Type" "text/html"}
      :body (render-page p-name  raw)}
@@ -52,7 +55,6 @@
 
 (defn get-raw [request]
   (let [{:keys [p-name raw]} (page-request request)]
-    (println "GET RAW :: " p-name)
     {:status 200
      :headers {"Content-Type" "text/html"}
      :body raw}))
@@ -60,7 +62,7 @@
 (defn get-edn-cards [request]
   (let [{:keys [p-name raw]} (page-request request)
         cards (pagestore/raw->cards raw)]
-    (println "GET EDN :: " p-name)
+
 
     (pp/pprint cards)
     {:status 200
@@ -72,7 +74,6 @@
   (let [form-body (-> request :body .bytes slurp edn/read-string)
         p-name (:page form-body)
         body (:data form-body)]
-    (println "SAVE PAGE :: " p-name)
     (pagestore/write-page-to-file! p-name body)
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}))
 
@@ -85,7 +86,6 @@
 (defn get-flattened [request]
   (let [{:keys [p-name raw]} (page-request request)
         cards (apply str (map card->raw (pagestore/raw->cards raw)))]
-    (println "GET FLATTENED :: " p-name)
 
     (pp/pprint cards)
     {:status 200
@@ -124,6 +124,10 @@
      :body (str "<pre>" (with-out-str (pp/pprint (pagestore/raw-db))) "</pre>" )}))
 
 
+(defn get-start-page [request]
+  {:status 200
+   :headers {"Content-Type" "text/text"}
+   :body (-> @all-state :start-page)})
 
 ;; GraphQL handler
 
@@ -161,10 +165,13 @@
 
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
-  (let []
+  (let [m (re-matches #"/view/(\S+)" uri)]
     (cond
 
-      (= uri "/clj_ts/view")
+      (= uri "/startpage")
+      (get-start-page request)
+
+      (= uri "/clj_ts/old")
       (get-page request)
 
 
@@ -177,6 +184,14 @@
 
       (= uri "/clj_ts/db")
       (raw-db request)
+
+      m
+      (let [pagename (-> m second )]
+        (do
+          (set-start-page! pagename)
+          {:status 303
+           :headers {"Location" "/index.html"}
+           }))
 
 
       :otherwise
