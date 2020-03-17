@@ -56,7 +56,10 @@
       :soundcloud
       (soundcloud data)
 
-      (str "Not recognised type:  " (:type data))
+      :oembed
+      (generic-oembed (:api data) (:url data))
+
+      (str "Not recognised type:  " (:type data) )
       )
  )
 )

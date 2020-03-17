@@ -139,8 +139,9 @@
 (defn transclude [i data]
   (let [{:keys [from process]} (read-string data)
         raw (get-page-from-file from)
-        return-type (if (nil? process) :markdown process)]
-       (package-card i :transclude return-type raw)
+        return-type (if (nil? process) :markdown process)
+        head (str "*Transcluded from [[" from "]]* \n")]
+    (package-card i :transclude return-type (str head raw))
     ))
 
 (defn process-card [i card]

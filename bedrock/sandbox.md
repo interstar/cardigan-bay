@@ -4,29 +4,14 @@ This is a place to play with wiki notation.
 :transclude 
 
 {:from "HelloWorld"}
+ 
+
 
 ----
-:embed
 
-{:type :youtube
- :url "https://www.youtube.com/watch?v=PsS29rEy07Y"}
+[[EmbeddingExamples]]
 
-----
-:embed
 
-{:type :soundcloud
- :url "https://soundcloud.com/mentufacturer/sets/muerck"}
-
-----
-:embed
-
-{:type :bandcamp
- :id 3725429300
- :url "http://mentufacturer.bandcamp.com/album/muerck"
- :description "Muerck by Mentufacturer"
-}
-
-----
 
 [[EvalExamples]]
 
