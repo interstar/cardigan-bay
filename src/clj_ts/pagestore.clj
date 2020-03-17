@@ -33,9 +33,29 @@
 (defn regenerate-db! []
   (ldb/regenerate-db! (-> @page-store-state :page-dir)) )
 
+
+
+;; RecentChanges
+;; We store recent-changes in a page called "systemrecentchanges".
+
+(defn update-recent-changes! [pagename]
+  (let [pn "systemrecentchanges"
+        fnm (page-name-to-file-name pn)
+        rcc (get-page-from-file pn)
+        filter-step (fn [xs] (filter #(not (string/includes? % (str "[[" pagename "]]"))) xs ) )
+        curlist (-> rcc string/split-lines filter-step )
+        newlist (cons
+                 (str "* [[" pagename "]] (" (.toString (java.util.Date.)) ")")
+                 curlist
+                 )
+        ]
+    (spit fnm (string/join "\n" (take 30 newlist)))))
+
+
 (defn write-page-to-file! [p-name body]
   (do
     (spit (page-name-to-file-name p-name) body)
+    (update-recent-changes! p-name)
     (regenerate-db!)
     ))
 
@@ -115,6 +135,14 @@
       (package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
     ))
 
+
+(defn transclude [i data]
+  (let [{:keys [from process]} (read-string data)
+        raw (get-page-from-file from)
+        return-type (if (nil? process) :markdown process)]
+       (package-card i :transclude return-type raw)
+    ))
+
 (defn process-card [i card]
   (let [[type, data] (card->type-and-card card)]
     (condp = type
@@ -131,6 +159,9 @@
 
       :embed
       (package-card i type :html (embed/process data))
+
+      :transclude
+      (transclude i data)
 
       ;; not recognised
       (package-card i type type data)

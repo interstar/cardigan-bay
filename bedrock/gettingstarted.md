@@ -2,7 +2,7 @@
 The default markup is [Markdown](https://daringfireball.net/projects/markdown/syntax)
 
 
-However Cardigan Bay tweaks it in the following ways :
+However CardiganBay tweaks it in the following ways :
 
 Pages are a sequence of sections called "cards". The four horizontal dashes markup (ie. -<!-->-<!-->-<!-->-) on a line by themselves, has been re-purposed as the "card separator".
 
@@ -20,7 +20,7 @@ Here's another separator before a new card on a new theme ...
 
 ### Card Types
 
-Each card in Cardigan Bay has a type, which tells us what its data is meant to represent, and how to render it. 
+Each card in CardiganBay has a type, which tells us what its data is meant to represent, and how to render it. 
 
 Cards which do not specify their type explicitly are taken to be of the :markdown type. And are therefore rendered on the client as Markdown.
 

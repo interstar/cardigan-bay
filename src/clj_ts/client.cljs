@@ -162,7 +162,9 @@
        (let [editing (-> @db :editing)]
          [:div {:class "navbar"}
           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
-         " || "
+          " || "
+          [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
+          " || "
           [:span {:on-click (fn [] (go-new! "AllPages"))} "AllPages"]
           " || "
           [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]

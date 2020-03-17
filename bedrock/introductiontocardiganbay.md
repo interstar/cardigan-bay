@@ -1,4 +1,4 @@
-CardiganBay is a new wiki-engine with a number of interesting features.
+[[CardiganBay]] is a new wiki-engine with a number of interesting features.
 
 Some of these are "classics" from the very dawn of wiki.
 
@@ -21,7 +21,7 @@ I need a new wiki-engine that can
 * Be a platform to explore new ideas and functionalities for wiki
 * Be a platform not simply for writing and capturing information, but for making sense of, and finding meaning in it.
 * Be a platform to help me DO things as well as write about them
-
+ 
 ----
 
 ### Goals
@@ -64,13 +64,13 @@ The wiki-engine should
 
 ### Technical Decisions
 
-* The wiki is a Single Page App written in Clojure / ClojureScript. 
-* It uses Reagent (the ClojureScript wrapper for React) as its client-side framework.
-* Communication between client and server is mainly through GraphQL
+* The wiki is a Single Page App written in [Clojure](https://clojure.org/) / ClojureScript. 
+* It uses [Reagent](https://reagent-project.github.io/) (the ClojureScript wrapper for React) as its client-side framework.
+* Communication between client and server is mainly through [GraphQL](https://graphql.org/)
 * Markdown is the default markup type
 * By default cards of other types that need to contain some structured data will use EDN
-* Where possible we embedding uses oEmbed.
+* Where possible we embedding uses [oEmbed](https://oembed.com/).
 * Pages are stored as simple text files in the file system
-* Assume git for managing page history / version control, rather than writing my own.
-* We capture information about the collection of pages in a Core.Logic database. And, as much as possible, use core.logic logic programming to query and reason about it. Eg. to find broken links, orphaned pages etc.
+* Assume [git](https://git-scm.com/) for managing page history / version control, rather than writing my own.
+* We capture information about the collection of pages in a [Core.Logic](https://github.com/clojure/core.logic) database. And, as much as possible, use core.logic logic programming to query and reason about it. Eg. to find broken links, orphaned pages etc.
 * As a Clojure program, the wiki engine runs on the Java Virtual Machine and can be distributed as an UberJAR file, without the need for potential users to install or understand any dependencies.
