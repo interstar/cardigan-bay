@@ -141,3 +141,13 @@ The plan is, though, that at some point, in the not too distant future, I'll mov
 I *like* Python. But I like Clojure a whole lot more. And the more I get into it, (and writing this has helped me with that) the more I see Clojure as the language I want to be using for most things in future. I don't need a legacy Python wiki code-base to be responsible for. And the world sure as hell doesn't need A.N.Other Python wiki-engine. Certainly not mine.
 
 Whereas it feels like in Clojure I might yet be able to push my vision of wiki forward sufficiently to actually make something new and interesting.
+
+*What was that you were saying about usage on mobile devices?*
+
+Sorry to disappoint you, but right now there is no CardiganBay app. for Android. Possibly, because it's all Clojure (and therefore Java) there will be. Or maybe ClojureScript and ReactNative is the future. Long term there's an aspiration towards that but it's not in the immediate future.
+
+**However** I am having success running normal CardiganBay on Ubuntu on the [UserLand VM](https://www.fossmint.com/userland-run-linux-distros-on-android/) on my Android tablet. And by success, I don't just mean that it kind of works. I spent [several weeks travelling](http://sdi.thoughtstorms.info/?p=1392) in January and was actually developing the software (with the CLI tools, and running Emacs all in the UserLand app on the tablet. While simultaneously using CardiganBay through the tablet's normal Chrome browser. With an 8" tablet, and external keyboard this was actually a pleasant experience, as it acts like a very small laptop / netbook. Even without the keyboard, I'm finding CardiganBay *usable* on the tablet. Though it's not as comfortable or slick an experience as it is writing in a well designed Android app.
+
+The bottom line is that, even if this isn't the greatest user experience, for people who know about Linux, wiki and Clojure, this is totally usable right now. 
+
+(Just use git when you get home to sync your work back into your laptop based notebook.)
