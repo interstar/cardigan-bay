@@ -1,5 +1,9 @@
 This is a place to play with wiki notation.
 
+----
+:transclude 
+
+{:from "HelloWorld"}
 
 ----
 :embed
