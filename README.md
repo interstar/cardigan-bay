@@ -125,3 +125,19 @@ The core.logic stuff happens in src/clj_ts/pagestore.clj If you want to capture 
 I use my own [fsquery](https://github.com/interstar/FSQuery-CLJ) library to crawl the file system when building the logic db. 
 
 The convention for using logic queries is that calls to them are embedded in :system type cards. (See pagestore/system-card to see how to add a new system command. 
+
+## Final Comments
+
+*Does CardiganBay deprecate [Project ThoughtStorms](https://github.com/interstar/ThoughtStorms)?*
+
+**Pretty much, yes.**
+
+Project ThoughtStorms is the code behind ThoughtStorms Wiki. The last version was the custom engine I wrote back in 2016 using Python.
+
+CardiganBay is, indeed, intended as the new engine to sit behind ThoughtStorms wiki. However it is not quite ready nor an exact clone. So ThoughtStorms is still running on that Python server at the moment.
+
+The plan is, though, that at some point, in the not too distant future, I'll move ThoughtStorms to this new wiki engine. At which point I don't plan to do any further work on that Python code-base nor on the Python libraries that underpin it.
+
+I *like* Python. But I like Clojure a whole lot more. And the more I get into it, (and writing this has helped me with that) the more I see Clojure as the language I want to be using for most things in future. I don't need a legacy Python wiki code-base to be responsible for. And the world sure as hell doesn't need A.N.Other Python wiki-engine. Certainly not mine.
+
+Whereas it feels like in Clojure I might yet be able to push my vision of wiki forward sufficiently to actually make something new and interesting.
