@@ -108,25 +108,25 @@ java -jar PATH/TO/clj-ts-0.1.0-SNAPSHOT-standalone.jar PATH/TO/PAGES PORT
 
 ### Hacker Roadmap
 
-Want to change the look of CardiganBay?
+**Want to change the look of CardiganBay?**
 
-All the css is in /resources/clj_ts/main.css
+All the css is in `/resources/clj_ts/main.css`
 
-All the layout / widgets of the UI are defined (in hiccup format) in src/clj_ts/client.cljs.core
+All the layout / widgets of the UI are defined (in hiccup format) in `src/clj_ts/client.cljs`
 
-Most of the work on managing pages, including parsing them into cards and handling the rendering of cards is in src/clj_ts/pagestore.clj 
+**Most of the work on managing pages**, including parsing them into cards and handling the rendering of cards is in `src/clj_ts/pagestore.clj` 
 
-If you want to creat a new card type or edit how a particular type is being rendered, have a look in pagestore.clj
+**If you want to creat a new card type** or edit how a particular type is being rendered, have a look in `pagestore.clj` too.
 
 Cards that are not Markdown or raw-text are usually represented with their type, and a small map in EDN format, with the required parameters.
 
-The core.logic stuff happens in src/clj_ts/pagestore.clj If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
+**The core.logic stuff** happens in `src/clj_ts/pagestore.clj` If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
 
 I use my own [fsquery](https://github.com/interstar/FSQuery-CLJ) library to crawl the file system when building the logic db. 
 
 The convention for using logic queries is that calls to them are embedded in :system type cards. (See pagestore/system-card to see how to add a new system command. 
 
-## Final Comments
+## Final Comments / Queries
 
 *Does CardiganBay deprecate [Project ThoughtStorms](https://github.com/interstar/ThoughtStorms)?*
 
