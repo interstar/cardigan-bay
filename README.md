@@ -43,7 +43,7 @@ I need a new wiki-engine that can
 * Pages are stored as simple text files in the file system
 * Assume [git](https://git-scm.com/) for managing page history / version control, rather than writing our own.
 * We capture information about the collection of pages in a [Core.Logic](https://github.com/clojure/core.logic) database. And, as much as possible, use core.logic logic programming to query and reason about it. Eg. to find broken links, orphaned pages etc.
-* As a Clojure program, the wiki engine runs on the Java Virtual Machine and can be distributed as n [UberJAR](https://stackoverflow.com/questions/11947037/what-is-an-uber-jar) file, without the need for potential users to install or understand any dependencies.
+* As a Clojure program, the wiki engine runs on the Java Virtual Machine and can be distributed as an [UberJAR](https://stackoverflow.com/questions/11947037/what-is-an-uber-jar) file, without the need for potential users to install or understand any dependencies.
 
 ## Getting Started.
 
@@ -120,7 +120,7 @@ All the layout / widgets of the UI are defined (in hiccup format) in `src/clj_ts
 
 Cards that are not Markdown or raw-text are usually represented with their type, and a small map in EDN format, with the required parameters.
 
-**The core.logic stuff** happens in `src/clj_ts/pagestore.clj` If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
+**The core.logic stuff** happens in `src/clj_ts/logic.clj` If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
 
 I use my own [fsquery](https://github.com/interstar/FSQuery-CLJ) library to crawl the file system when building the logic db. 
 
