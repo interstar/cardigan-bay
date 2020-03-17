@@ -128,7 +128,7 @@ The convention for using logic queries is that calls to them are embedded in :sy
 
 ## Final Comments / Queries
 
-*Does CardiganBay deprecate [Project ThoughtStorms](https://github.com/interstar/ThoughtStorms)?*
+#### *Does CardiganBay deprecate [Project ThoughtStorms](https://github.com/interstar/ThoughtStorms)?*
 
 **Pretty much, yes.**
 
@@ -142,7 +142,7 @@ I *like* Python. But I like Clojure a whole lot more. And the more I get into it
 
 Whereas it feels like in Clojure I might yet be able to push my vision of wiki forward sufficiently to actually make something new and interesting.
 
-*What was that you were saying about usage on mobile devices?*
+#### *What was that you were saying about usage on mobile devices?*
 
 Sorry to disappoint you, but right now there is no CardiganBay app. for Android. Possibly, because it's all Clojure (and therefore Java) there will be. Or maybe ClojureScript and ReactNative is the future. Long term there's an aspiration towards that but it's not in the immediate future.
 
