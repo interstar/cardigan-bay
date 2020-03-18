@@ -45,7 +45,29 @@ I need a new wiki-engine that can
 * We capture information about the collection of pages in a [Core.Logic](https://github.com/clojure/core.logic) database. And, as much as possible, use core.logic logic programming to query and reason about it. Eg. to find broken links, orphaned pages etc.
 * As a Clojure program, the wiki engine runs on the Java Virtual Machine and can be distributed as an [UberJAR](https://stackoverflow.com/questions/11947037/what-is-an-uber-jar) file, without the need for potential users to install or understand any dependencies.
 
-## Getting Started.
+
+## Quick Start (for Users)
+
+
+Make sure you have Java on your machine. 
+
+Go to https://github.com/interstar/cardigan-bay/tree/master/deploy and download the zip file. 
+
+Unzip it.
+
+```
+cd cardigan
+./go.sh
+```
+
+This should run the jar file. Using the default pages in `bedrock`.
+
+Then go to http://localhost:4545/index.html in your browser.
+
+You are now looking at and can edit your wiki.
+
+
+## Getting Started (as Developer)
 
 CardiganBay is a Clojure project, originally kickstarted in [LightMod](https://sekao.net/lightmod/) but now compiled and run using the CLI tools.
 
