@@ -12,16 +12,19 @@
         @(http/post url {:form-params params})]
     (if error
       (str "Failed, exception: " error)
-
       (do
         (println "HTTP GET success: " status)
         body))
     ))
 
 (defn generic-oembed [oembed url]
-  (str (->
-        (http-call oembed {:format "json" :url url })
-        json/read-str (get "html"))))
+  (let [call (http-call oembed {:format "json" :url url }) ]
+    (try
+      (str (->
+            call
+            json/read-str (get "html")))
+      (catch Exception e
+        (str (.getMessage e) " " oembed " " url "  " (str call))))))
 
 (defn youtube [data]
   (let [url (:url data)
