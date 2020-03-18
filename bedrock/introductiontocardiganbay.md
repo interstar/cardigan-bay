@@ -14,13 +14,13 @@ Not everything here is currently implemented, but everything is being planned.
 
 
 I need a new wiki-engine that can 
-* Be the engine to manage and maintain my long-running, publicly facing [ThoughtStormsWiki](http://thoughtstorms.info/view/ThoughtStorms).
+* Be the engine to manage and maintain my long-running, publicly facing, and somewhat in need of cleaning up [ThoughtStormsWiki](http://thoughtstorms.info/view/ThoughtStorms).
 * Be an engine to manage a couple of smaller, more specific wikis and sites, with some specialized media types embedded in pages. 
 * Be the engine to run my own private notebook of ideas. Replacing my long defunct [SdiDesk](http://thoughtstorms.info/view/SdiDesk) and more recent [OutlinerWithWikiLinking](http://thoughtstorms.info/view/OutlinerWithWikiLinking)
-* Be something I can use when travelling to work on this notebook even when away from my main machine or offline.
-* Be a platform to explore new ideas and functionalities for wiki
+* Be something I can use when travelling. To work on these notebooks even when I'm away from my main machine or off-line.
+* Be a platform to explore new ideas and functionalities for wiki.
 * Be a platform not simply for writing and capturing information, but for making sense of, and finding meaning in it.
-* Be a platform to help me DO things as well as write about them
+* Be a platform to help me DO things as well as write about them.
  
 ----
 
@@ -60,17 +60,18 @@ The wiki-engine should
 * **Unlike SFW** we rely on external tools such as Git to manage and merge forks rather than trying to do this ourselves.
 * The wiki engine is a personal tool rather than intended for a public server. The assumption is that public facing sites will be exported as either completely flat sites, or minimal engines without editing capabilities.
 
-----
+
 
 ### Technical Decisions
 
 * The wiki is a Single Page App written in [Clojure](https://clojure.org/) / ClojureScript. 
 * It uses [Reagent](https://reagent-project.github.io/) (the ClojureScript wrapper for React) as its client-side framework.
+* All UI components are therefore written in [hiccup format](https://github.com/weavejester/hiccup)
 * Communication between client and server is mainly through [GraphQL](https://graphql.org/)
-* Markdown is the default markup type
-* By default cards of other types that need to contain some structured data will use EDN
-* Where possible we embedding uses [oEmbed](https://oembed.com/).
+* [Markdown](https://daringfireball.net/projects/markdown/) is the default markup type
+* By default cards of other types that need to contain some structured data will use [EDN](https://github.com/edn-format/edn)
+* Where possible embedding uses [oembed](https://oembed.com/).
 * Pages are stored as simple text files in the file system
-* Assume [git](https://git-scm.com/) for managing page history / version control, rather than writing my own.
+* Assume [git](https://git-scm.com/) for managing page history / version control, rather than writing our own.
 * We capture information about the collection of pages in a [Core.Logic](https://github.com/clojure/core.logic) database. And, as much as possible, use core.logic logic programming to query and reason about it. Eg. to find broken links, orphaned pages etc.
 * As a Clojure program, the wiki engine runs on the Java Virtual Machine and can be distributed as an UberJAR file, without the need for potential users to install or understand any dependencies.
