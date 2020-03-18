@@ -46,6 +46,17 @@
   (str "<div class='bandcamp-embedded'><iframe style='border: 0; width: 550px; height: 555px;' src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/' seamless><a href='" url "'>" description "</a></iframe></div>")
   )
 
+(defn twitter [data]
+  (let [url (:url data)
+        api (str  "https://publish.twitter.com/oembed?url=" url)
+        {:keys [status headers body error]}
+        @(http/get api)]
+    (if error
+      (str "Failed, exception: " error)
+      (do
+        (println "HTTP GET success: " status)
+        (-> body json/read-str (get "html"))))
+    ))
 
 (defn process [s]
   (let [data (read-string s)]
@@ -58,6 +69,9 @@
 
       :soundcloud
       (soundcloud data)
+
+      :twitter
+      (twitter data)
 
       :oembed
       (generic-oembed (:api data) (:url data))
