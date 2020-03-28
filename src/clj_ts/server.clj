@@ -161,10 +161,7 @@
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body (let [query (extract-query request)
-               cc (println "CCC " query)
                result (execute pagestore/pagestore-schema query nil nil)]
-           (println "DDD " )
-           (pp/pprint result)
            (json/write-str result))})
 
 
