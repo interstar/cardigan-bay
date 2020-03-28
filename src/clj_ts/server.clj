@@ -4,7 +4,7 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
 
-
+            [clojure.tools.cli :refer [parse-opts]]
             [clj-ts.pagestore :as pagestore]
 
             [markdown.core :as md]
@@ -25,10 +25,14 @@
 
 
 (def all-state
-  (atom {:start-page "HelloWorld"}))
+  (atom {:start-page "HelloWorld"
+         }))
+
+(defn set-state! [key val]
+  (swap! all-state assoc key val))
 
 (defn set-start-page! [pagename]
-  (swap! all-state assoc :start-page pagename))
+  (set-state! :start-page pagename))
 
 ;; Requests
 
@@ -159,7 +163,8 @@
    :body (let [query (extract-query request)
                cc (println "CCC " query)
                result (execute pagestore/pagestore-schema query nil nil)]
-           (println "DDD " result)
+           (println "DDD " )
+           (pp/pprint result)
            (json/write-str result))})
 
 
@@ -185,6 +190,11 @@
       (= uri "/clj_ts/db")
       (raw-db request)
 
+      (= uri "/rss/recentchanges")
+      {:status 200
+       :headers {"Content-Type" "application/rss+xml"}
+       :body (pagestore/recent-changes "http://localhost:4545/")}
+
       m
       (let [pagename (-> m second )]
         (do
@@ -206,28 +216,57 @@
 
 
 
+;; Parse command line args
+(def cli-options
+ [
+  ["-p" "--port PORT" "Port number"
+   :default 4545
+   :parse-fn #(Integer/parseInt %)
+   :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+  ["-d" "--directory DIR" "Pages directory"
+   :default "./bedrock/"
+   :parse-fn str
+   ]
+  ["-n" "--name NAME" "Wiki Name"
+   :default "Yet Another CardiganBay Wiki"
+   :parse-fn str]
+  ["-s" "--site" "Site Root URL "
+   :default "/"
+   ]
+  ]
+
+  )
+
+
 ; runs when the server starts
 (defn -main [& args]
   (let [
-        page-dir
-        (->  (drop-while nil? [(first *command-line-args*) (first args) "./bedrock/"]) first)
+        as (if *command-line-args* *command-line-args* args)
+        xs (parse-opts as cli-options)
 
+        opts (get xs :options)
 
-        port
-        (-> (drop-while nil? [(second *command-line-args*) (second args) "4545"]) first (Integer/parseInt))
-
-        ]
+        port (:port opts)
+        page-dir (:directory opts)
+        name (:name opts)
+        site-root (:site opts)]
     (println "Welcome to Cardigan Bay")
 
-
     (pagestore/update-pagedir! page-dir)
+    (pagestore/set-site-url! site-root)
+    (pagestore/set-wiki-name! name)
 
     (println
      (str "Cardigan Bay Started.
 
 Page Directory is " (pagestore/cwd) "
 
-Port is " port))
+Port is " port "
+
+Wiki Name is " name "
+
+Site URL is " site-root))
+
     (-> #'handler
         (wrap-content-type)
         (wrap-keyword-params)
