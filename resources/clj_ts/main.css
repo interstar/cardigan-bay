@@ -41,6 +41,10 @@ body {
 
 }
 
+.navbar span {
+      cursor: pointer;
+}
+
 .wikiname {color: #555555; text-align: right;}
 
 .headerbar {
