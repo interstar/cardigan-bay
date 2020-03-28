@@ -1,7 +1,8 @@
 {:enums
  {:cardtype
   {:description "A type that is attached to each card"
-   :values [:RAW :MARKDOWN :CALCULATED]}}
+   :values [:raw :markdown]}}
+
 
  :objects
  {:Card
@@ -18,13 +19,16 @@
   {:description "A page always has a representation whose body is nothing but a string of plaintext"
    :fields
    {:page_name {:type String}
-    :body {:type String}}}
+    :body {:type String}}
+    :boo {:type String}}
 
   :Page
   {:description "A Page is a named page within the wiki. It is made of a series of cards"
    :fields
    {:page_name {:type String}
     :cards {:type (list :Card)}
+    :wiki_name {:type String}
+    :site_url {:type String}
     :editable {:type Boolean} }}}
 
 

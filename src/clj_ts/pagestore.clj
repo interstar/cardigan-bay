@@ -8,19 +8,32 @@
             [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
             [com.walmartlabs.lacinia.schema :as schema]
 
+            [clj-rss.core :as rss]
+
             [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
             ))
 
 
-
-
-
 (def page-store-state
-  (atom {:page-dir "./bedrock/"}))
+  (atom {:page-dir "./bedrock/"
+         :wiki-name "Yet Another CardiganBay Wiki"
+         :site-url "/"
+         }))
+
+(defn set-state! [key val]
+  (swap! page-store-state assoc key val))
+
 
 (defn page-name-to-file-name [page-name]
   (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
     (-> @page-store-state :page-dir mkname)))
+
+
+(defn set-wiki-name! [wname]
+  (set-state! :wiki-name wname))
+
+(defn set-site-url! [url]
+  (set-state! :site-url url))
 
 
 (defn page-exists? [p-name]
@@ -66,8 +79,6 @@
 
 
 (defn cwd [] (-> @page-store-state :page-dir))
-
-
 
 
 
@@ -131,6 +142,14 @@
       (ldb-query->mdlist-card
        i (orphans) :orphanpages item1)
 
+      :about
+      (package-card i :system :markdown
+                    (str "### System Information
+
+**Wiki Name**,, " (-> @page-store-state :wiki-name  )  "
+**PageStore Directory** (relative to code) ,, " (->@page-store-state :page-dir) "
+**Site Url Root** ,, " (->@page-store-state :site-url) ))
+
       ;; not recognised
       (package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
     ))
@@ -179,27 +198,63 @@
   (let [{:keys [page_name]} arguments]
     (if (page-exists? page_name)
       {:page_name page_name
+       :boo "BOOO!"
        :body (get-page-from-file page_name)}
       {:page_name page_name
        :body "PAGE DOES NOT EXIST"})))
 
 
 (defn resolve-cooked-page [context arguments value]
-  (let [{:keys [page_name]} arguments]
+  (let [{:keys [page_name]} arguments
+        wiki-name (-> @page-store-state :wiki-name)
+        site-url (-> @page-store-state :site-url)]
+    (println "TYTYTY " wiki-name " && " site-url)
+    (println @page-store-state)
     (if (page-exists? page_name)
       {:page_name page_name
-       :cards (-> page_name get-page-from-file raw->cards)}
+       :wiki_name wiki-name
+       :site_url site-url
+       :cards (-> page_name get-page-from-file raw->cards)
+       :editable true}
       {:page_name page_name
-       :cards (raw->cards "PAGE DOES NOT EXIST")})))
+       :wiki_name wiki-name
+       :site_url site-url
+       :editable true
+       :cards (raw->cards "PAGE DOES NOT EXIST")
+       })))
 
+
+(defn P [x label] (do (println (str label " :: " x)) x))
 
 ;; [schema-file (io/file (System/getProperty "user.dir") "clj_ts/gql_schema.edn")]
 (def pagestore-schema
   (-> "gql_schema.edn"
       io/resource
       slurp
+
       edn/read-string
+
+
       (attach-resolvers {:resolve-raw-page resolve-raw-page
                          :resolve-cooked-page resolve-cooked-page
                          })
       schema/compile))
+
+
+;; RecentChanges as RSS
+
+(defn recent-changes [server-url]
+  (let [make-link (fn [s]
+                    (let [m (re-matches #"\* \[\[(\S+)\]\] (\(.+\))" s)
+                          [pname date] [(second m) (nth m 2)]]
+                      {:title (str pname " changed on " date)
+                       :link (str server-url "/view/" pname)}
+                      ))
+        rc (-> (get-page-from-file "systemrecentchanges")
+               string/split-lines
+               (#(map make-link %)))]
+    (rss/channel-xml {:title "RecentChanges"
+                      :link server-url
+                      :description "Recent Changes in CardiganBay Wiki"}
+                     rc
+                     )))

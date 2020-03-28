@@ -27,7 +27,9 @@
                :cooked []
                :editing false
                :past ["HelloWorld"]
-               :future []}))
+               :future []
+               :wiki-name "Wiki Name"
+               :site-url "Site URL"}))
 
 
 ;; PageStore
@@ -43,6 +45,8 @@
   }
   cooked_page(page_name:  \\\"" lcpn "\\\") {
     page_name
+    wiki_name
+    site_url
     cards {
       type
       id
@@ -57,12 +61,18 @@
            (fn [e]
              (let [status (-> e .-target .getStatusText)
                    edn (-> e .-target .getResponseText .toString
-                            (#(.parse js/JSON %)) js->clj )
-                   raw (-> edn (get "data") (get "raw_page") (get "body"))
-                   cooked (-> edn (get "data") (get "cooked_page") (get "cards"))
+                           (#(.parse js/JSON %)) js->clj )
+                   data (-> edn (get "data"))
+                   raw (-> data (get "raw_page") (get "body"))
+                   cooked (-> data (get "cooked_page") (get "cards"))
+                   site-url (-> data (get "cooked_page") (get "site_url"))
+                   wiki-name (-> data (get "cooked_page") (get "wiki_name"))
                    ]
+
                (swap! db assoc
                       :current-page page-name
+                      :site-url site-url
+                      :wiki-name wiki-name
                       :raw  raw
                       :cooked cooked
                       :past new-past
@@ -163,19 +173,12 @@
          [:div {:class "navbar"}
           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
           " || "
-          [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
+          [:span {:on-click (fn [] (go-new! "AboutThisWiki"))} "AboutThisWiki"]
           " || "
-          [:span {:on-click (fn [] (go-new! "AllPages"))} "AllPages"]
+          [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
           " || "
           [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]
           " || "
-          [:span {:on-click (fn [] (go-new! "AllLinks"))} "AllLinks"]
-          " || "
-          [:span {:on-click (fn [] (go-new! "BrokenLinks"))} "BrokenLinks"]
-          " || "
-          [:span {:on-click (fn [] (go-new! "OrphanPages"))} "OrphanPages"]
-
-          " ||| "
           [:button
            {:class "big-btn"
             :on-click (fn [] (back!))} "<"]
@@ -246,7 +249,7 @@
           (str data)
           (str "UNKNOWN TYPE(" type ") " data))
         ]
-    (js/console.log (pr-str card))
+    ;;(js/console.log (pr-str card))
 
     [:div
      [:div
