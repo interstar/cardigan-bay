@@ -20,7 +20,7 @@
    :fields
    {:page_name {:type String}
     :body {:type String}}
-    :boo {:type String}}
+   }
 
   :Page
   {:description "A Page is a named page within the wiki. It is made of a series of cards"

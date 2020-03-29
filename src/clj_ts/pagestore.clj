@@ -24,10 +24,14 @@
   (swap! page-store-state assoc key val))
 
 
-(defn page-name-to-file-name [page-name]
+(defn page-name->file-name [page-name]
   (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
     (-> @page-store-state :page-dir mkname)))
 
+
+(defn page-name->url [page-name]
+  (string/replace (str (-> @page-store-state :site-url) "/view/" page-name) #"\/\/" "/")
+  )
 
 (defn set-wiki-name! [wname]
   (set-state! :wiki-name wname))
@@ -37,10 +41,10 @@
 
 
 (defn page-exists? [p-name]
-  (.exists (io/file (page-name-to-file-name p-name))))
+  (.exists (io/file (page-name->file-name p-name))))
 
 (defn get-page-from-file [p-name]
-  (slurp (page-name-to-file-name p-name)))
+  (slurp (page-name->file-name p-name)))
 
 
 (defn regenerate-db! []
@@ -53,7 +57,7 @@
 
 (defn update-recent-changes! [pagename]
   (let [pn "systemrecentchanges"
-        fnm (page-name-to-file-name pn)
+        fnm (page-name->file-name pn)
         rcc (get-page-from-file pn)
         filter-step (fn [xs] (filter #(not (string/includes? % (str "[[" pagename "]]"))) xs ) )
         curlist (-> rcc string/split-lines filter-step )
@@ -67,7 +71,7 @@
 
 (defn write-page-to-file! [p-name body]
   (do
-    (spit (page-name-to-file-name p-name) body)
+    (spit (page-name->file-name p-name) body)
     (update-recent-changes! p-name)
     (regenerate-db!)
     ))
@@ -208,8 +212,7 @@
   (let [{:keys [page_name]} arguments
         wiki-name (-> @page-store-state :wiki-name)
         site-url (-> @page-store-state :site-url)]
-    (println "TYTYTY " wiki-name " && " site-url)
-    (println @page-store-state)
+
     (if (page-exists? page_name)
       {:page_name page_name
        :wiki_name wiki-name
@@ -243,18 +246,18 @@
 
 ;; RecentChanges as RSS
 
-(defn recent-changes [server-url]
+(defn rss-recent-changes []
   (let [make-link (fn [s]
                     (let [m (re-matches #"\* \[\[(\S+)\]\] (\(.+\))" s)
                           [pname date] [(second m) (nth m 2)]]
                       {:title (str pname " changed on " date)
-                       :link (str server-url "/view/" pname)}
+                       :link (page-name->url pname)}
                       ))
         rc (-> (get-page-from-file "systemrecentchanges")
                string/split-lines
                (#(map make-link %)))]
     (rss/channel-xml {:title "RecentChanges"
-                      :link server-url
+                      :link (-> @page-store-state :site-url)
                       :description "Recent Changes in CardiganBay Wiki"}
                      rc
                      )))

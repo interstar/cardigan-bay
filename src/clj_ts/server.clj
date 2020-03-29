@@ -190,7 +190,7 @@
       (= uri "/rss/recentchanges")
       {:status 200
        :headers {"Content-Type" "application/rss+xml"}
-       :body (pagestore/recent-changes "http://localhost:4545/")}
+       :body (pagestore/rss-recent-changes )}
 
       m
       (let [pagename (-> m second )]
@@ -227,8 +227,9 @@
   ["-n" "--name NAME" "Wiki Name"
    :default "Yet Another CardiganBay Wiki"
    :parse-fn str]
-  ["-s" "--site" "Site Root URL "
+  ["-s" "--site SITE" "Site Root URL "
    :default "/"
+   :parse-fn str
    ]
   ]
 

@@ -45,6 +45,8 @@ body {
       cursor: pointer;
 }
 
+.wikilink { cursor: pointer; }
+
 .wikiname {color: #555555; text-align: right;}
 
 .headerbar {
