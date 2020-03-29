@@ -9,35 +9,46 @@
             [com.walmartlabs.lacinia.schema :as schema]
 
             [clj-rss.core :as rss]
-
+            [fsquery.core :as fsquery]
+            [fsquery.fsnode :as fsnode]
             [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
             ))
 
+;; Diagnostic T
+(defn P [x label] (do (println (str label " :: " x)) x))
+
+;; State management
 
 (def page-store-state
   (atom {:page-dir "./bedrock/"
          :wiki-name "Yet Another CardiganBay Wiki"
          :site-url "/"
+         :git-repo "default"
          }))
 
 (defn set-state! [key val]
   (swap! page-store-state assoc key val))
 
 
-(defn page-name->file-name [page-name]
-  (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
-    (-> @page-store-state :page-dir mkname)))
-
-
-(defn page-name->url [page-name]
-  (string/replace (str (-> @page-store-state :site-url) "/view/" page-name) #"\/\/" "/")
-  )
-
 (defn set-wiki-name! [wname]
   (set-state! :wiki-name wname))
 
 (defn set-site-url! [url]
   (set-state! :site-url url))
+
+
+;; Basic functions
+
+(defn page-name->file-name [page-name]
+  (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
+    (-> @page-store-state :page-dir mkname)))
+
+
+(defn dedouble [s] (string/replace s #"\/\/" "/"))
+
+(defn page-name->url [page-name]
+  (dedouble (str (-> @page-store-state :site-url) "/view/" page-name))
+  )
 
 
 (defn page-exists? [p-name]
@@ -77,8 +88,10 @@
     ))
 
 (defn update-pagedir! [new-pd]
-  (do
+  (let [path (dedouble (str new-pd "/.git") )
+        git? (.exists (io/file path))]
     (swap! page-store-state assoc :page-dir new-pd)
+    (swap! page-store-state assoc :git-repo git?)
     (regenerate-db!)))
 
 
@@ -151,8 +164,9 @@
                     (str "### System Information
 
 **Wiki Name**,, " (-> @page-store-state :wiki-name  )  "
-**PageStore Directory** (relative to code) ,, " (->@page-store-state :page-dir) "
-**Site Url Root** ,, " (->@page-store-state :site-url) ))
+**PageStore Directory** (relative to code) ,, " (-> @page-store-state :page-dir) "
+**Is Git Repo?**  ,, " (-> @page-store-state :git-repo) "
+**Site Url Root** ,, " (-> @page-store-state :site-url) ))
 
       ;; not recognised
       (package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
@@ -227,7 +241,7 @@
        })))
 
 
-(defn P [x label] (do (println (str label " :: " x)) x))
+
 
 ;; [schema-file (io/file (System/getProperty "user.dir") "clj_ts/gql_schema.edn")]
 (def pagestore-schema
