@@ -30,5 +30,22 @@
       (is (nil? (common/find-card-by-hash cards "777")))
       (is (= 3 (count c2)))
       (is (= 22 (-> (common/find-card-by-hash c2 h2) :id)))
-      (is (= c3 cards))
-)))
+      (is (= c3 cards)))))
+
+(deftest double-bracket
+  (testing "Double bracket links"
+    (is (= (common/double-bracket-links "hello world") "hello world"))
+    (is (= (common/double-bracket-links "hello [[world]]") "hello <span class=\"wikilink\" data=\"world\">world</span>"))  ) )
+
+(deftest double-comma-table
+  (testing "Double comma table"
+    (is (= (common/double-comma-table "hello world") "hello world"))
+    (is (= (common/double-comma-table "hello,, world")
+           "<table class='double-comma-table'>
+<tr><td>hello</td><td> world</td></tr>
+</table>"))
+    (is (= (common/double-comma-table "hello\nteenage,,america")
+           "hello
+<table class='double-comma-table'>
+<tr><td>teenage</td><td>america</td></tr>
+</table>"))))
