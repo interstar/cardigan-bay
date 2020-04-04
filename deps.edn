@@ -2,7 +2,6 @@
  :aliases
 
  {
-
   :clj-kondo
   {:extra-deps {clj-kondo {:mvn/version "RELEASE"}}
    :main-opts ["-m" "clj-kondo.main"]}
@@ -16,6 +15,22 @@
     nightlight #:mvn{:version "RELEASE"},
     com.bhauman/figwheel-main #:mvn{:version "0.2.0"}},
    :main-opts ["dev.clj"]},
+
+
+
+  :test
+  {:extra-paths ["test"]
+   :extra-deps
+   {
+    com.cognitect/test-runner
+    {:git/url "https://github.com/cognitect-labs/test-runner.git"
+     :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
+    markdown-clj {:mvn/version "1.10.1"}
+    io.replikativ/hasch {:mvn/version "0.3.7"}
+    }
+   :main-opts ["-m" "cognitect.test-runner"]}
+
+
 
   :prod
   {:extra-deps
