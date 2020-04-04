@@ -6,6 +6,7 @@
 
             [clojure.tools.cli :refer [parse-opts]]
             [clj-ts.pagestore :as pagestore]
+            [clj-ts.common :as common]
 
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
@@ -15,7 +16,7 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
-            [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
+
 
             [com.walmartlabs.lacinia :refer [execute]]
             [clojure.data.json :as json]
@@ -82,14 +83,11 @@
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}))
 
 
-(defn card->raw [{:keys [id type data]}]
-  (if  (=  type :markdown)
-    (str "----\n" data)
-    (str "----\n" type "\n" data )))
+
 
 (defn get-flattened [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (apply str (map card->raw (pagestore/raw->cards raw)))]
+        cards (-> p-name pagestore/load->cards common/cards->raw )]
 
     (pp/pprint cards)
     {:status 200
