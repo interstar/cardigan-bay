@@ -12,6 +12,23 @@
       (is (= (:id c) 1))
       (is (= (:data c) "hello teenage america")))))
 
+(deftest raw-and-cards
+  (testing "raw to card two way conversion"
+    (let [r1 "hello teenage america"
+          [t1 d1] (common/raw-card->type-and-data r1)
+          r2 "
+:unusual
+hello teenage america"
+          [t2 d2] (common/raw-card->type-and-data r2)
+          c1 (common/package-card 1 t1 t1 d1)
+          c2 (common/package-card 2 t2 t2 d2)]
+      (is (= t1 :markdown))
+      (is (= d1 "hello teenage america"))
+      (is (= t2 :unusual))
+      (is (= d2 "\nhello teenage america"))
+      (is (= (common/card->raw c1) r1))
+      (is (= (common/card->raw c2) r2))
+      )))
 
 (deftest basic-search-and-replace
   (testing "Searching cards"
@@ -31,6 +48,20 @@
       (is (= 3 (count c2)))
       (is (= 22 (-> (common/find-card-by-hash c2 h2) :id)))
       (is (= c3 cards)))))
+
+(deftest cards-test
+  (testing "Cards"
+    (let [cards [(common/package-card 1 :markdown :boo "hello")
+                 (common/package-card 2 :a :b "teenage")
+                 (common/package-card 3 :a :b "america")]]
+      (is (= (common/cards->raw cards)
+             "hello
+----
+:a
+teenage
+----
+:a
+america")))))
 
 (deftest double-bracket
   (testing "Double bracket links"
