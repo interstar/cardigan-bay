@@ -11,7 +11,7 @@
             [clj-rss.core :as rss]
             [fsquery.core :as fsquery]
             [fsquery.fsnode :as fsnode]
-            [clj-ts.common :refer [package-card card->type-and-card card->html]  ]
+            [clj-ts.common :as common]
             ))
 
 ;; Diagnostic T
@@ -56,6 +56,8 @@
 
 (defn get-page-from-file [p-name]
   (slurp (page-name->file-name p-name)))
+
+
 
 
 (defn regenerate-db! []
@@ -131,7 +133,7 @@
 
 (defn ldb-query->mdlist-card [i result qname f]
   (let [items (apply str (map f result))]
-    (package-card i qname :markdown
+    (common/package-card i qname :markdown
                   (str "*" (count result) " items*\n\n" items ) )))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
@@ -160,7 +162,7 @@
        i (orphans) :orphanpages item1)
 
       :about
-      (package-card i :system :markdown
+      (common/package-card i :system :markdown
                     (str "### System Information
 
 **Wiki Name**,, " (-> @page-store-state :wiki-name  )  "
@@ -169,7 +171,7 @@
 **Site Url Root** ,, " (-> @page-store-state :site-url) ))
 
       ;; not recognised
-      (package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
+      (common/package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
     ))
 
 
@@ -178,36 +180,41 @@
         raw (get-page-from-file from)
         return-type (if (nil? process) :markdown process)
         head (str "*Transcluded from [[" from "]]* \n")]
-    (package-card i :transclude return-type (str head raw))
+    (common/package-card i :transclude return-type (str head raw))
     ))
 
 (defn process-card [i card]
-  (let [[type, data] (card->type-and-card card)]
+  (let [[type, data] (common/raw-card->type-and-data card)]
     (condp = type
-      :markdown (package-card i type :markdown data)
-      :raw (package-card i type :raw data)
+      :markdown (common/package-card i type :markdown data)
+      :raw (common/package-card i type :raw data)
       :evalraw
-      (package-card i type :raw (server-eval data))
+      (common/package-card i type :raw (server-eval data))
 
       :evalmd
-      (package-card i type :markdown (server-eval data))
+      (common/package-card i type :markdown (server-eval data))
 
       :system
       (system-card i data)
 
       :embed
-      (package-card i type :html (embed/process data))
+      (common/package-card i type :html (embed/process data))
 
       :transclude
       (transclude i data)
 
       ;; not recognised
-      (package-card i type type data)
+      (common/package-card i type type data)
       )))
 
 (defn raw->cards [raw]
   (let [cards (string/split  raw #"----")]
     (map process-card (iterate inc 0) cards)))
+
+(defn load->cards [page-name]
+  (-> page-name
+      get-page-from-file
+      raw->cards))
 
 
 ;; GraphQL resolvers
@@ -275,3 +282,32 @@
                       :description "Recent Changes in CardiganBay Wiki"}
                      rc
                      )))
+
+;; transforms on pages
+
+(defn append-card-to-page! [page-name type body]
+  (let [page-body (get-page-from-file page-name)
+        new-body (str page-body "----
+:" type "
+
+" body)]
+    (write-page-to-file! page-name new-body )))
+
+
+
+
+
+(defn find-card-by-hash [page-name hash]
+  (common/find-card-by-hash (load->cards) hash)
+)
+
+
+(defn append-to-card! [page-name hash extra]
+  (let [cards (-> (get-page-from-file page-name) raw->cards)
+        card (find-card-by-hash page-name hash)]
+    (if (nil? card)
+      (throw (Exception. (str "No card with hash " hash " in cards : " (pr-str cards)) ))
+
+      (common/sub-card cards #(= hash (:hash %))  )
+      )
+    ))

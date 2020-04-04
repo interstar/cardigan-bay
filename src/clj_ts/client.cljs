@@ -10,7 +10,7 @@
 
 
             [markdown.core :as md]
-            [clj-ts.common :refer [card->type-and-card package-card
+            [clj-ts.common :refer [raw-card->type-and-data package-card
                                    double-comma-table
                                    double-bracket-links auto-links ]]
             ;;[clj-ts.common :refer [card->html ]]
@@ -146,7 +146,7 @@
 ;; Rendering Views
 
 (defn process-card [i card]
-  (let [[type, data] (card->type-and-card card)]
+  (let [[type, data] (raw-card->type-and-data card)]
     (condp = type
       :markdown (package-card i type :markdown data)
       :raw (package-card i type :raw data)

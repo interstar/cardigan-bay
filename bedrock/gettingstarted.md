@@ -1,4 +1,17 @@
 
+## Starting the Wiki
+
+In development mode :
+
+```
+clj -A:dev:app [ARGS]
+```
+
+
+----
+
+## Understanding the Wiki
+
 The default markup is [Markdown](https://daringfireball.net/projects/markdown/syntax)
 
 
