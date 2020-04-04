@@ -55,11 +55,14 @@ We will be adding more types over time, but the current types are
 
 * default / :markdown
 * :raw
-* :evalraw
+* :evalraw  
 * :evalmd
 * :system
+* :embed 
 
-See [[EvalExamples]] for more on evaluating code in your pages.
+See [[EvalExamples]] for how to embed Clojure code in a card.
+
+See [[EmbeddingExamples]] for examples of cards that embed media from other sites.
 
 :system cards are calls to specific system functions. At the moment these include queries such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]] and  [[OrphanPages]]
 
@@ -67,7 +70,6 @@ See [[EvalExamples]] for more on evaluating code in your pages.
 
 ### Future Types
 * :hiccup
-* :embed
 * :transclude
 * :transcludemd
 
