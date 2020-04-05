@@ -30,6 +30,22 @@ hello teenage america"
       (is (= (common/card->raw c2) r2))
       )))
 
+(deftest append-to-card
+  (testing "appending to a single card"
+    (let [cards [(common/package-card 1 :markdown :markdown "hello")
+                 (common/package-card 2 :markdown :markdown "teenage")]
+          c2 (second cards)
+          c3 (common/append-to-card c2 " america")
+          cards2 (common/append-to-card-by-hash cards (:hash c2) " america" )
+          ]
+      (is (= (:data c3) "teenage america"))
+      (is (= (:id c3) (:id c2)))
+      (is (= (:type c3) (:type c2)))
+      (is (= (:delivered_type c3) (:delivered_type c2)))
+
+      (is (= (second cards2) c3))
+      )))
+
 (deftest basic-search-and-replace
   (testing "Searching cards"
     (let [cards [(common/package-card 1 :a :b "hello")

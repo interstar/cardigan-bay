@@ -223,7 +223,6 @@
   (let [{:keys [page_name]} arguments]
     (if (page-exists? page_name)
       {:page_name page_name
-       :boo "BOOO!"
        :body (get-page-from-file page_name)}
       {:page_name page_name
        :body "PAGE DOES NOT EXIST"})))
@@ -238,7 +237,7 @@
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
-       :cards (-> page_name get-page-from-file raw->cards)
+       :cards (load->cards page_name)
        :editable true}
       {:page_name page_name
        :wiki_name wiki-name
@@ -289,11 +288,8 @@
   (let [page-body (get-page-from-file page-name)
         new-body (str page-body "----
 :" type "
-
 " body)]
     (write-page-to-file! page-name new-body )))
-
-
 
 
 
@@ -303,11 +299,12 @@
 
 
 (defn append-to-card! [page-name hash extra]
-  (let [cards (-> (get-page-from-file page-name) raw->cards)
-        card (find-card-by-hash page-name hash)]
+  (let [cards (load->cards)
+        card (find-card-by-hash page-name hash)
+]
     (if (nil? card)
       (throw (Exception. (str "No card with hash " hash " in cards : " (pr-str cards)) ))
 
-      (common/sub-card cards #(= hash (:hash %))  )
+      (let [new-cards (common/append-to-card-by-hash cards hash extra)])
       )
     ))

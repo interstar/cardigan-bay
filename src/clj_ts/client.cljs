@@ -132,7 +132,7 @@
   (do
     (swap! db assoc
            :editing true
-           :raw (str (-> @db :raw) "\n\n" stamp ))))
+           :raw (str (-> @db :raw) "\n----\n:stamp\n" {:type stamp} ))))
 
 ;; RUN
 
@@ -213,16 +213,16 @@
               [:button {:class "big-btn"
                         :on-click
                         #(swap! db assoc :editing (not editing))} "Edit"]])
-           "Stamps :: "
+           " :: Stamps :: "
            [:button {:class "big-btn"
                      :on-click
                      (fn []
-                       (stamp! "==DELETE==" ))} "Delete"]
+                       (stamp! :delete ))} "Delete"]
            " | "
            [:button {:class "big-btn"
                      :on-click
                      (fn []
-                       (stamp! "==FIX==")) } "Fix"]]] ))))
+                       (stamp! :fix)) } "Fix"]]] ))))
 
 
 
@@ -247,12 +247,14 @@
           (card->html card)
           ":html"
           (str data)
+          ":stamp"
+          (str data)
           (str "UNKNOWN TYPE(" type ") " data))
         ]
     ;;(js/console.log (pr-str card))
 
     [:div
-     [:div
+     [:div {:class :card-meta}
       [:span (get card "id")] " | "
       [:span (get card "hash")] " | Original type: "
       [:span (get card "type")] " | Delivered type: "

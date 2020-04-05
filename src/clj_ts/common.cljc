@@ -33,6 +33,8 @@
     (str "\n" type "\n" (string/trim data) )))
 
 
+(defn append-to-card [card extra]
+  (package-card (:id card) (:type card) (:delivered_type card) (str (:data card) extra)))
 
 ;; Cards in card list
 
@@ -53,6 +55,11 @@
       (concat before [new-card] after)
       )))
 
+
+(defn append-to-card-by-hash [cards hash extra]
+  (let [old (find-card-by-hash cards hash)
+        new (append-to-card old extra)]
+    (sub-card cards #(= hash (:hash %)) new)))
 
 (defn cards->raw [cards]
   (string/join "\n----" (map card->raw cards)))
