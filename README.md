@@ -90,7 +90,7 @@ You should be running your wiki. By default CardiganBay starts on port 4545 and 
 To change the page directory and port run with these as command line arguments, eg. 
 
 ```
-clj -A:dev:app PATH/TO/PAGES PORT
+clj -A:dev:app -d PATH/TO/PAGES PORT
 ```
 
 ### Features of CardiganBay
