@@ -5,7 +5,14 @@
 
 
  :objects
- {:Card
+ {:RawCard
+  {:description "Raw version of a single card"
+   :fields
+   {:page_name {:type String}
+    :hash {:type String}
+    :data {:type String}}}
+
+  :Card
   {:description "A card within the system"
    :fields
    {:type {:type String}
@@ -45,5 +52,20 @@
    :description "Retrieve the cooked version of a single page by its name"
    :args {:page_name {:type (non-null String)}}
    :resolve :resolve-cooked-page}
-  }
- }
+
+
+  :raw_card
+  {:type :RawCard
+   :description "Retrieve a raw version of a single card"
+   :args {:page_name {:type (non-null String)}
+          :hash {:type (non-null String)}}
+   :resolve :resolve-raw-card}
+
+  :cooked_card
+  {:type :Card
+   :description "Retrieve a cooked version of a single card"
+   :args {:page_name {:type (non-null String)}
+          :hash {:type (non-null String)}
+          }
+   :resolve :resolve-cooked-card
+   }}}
