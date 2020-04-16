@@ -61,7 +61,6 @@ The wiki-engine should
 * The wiki engine is a personal tool rather than intended for a public server. The assumption is that public facing sites will be exported as either completely flat sites, or minimal engines without editing capabilities.
 
 
-
 ### Technical Decisions
 
 * The wiki is a Single Page App written in [Clojure](https://clojure.org/) / ClojureScript. 
