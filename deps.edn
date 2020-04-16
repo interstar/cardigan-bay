@@ -25,8 +25,6 @@
     com.cognitect/test-runner
     {:git/url "https://github.com/cognitect-labs/test-runner.git"
      :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
-    markdown-clj {:mvn/version "1.10.1"}
-    io.replikativ/hasch {:mvn/version "0.3.7"}
     }
    :main-opts ["-m" "cognitect.test-runner"]}
 
