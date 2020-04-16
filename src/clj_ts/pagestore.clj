@@ -113,6 +113,8 @@
 
 (defn orphans [] (ldb/orphans))
 
+(defn links-to [target] (ldb/links-to target))
+
 
 ;; Card Processing
 
@@ -211,13 +213,31 @@
   (let [cards (string/split  raw #"----")]
     (map process-card (iterate inc 0) cards)))
 
+
+(declare backlinks)
+
 (defn load->cards [page-name]
   (-> page-name
       get-page-from-file
-      raw->cards))
+      raw->cards
+      (concat [(backlinks page-name)])))
 
+(defn load-one-card [page-name hash]
+  (let [cards (load->cards page-name)]
+    (common/find-card-by-hash cards hash)))
 
 ;; GraphQL resolvers
+
+(defn resolve-cooked-card [context arguments value]
+  (let [{:keys [page_name hash]} arguments]
+    (if (page-exists? page_name)
+      (-> (load->cards page_name)
+          (common/find-card-by-hash hash))
+      (common/package-card 0 :markdown :markdown
+                           (str "Card " hash " doesn't exist in " page_name)))))
+
+(defn resolve-raw-card [context arguments value]
+  (-> (resolve-cooked-card context arguments value) (common/card->raw)))
 
 (defn resolve-raw-page [context arguments value]
   (let [{:keys [page_name]} arguments]
@@ -260,6 +280,8 @@
 
       (attach-resolvers {:resolve-raw-page resolve-raw-page
                          :resolve-cooked-page resolve-cooked-page
+                         :resolve-raw-card resolve-raw-card
+                         :resolve-cooked-card resolve-cooked-card
                          })
       schema/compile))
 
@@ -281,6 +303,15 @@
                       :description "Recent Changes in CardiganBay Wiki"}
                      rc
                      )))
+
+
+;; Backlinks
+
+(defn backlinks [page-name]
+  (ldb-query->mdlist-card "backlinks" (links-to page-name) :calculated
+                          (fn [[a b]] (str "* [[" a "]] \n"))))
+
+
 
 ;; transforms on pages
 
