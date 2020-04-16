@@ -84,7 +84,7 @@
       (link p q)
       (page p)
       (page q)
-      (= target q)
+      (logic/== target q)
       )))
 
 (defn broken-links []
@@ -94,12 +94,6 @@
       (logic/nafc page q)
       )))
 
-(defn xorphans []
-  (pldb/with-db @facts
-    (logic/run* [p q]
-      (logic/nafc link p q)
-      (page q)
-      )))
 
 (defn orphans []
   (pldb/with-db @facts
