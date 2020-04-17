@@ -82,8 +82,6 @@
   (pldb/with-db @facts
     (logic/run* [p q]
       (link p q)
-      (page p)
-      (page q)
       (logic/== target q)
       )))
 
