@@ -3,8 +3,7 @@
    [clojure.core.logic :as logic]
    [clojure.core.logic.pldb :as pldb]
    [clojure.string :as string]
-   [fsquery.core :as fsquery]
-   [fsquery.fsnode :as fsnode]
+
 ))
 
 (pldb/db-rel link from to)
@@ -16,21 +15,30 @@
    (pldb/db )))
 
 
+;; Diagnostic T
+(defn P [x label] (do (println (str label " :: " x)) x))
 
-(defn extract-links [page-node n]
-  (map #(vector (-> page-node
-                    ((fn [x] (-> x :java-file .getName)))
-                    (string/split #"\.") first )
-                (-> % last (string/lower-case)))
-       (re-seq #"\[\[(.+?)\]\]" (fsnode/slurp-it n))))
+(defn path->pagename [path]
+  (-> path .getFileName .toString (string/split #"\.") first))
+
+
+(defn extract-links [path]
+  (let [text (-> path .toFile slurp)
+        link-seq (re-seq #"\[\[(.+?)\]\]" text)]
+    (map #(vector (path->pagename path)
+                  (-> % last (string/lower-case))  )
+         link-seq)))
 
 (defn regenerate-db! [path]
-  (let [
-        fsq (-> (fsquery/make-fsquery path)
-                (fsquery/ext "md")
-                (fsquery/files-only)
-                (fsquery/no-follow #"\.work"))
+  (let [pages (java.nio.file.Files/newDirectoryStream path "*.md")
+        pages2 (java.nio.file.Files/newDirectoryStream path "*.md")
 
+        all-page-names
+        (map path->pagename pages)
+
+        all-links (-> pages2
+                      (#(map extract-links %))
+                      (#(apply concat %)))
         add-page
         (fn [db page-name]
           (-> db (pldb/db-fact page page-name)))
@@ -39,22 +47,14 @@
         (fn [db [from to]]
           (-> db (pldb/db-fact link from to)))
 
-        extract-page-name (fn [n] (-> n :abs (string/split #"/") last (string/split #"\." ) first))
-
-
-        all-page-names (map extract-page-name (fsquery/start-walk fsq))
-        all-links (-> (fsquery/start-walk fsq)
-                      (#(map extract-links % %))
-                      (#(apply concat %)))
-
         new-db
         (->
          (pldb/db )
          ((fn [db] (reduce add-page db all-page-names)))
          ((fn [db] (reduce add-link db all-links)))
-         )]
+         )
+        ]
     (println "DB recreated")
-
 
     (reset! facts new-db)
     ))

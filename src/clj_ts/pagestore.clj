@@ -9,8 +9,7 @@
             [com.walmartlabs.lacinia.schema :as schema]
 
             [clj-rss.core :as rss]
-            [fsquery.core :as fsquery]
-            [fsquery.fsnode :as fsnode]
+
             [clj-ts.common :as common]
             ))
 
@@ -20,11 +19,7 @@
 ;; State management
 
 (def page-store-state
-  (atom {:page-dir "./bedrock/"
-         :wiki-name "Yet Another CardiganBay Wiki"
-         :site-url "/"
-         :git-repo "default"
-         }))
+  (atom {}))
 
 (defn set-state! [key val]
   (swap! page-store-state assoc key val))
@@ -39,9 +34,11 @@
 
 ;; Basic functions
 
-(defn page-name->file-name [page-name]
-  (let [mkname (fn [path] (str path (string/lower-case page-name) ".md"))]
-    (-> @page-store-state :page-dir mkname)))
+(defn page-name->file-path [page-name]
+  (let [mdn (str (string/lower-case page-name) ".md")]
+
+    (-> @page-store-state :page-dir
+        (#(.resolve % mdn)) )))
 
 
 (defn dedouble [s] (string/replace s #"\/\/" "/"))
@@ -52,12 +49,19 @@
 
 
 (defn page-exists? [p-name]
-  (.exists (io/file (page-name->file-name p-name))))
-
-(defn get-page-from-file [p-name]
-  (slurp (page-name->file-name p-name)))
+  (-> (page-name->file-path p-name) .toFile .exists))
 
 
+(defn read-page [page]
+  (do
+    (if (instance? java.nio.file.Path page)
+      (-> page .toFile slurp)
+      (-> page page-name->file-path .toFile slurp))))
+
+(defn write-page! [page data]
+  (if (instance? java.nio.file.Path page)
+    (spit page data)
+    (-> page  page-name->file-path .toFile (spit data))))
 
 
 (defn regenerate-db! []
@@ -70,8 +74,9 @@
 
 (defn update-recent-changes! [pagename]
   (let [pn "systemrecentchanges"
-        fnm (page-name->file-name pn)
-        rcc (get-page-from-file pn)
+        rcc (read-page pn)
+        file-path (page-name->file-path pn)
+
         filter-step (fn [xs] (filter #(not (string/includes? % (str "[[" pagename "]]"))) xs ) )
         curlist (-> rcc string/split-lines filter-step )
         newlist (cons
@@ -79,22 +84,26 @@
                  curlist
                  )
         ]
-    (spit fnm (string/join "\n" (take 30 newlist)))))
+    (spit file-path (string/join "\n" (take 30 newlist)))))
 
 
 (defn write-page-to-file! [p-name body]
   (do
-    (spit (page-name->file-name p-name) body)
+    (write-page! p-name body)
     (update-recent-changes! p-name)
     (regenerate-db!)
     ))
 
 (defn update-pagedir! [new-pd]
-  (let [path (dedouble (str new-pd "/.git") )
-        git? (.exists (io/file path))]
-    (swap! page-store-state assoc :page-dir new-pd)
-    (swap! page-store-state assoc :git-repo git?)
-    (regenerate-db!)))
+  (do
+    (assert (instance? java.nio.file.Path new-pd)
+            (str "update-pagedir! received "
+                 new-pd " which is not a Java Path"))
+    (let [git-path (.resolve new-pd ".git")
+          git? (-> git-path .toFile .exists)]
+      (swap! page-store-state assoc :page-dir new-pd)
+      (swap! page-store-state assoc :git-repo git?)
+      (regenerate-db!))))
 
 
 (defn cwd [] (-> @page-store-state :page-dir))
@@ -179,7 +188,7 @@
 
 (defn transclude [i data]
   (let [{:keys [from process]} (read-string data)
-        raw (get-page-from-file from)
+        raw (-> from read-page)
         return-type (if (nil? process) :markdown process)
         head (str "*Transcluded from [[" from "]]* \n")]
     (common/package-card i :transclude return-type (str head raw))
@@ -218,7 +227,7 @@
 
 (defn load->cards [page-name]
   (-> page-name
-      get-page-from-file
+      read-page
       raw->cards
       (concat [(backlinks page-name)])))
 
@@ -243,7 +252,7 @@
   (let [{:keys [page_name]} arguments]
     (if (page-exists? page_name)
       {:page_name page_name
-       :body (get-page-from-file page_name)}
+       :body (read-page page_name)}
       {:page_name page_name
        :body "PAGE DOES NOT EXIST"})))
 
@@ -295,7 +304,7 @@
                       {:title (str pname " changed on " date)
                        :link (page-name->url pname)}
                       ))
-        rc (-> (get-page-from-file "systemrecentchanges")
+        rc (-> (read-page "systemrecentchanges")
                string/split-lines
                (#(map make-link %)))]
     (rss/channel-xml {:title "RecentChanges"
@@ -316,7 +325,7 @@
 ;; transforms on pages
 
 (defn append-card-to-page! [page-name type body]
-  (let [page-body (get-page-from-file page-name)
+  (let [page-body (read-page page-name)
         new-body (str page-body "----
 :" type "
 " body)]

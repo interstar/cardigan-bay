@@ -41,7 +41,7 @@
   (let [qs (:query-string request)
         p-name (second (string/split qs #"="))
         raw (if (pagestore/page-exists? p-name)
-              (pagestore/get-page-from-file p-name)
+              (pagestore/read-page p-name)
               "PAGE DOES NOT EXIST")]
     {:p-name p-name :raw raw}))
 
@@ -244,11 +244,21 @@
 
         port (:port opts)
         page-dir (:directory opts)
+        page-dir-path (->
+                       (java.nio.file.Paths/get page-dir (make-array java.lang.String 0))
+                       (.toAbsolutePath)
+                       (.normalize))
         name (:name opts)
         site-root (:site opts)]
     (println "Welcome to Cardigan Bay")
 
-    (pagestore/update-pagedir! page-dir)
+    (assert (-> page-dir-path .toFile .exists )
+            (str "Given page-store directory " page-dir " does not exist."))
+
+    (assert (-> page-dir-path .toFile .isDirectory)
+            (str "page-store " page-dir" is not a directory."))
+
+    (pagestore/update-pagedir! page-dir-path)
     (pagestore/set-site-url! site-root)
     (pagestore/set-wiki-name! name)
 
