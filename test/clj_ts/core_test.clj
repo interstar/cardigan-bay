@@ -1,6 +1,8 @@
 (ns clj-ts.core-test
   (:require [clojure.test :refer :all]
             [clj-ts.common :as common]
+
+            [clj-ts.static-export :as static]
             ))
 
 
@@ -96,3 +98,17 @@ america")))))
 <table class='double-comma-table'>
 <tr><td>teenage</td><td>america</td></tr>
 </table>"))))
+
+
+(deftest static-render
+  (testing "Static Rendering"
+    (let [p1 "
+### Hello Teenage America
+
+* [[AnotherGreenWorld]]" ]
+      (is (= (static/render p1 "HelloTeenageAmerica" "http://server.com/" ".html")
+             "<h3>Hello Teenage America</h3>
+
+<ul>
+<li><a href='http://server.com/HelloTeenageAmerica.html'>HelloTeenageAmerica</a></li>
+</ul>")) )))
