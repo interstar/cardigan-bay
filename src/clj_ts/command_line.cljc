@@ -24,3 +24,7 @@
       :otherwise
       {:type :error :result parsed}
       )))
+
+
+(defn command-line? [s]
+  (not= :error (:type (parser s))))

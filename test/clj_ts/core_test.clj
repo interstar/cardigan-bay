@@ -119,7 +119,12 @@ america")))))
   (testing "Command line"
     (let [parse command-line/parser
           s1 "! >>HelloWorld"
-          s2 "! +hello +teenage +america"]
+          s2 "! +hello +teenage +america"
+          s3 "blah blah"]
+
+      (is (command-line/command-line? s1))
+      (is (command-line/command-line? s2))
+      (is (= false (command-line/command-line? s3)))
 
       (is (= (parse s1) {:type :Move
                          :page-name "HelloWorld"} ))

@@ -2,12 +2,11 @@
   (:require [clojure.string :as string]
 
             [markdown.core :as md]
-            [hasch.core :refer [uuid5 edn-hash]]) )
+            [hasch.core :refer [uuid5 edn-hash]]
+            [clj-ts.command-line :as command-line]))
 
 
 ;; Manage Cards
-
-
 
 (defn raw-card->type-and-data [c]
   (let [card (string/trim c)

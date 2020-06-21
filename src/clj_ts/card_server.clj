@@ -1,10 +1,13 @@
 (ns clj-ts.card-server
   [:require
+   [clojure.string :as string]
+
    [clj-ts.logic :as ldb]
    [clj-ts.pagestore :as pagestore]
    [clj-ts.common :as common]
    [clj-ts.embed :as embed]
-   [clojure.string :as string]
+
+
 
    [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
    [com.walmartlabs.lacinia.schema :as schema]
