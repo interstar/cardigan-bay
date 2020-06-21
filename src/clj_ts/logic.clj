@@ -10,10 +10,6 @@
 (pldb/db-rel page p)
 
 
-(def facts
-  (atom
-   (pldb/db )))
-
 
 ;; Diagnostic T
 (defn P [x label] (do (println (str label " :: " x)) x))
@@ -29,8 +25,9 @@
                   (-> % last (string/lower-case))  )
          link-seq)))
 
-(defn regenerate-db! [path]
-  (let [pages (java.nio.file.Files/newDirectoryStream path "*.md")
+(defn regenerate-db [server-state]
+  (let [path (-> server-state :page-dir)
+        pages (java.nio.file.Files/newDirectoryStream path "*.md")
         pages2 (java.nio.file.Files/newDirectoryStream path "*.md")
 
         all-page-names
@@ -54,47 +51,44 @@
          ((fn [db] (reduce add-link db all-links)))
          )
         ]
-    (println "DB recreated")
-
-    (reset! facts new-db)
+    new-db
     ))
 
 
-(defn raw-db [] @facts)
 
-(defn all-pages []
+(defn all-pages [server-state]
   (sort
-   (pldb/with-db @facts
+   (pldb/with-db (:facts-db server-state)
      (logic/run* [p]
        (page p))
      )) )
 
 
-(defn links []
-  (pldb/with-db @facts
+(defn links [server-state]
+  (pldb/with-db (:facts-db server-state)
     (logic/run* [p q]
       (link p q)
       (page p)
       (page q)
       )))
 
-(defn links-to [target]
-  (pldb/with-db @facts
+(defn links-to [server-state target]
+  (pldb/with-db (:facts-db server-state)
     (logic/run* [p q]
       (link p q)
       (logic/== target q)
       )))
 
-(defn broken-links []
-  (pldb/with-db @facts
+(defn broken-links [server-state]
+  (pldb/with-db (:facts-db server-state)
     (logic/run* [p q]
       (link p q)
       (logic/nafc page q)
       )))
 
 
-(defn orphans []
-  (pldb/with-db @facts
+(defn orphans [server-state]
+  (pldb/with-db (:facts-db server-state)
     (logic/run* [q]
       (logic/fresh [p]
         (page q)

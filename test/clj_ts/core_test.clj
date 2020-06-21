@@ -3,6 +3,7 @@
             [clj-ts.common :as common]
 
             [clj-ts.static-export :as static]
+            [clj-ts.command-line :as command-line]
             ))
 
 
@@ -100,15 +101,30 @@ america")))))
 </table>"))))
 
 
-(deftest static-render
-  (testing "Static Rendering"
-    (let [p1 "
+(comment
+  (deftest static-render
+    (testing "Static Rendering"
+      (let [p1 "
 ### Hello Teenage America
 
 * [[AnotherGreenWorld]]" ]
-      (is (= (static/render p1 "HelloTeenageAmerica" "http://server.com/" ".html")
-             "<h3>Hello Teenage America</h3>
+        (is (= (static/render p1 "HelloTeenageAmerica" "http://server.com/" ".html")
+               "<h3>Hello Teenage America</h3>
 
 <ul>
 <li><a href='http://server.com/HelloTeenageAmerica.html'>HelloTeenageAmerica</a></li>
-</ul>")) )))
+</ul>")) ))))
+
+(deftest command-line
+  (testing "Command line"
+    (let [parse command-line/parser
+          s1 "! >>HelloWorld"
+          s2 "! +hello +teenage +america"]
+
+      (is (= (parse s1) {:type :Move
+                         :page-name "HelloWorld"} ))
+      (is (= (parse s2) {:type :Tags
+                         :tags [ [:Tag "hello"] [:Tag "teenage"] [:Tag "america"]]}))
+
+      (is (= (-> (parse ">>Boo") :type) :error))
+      )))

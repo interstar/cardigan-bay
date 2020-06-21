@@ -5,7 +5,8 @@
             [clojure.pprint :as pp]
 
             [clojure.tools.cli :refer [parse-opts]]
-            [clj-ts.pagestore :as pagestore]
+
+            [clj-ts.card-server :as card-server]
             [clj-ts.common :as common]
 
             [markdown.core :as md]
@@ -24,24 +25,13 @@
   (:gen-class))
 
 
-
-(def all-state
-  (atom {:start-page "HelloWorld"
-         }))
-
-(defn set-state! [key val]
-  (swap! all-state assoc key val))
-
-(defn set-start-page! [pagename]
-  (set-state! :start-page pagename))
-
 ;; Requests
 
 (defn page-request [request]
   (let [qs (:query-string request)
         p-name (second (string/split qs #"="))
-        raw (if (pagestore/page-exists? p-name)
-              (pagestore/read-page p-name)
+        raw (if (card-server/page-exists? p-name)
+              (card-server/read-page p-name)
               "PAGE DOES NOT EXIST")]
     {:p-name p-name :raw raw}))
 
@@ -66,7 +56,7 @@
 
 (defn get-edn-cards [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (pagestore/raw->cards raw)]
+        cards (card-server/raw->cards raw)]
 
 
     (pp/pprint cards)
@@ -79,7 +69,7 @@
   (let [form-body (-> request :body .bytes slurp edn/read-string)
         p-name (:page form-body)
         body (:data form-body)]
-    (pagestore/write-page-to-file! p-name body)
+    (card-server/write-page-to-file! p-name body)
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}))
 
 
@@ -87,7 +77,7 @@
 
 (defn get-flattened [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (-> p-name pagestore/load->cards common/cards->raw )]
+        cards (-> p-name card-server/load->cards common/cards->raw )]
 
     (pp/pprint cards)
     {:status 200
@@ -120,16 +110,16 @@
 
 (defn raw-db [request]
   (do
-    (pagestore/regenerate-db!)
+    (card-server/regenerate-db!)
     {:status 200
      :headers {"Content-Type" "text/html"}
-     :body (str "<pre>" (with-out-str (pp/pprint (pagestore/raw-db))) "</pre>" )}))
+     :body (str "<pre>" (with-out-str (pp/pprint (card-server/raw-db))) "</pre>" )}))
 
 
 (defn get-start-page [request]
   {:status 200
    :headers {"Content-Type" "text/text"}
-   :body (-> @all-state :start-page)})
+   :body (-> (card-server/server-state) :start-page)})
 
 ;; GraphQL handler
 
@@ -159,7 +149,7 @@
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body (let [query (extract-query request)
-               result (execute pagestore/pagestore-schema query nil nil)]
+               result (execute card-server/pagestore-schema query nil nil)]
            (json/write-str result))})
 
 
@@ -188,12 +178,12 @@
       (= uri "/rss/recentchanges")
       {:status 200
        :headers {"Content-Type" "application/rss+xml"}
-       :body (pagestore/rss-recent-changes )}
+       :body (card-server/rss-recent-changes )}
 
       m
       (let [pagename (-> m second )]
         (do
-          (set-start-page! pagename)
+          (card-server/set-start-page! pagename)
           {:status 303
            :headers {"Location" "/index.html"}
            }))
@@ -258,14 +248,14 @@
     (assert (-> page-dir-path .toFile .isDirectory)
             (str "page-store " page-dir" is not a directory."))
 
-    (pagestore/update-pagedir! page-dir-path)
-    (pagestore/set-site-url! site-root)
-    (pagestore/set-wiki-name! name)
+    (card-server/update-pagedir! page-dir-path)
+    (card-server/set-site-url! site-root)
+    (card-server/set-wiki-name! name)
 
     (println
      (str "Cardigan Bay Started.
 
-Page Directory is " (pagestore/cwd) "
+Page Directory is " (card-server/cwd) "
 
 Port is " port "
 
