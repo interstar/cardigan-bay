@@ -120,7 +120,35 @@ america")))))
     (let [parse command-line/parser
           s1 "! >>HelloWorld"
           s2 "! +hello +teenage +america"
-          s3 "blah blah"]
+          s3 "blah blah"
+          c1 "----
+
+hello world"
+          c2 "----
+
+! >>SomewhereElse
+hello teenage america"
+          c3 "----
+
+boo
+! >>SomewhereElse
+goodbye cruel world"
+
+          c4 "----
+
+more
+
+! +another +green +world"
+          c5 "----
+! >>SpiceWorld
+right about now
+! +funk +soul +brother"
+          c6 "----
+some stuff
+but +not +actual +tags"
+          cmds1 (common/gather-all-commands c1)
+          cmds2 (common/gather-all-commands c2)
+          cmds5 (common/gather-all-commands c5)]
 
       (is (command-line/command-line? s1))
       (is (command-line/command-line? s2))
@@ -132,4 +160,25 @@ america")))))
                          :tags [ [:Tag "hello"] [:Tag "teenage"] [:Tag "america"]]}))
 
       (is (= (-> (parse ">>Boo") :type) :error))
+
+
+      (is (= false (common/contains-commands? c1)))
+      (is (= true (common/contains-commands? c2)))
+      (is (= true (common/contains-commands? c3)))
+      (is (= true (common/contains-commands? c4)))
+      (is (= true (common/contains-commands? c5)))
+      (is (= false (common/contains-commands? c6)))
+
+      (is (= 0 (:size cmds1)))
+      (is (= 1 (:size cmds2)))
+      (is (= 2 (:size cmds5)))
+
+      (is (= false (:has-commands? cmds1)))
+      (is (= true (:has-commands? cmds2)))
+      (is (= true (:has-commands? cmds5)))
+
+      (is (= false (:has-move? cmds1)))
+      (is (= true (:has-move? cmds2)))
+      (is (= true (:has-move? cmds5)))
+
       )))

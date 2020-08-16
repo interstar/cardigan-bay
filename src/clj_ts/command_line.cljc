@@ -28,3 +28,7 @@
 
 (defn command-line? [s]
   (not= :error (:type (parser s))))
+
+
+(defn is-move? [s]
+  (= (:type (parser s)) :Move))

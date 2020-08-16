@@ -110,3 +110,23 @@
       (double-bracket-links)
 
       ))
+
+;; Cards with commands
+
+(defn contains-commands? [card]
+  (let [[type data] (raw-card->type-and-data card)
+        lines (string/split-lines data)]
+    (if
+        (some command-line/command-line? lines) true false)))
+
+
+
+(defn gather-all-commands [card]
+  (let [[type data] (raw-card->type-and-data card)
+        lines (string/split-lines data)
+        commands (filter command-line/command-line? lines)
+        has-move? (some command-line/is-move? commands)
+        ]
+    {:has-commands? (contains-commands? card)
+     :size (count commands)
+     :has-move? (true? has-move?) }))
