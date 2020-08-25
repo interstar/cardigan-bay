@@ -30,15 +30,16 @@
 
 
 (defn read-page [server-state page]
-  (do
-    (if (instance? java.nio.file.Path page)
-      (-> page .toFile slurp)
-      (-> page (#(page-name->file-path server-state %)) .toFile slurp))))
+  (if (instance? java.nio.file.Path page)
+    (-> page .toFile slurp)
+    (-> page (#(page-name->file-path server-state %)) .toFile slurp)
+    ) )
 
 (defn write-page! [server-state page data]
   (if (instance? java.nio.file.Path page)
-    (spit page data)
-    (-> page  page-name->file-path .toFile (spit data))))
+    (spit (.toString page) data)
+    (let [x (-> page (#(page-name->file-path server-state %)))]
+      (spit (.toString x) data))))
 
 
 
@@ -51,7 +52,7 @@
 (defn update-recent-changes! [server-state pagename]
   (let [pn "systemrecentchanges"
         rcc (read-page server-state pn)
-        file-path (page-name->file-path pn)
+        file-path (page-name->file-path server-state pn)
 
         filter-step (fn [xs] (filter #(not (string/includes? % (str "[[" pagename "]]"))) xs ) )
         curlist (-> rcc string/split-lines filter-step )
@@ -60,13 +61,14 @@
                  curlist
                  )
         ]
-    (spit file-path (string/join "\n" (take 30 newlist)))))
+
+    (spit (.toString  file-path) (string/join "\n" (take 30 newlist)))))
 
 
 (defn write-page-to-file! [server-state p-name body ]
   (do
-    (write-page! p-name body)
-    (update-recent-changes! p-name)
+    (write-page! server-state p-name body)
+    (update-recent-changes! server-state  p-name)
     ))
 
 
