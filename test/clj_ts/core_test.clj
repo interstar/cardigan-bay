@@ -181,4 +181,14 @@ but +not +actual +tags"
       (is (= true (:has-move? cmds2)))
       (is (= true (:has-move? cmds5)))
 
+      (is (= false (:has-tags? cmds1) ))
+      (is (= false (:has-tags? cmds2)) )
+      (is (= true (:has-tags? cmds5)))
+
+      (is (= [:funk :soul :brother] (:tags cmds5)))
+
+      (is (= "SomewhereElse" (:move-destination cmds2)))
+      (is (= "SpiceWorld" (:move-destination cmds5)))
+
+      (is (= "right about now" (:stripped cmds5)))
       )))

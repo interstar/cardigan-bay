@@ -124,9 +124,10 @@
 (defn gather-all-commands [card]
   (let [[type data] (raw-card->type-and-data card)
         lines (string/split-lines data)
-        commands (filter command-line/command-line? lines)
-        has-move? (some command-line/is-move? commands)
+        pseq (command-line/parsed-seq lines)
         ]
-    {:has-commands? (contains-commands? card)
-     :size (count commands)
-     :has-move? (true? has-move?) }))
+    (conj pseq
+          {:type type
+           :stripped (string/join "\n" (:non-commands pseq) )}
+          )
+    ))
