@@ -1,44 +1,39 @@
 body {
-    font-family: Inconsolata;
-    margin: 0;
-    width:100%;
+    font-family: serif;
+    font-size: 1.6rem;
+
+
+    line-height: 1.618;
+    max-width: 48em;
+    margin: auto;
+    color: #4a4a4a;
+    background-color: #f9f9f9;
+    padding: 13px;
+
+
+
 
 
     background-color:#cccccc;
-    color: #111111;
-    //font-family:Georgia, Times, Times New Roman, serif;
-    //font-family:Didot;
 
-    @media (min-width: 858px) {
-        html {
-            font-size: 24px;
-        }
-    }
 
-    @media (min-width: 780px) {
-        html {
-            font-size: 22px;
-        }
-    }
+}
 
-    @media (min-width: 702px) {
-        html {
-            font-size: 20px;
-        }
-    }
 
-    @media (min-width: 724px) {
-        html {
-            font-size: 18px;
-        }
-    }
 
-    @media (max-width: 623px) {
-        html {
-            font-size: 14px;
-        }
-    }
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.1;
+  font-family: Verdana, Geneva, sans-serif;
 
+  font-weight: 700;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-word;
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
 }
 
 .navbar span {
@@ -54,47 +49,35 @@ body {
 	margin: 0;
 /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#a7cfdf+0,331554+100 */
 
-        /*
-        background-image: url("/cardigan-bay.svg");
-        background-repeat: no-repeat;
-        background-size: cover;
-*/
-
-
-background: -moz-linear-gradient(45deg, #a7cfdf  0%, #331554 100% );
-background: -webkit-linear-gradient(45deg, #a7cfdf  0%, #331554 100%);
-background: linear-gradient(45deg, #a7cfdf  0%, #331554 100%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#331554',GradientType=1 );
+/*
+background: -moz-linear-gradient(45deg, #a7cfdf  0%, #7375A4 100% );
+background: -webkit-linear-gradient(45deg, #a7cfdf  0%, #7375A4 100%);
+background: linear-gradient(45deg, #a7cfdf  0%, #737594 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#7375A4',GradientType=1 );
 	width:100%;
+*/
 
 }
 
 .headerbar a {color:black;}
 
-.serviceheaderbar {
-	padding:10px;
-	margin: 0;
-/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#a7cfdf+0,331554+100 */
-background: #dfa7cf; /* Old browsers */
-background: -moz-linear-gradient(0deg, #a7cfdf 0%, #fada96 100%); /* FF3.6-15 */
-background: -webkit-linear-gradient(0deg, #a7cfdf 0%,#fada96 100%); /* Chrome10-25,Safari5.1-6 */
-background: linear-gradient(0deg, #a7cfdf 0%,#fada96 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#fada96',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
-	width:100%;
+
+.card-outer {
+    border-radius: 25px;
+    background: #eeeeee;
+    padding: 15px;
+    margin:1.5em;
 }
 
-.menubar {
-	padding:10px;
-	margin: 0 auto;
-	background-color:#fada96;
-	width:100%;
-	position:sticky;
-	top:0px;
-	left:0px;
+.card-meta {
+    font-size: 1rem;
 }
 
-h2 {
-	font-size:xx-large;
+.card {
+    background-color:white;
+    padding: 10px;
+    margin: 2px;
+    border-radius: 15px;
 }
 
 #content {
@@ -113,14 +96,12 @@ blockquote {
 .transcluded {
   background-color: #eeeeff;
   padding:10px;
+
+  border-left: 10px solid #faaa96;
+
 }
 
 
-.card {
-    background-color:white;
-    padding: 10px;
-    margin: 10px;
-}
 
 .main-container {
    background-color:#cccccc;
@@ -128,7 +109,7 @@ blockquote {
    padding:2%;
 }
 text {
-      font-family:Verdana;
+    /*      font-family:Verdana; */
 }
 
 a {color:39cccc;}
@@ -138,6 +119,8 @@ a {color:39cccc;}
 div textarea {
   box-sizing: border-box;
   max-width: 90%;
+  padding: 10px;
+  font-size: 1.1rem;
 }
 
 .button {
@@ -148,6 +131,10 @@ div textarea {
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     margin:10px
+}
+
+.button:hover {
+
 }
 
 .small-btn {
@@ -168,9 +155,6 @@ div textarea {
 .navbar {
     padding:20px;
     border:10px;
-    background-color:#ffffaa;
-    border-style:solid;
-    border-width:2px;
 }
 
 table .double-comma-table {
