@@ -171,60 +171,70 @@
     (fn []
        (let [editing (-> @db :editing)]
          [:div {:class "navbar"}
-          [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
-          " || "
-          [:span {:on-click (fn [] (go-new! "AboutThisWiki"))} "AboutThisWiki"]
-          " || "
-          [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
-          " || "
-          [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]
-          " || "
-          [:button
-           {:class "big-btn"
-            :on-click (fn [] (back!))} "<"]
-          [:button
-           {:class "big-btn"
-            :on-click (fn [] (forward! (-> @db :future last)))} ">" ]
-          [nav-input current]
-          [:button
-           {:class "big-btn"
-            :on-click (fn [] (go-new! @current))} "Go!"]
-          " || "
+          [:div {:id "nav1"}
+
+           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
+           " || "
+           [:span {:on-click (fn [] (go-new! "AboutThisWiki"))} "AboutThisWiki"]
+           " || "
+           [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
+           " || "
+           [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]]
+          [:div {:id "nav2"}
+
+           [:button
+            {:class "big-btn"
+             :on-click (fn [] (back!))} "<"]
+
+           [nav-input current]
+           [:button
+            {:class "big-btn"
+             :on-click (fn [] (go-new! @current))} "Go!"]
+
+           [:button
+            {:class "big-btn"
+             :on-click (fn [] (forward! (-> @db :future last)))} ">" ]
+           ]
 
 
-
-          [:div
-           (if editing
-             [:span
-              [:button {:class "big-btn"
-                        :on-click
-                        (fn []
-                          (do
-                            (swap! db assoc :editing (not editing))
-                            (reload!)))}  "Cancel"]
-              [:button {:class "big-btn"
-                        :on-click
-                        (fn []
-                          (do
-                            (swap! db assoc :editing (not editing))
-                            (save-page!)) )} "Save"]]
-
-             [:span
-              [:button {:class "big-btn"
-                        :on-click
-                        #(swap! db assoc :editing (not editing))} "Edit"]])
-           " :: Stamps :: "
-           [:button {:class "big-btn"
-                     :on-click
-                     (fn []
-                       (stamp! :delete ))} "Delete"]
-           " | "
-           [:button {:class "big-btn"
-                     :on-click
-                     (fn []
-                       (stamp! :fix)) } "Fix"]]] ))))
+          ] ))))
 
 
+(defn tool-bar []
+  (let [current (r/atom (-> @db :future last))]
+    (fn []
+      (let [editing (-> @db :editing)]
+        [:div
+         (if editing
+           [:span
+            [:button {:class "big-btn"
+                      :on-click
+                      (fn []
+                        (do
+                          (swap! db assoc :editing (not editing))
+                          (reload!)))}  "Cancel"]
+            [:button {:class "big-btn"
+                      :on-click
+                      (fn []
+                        (do
+                          (swap! db assoc :editing (not editing))
+                          (save-page!)) )} "Save"]]
+
+           [:span
+            [:button {:class "big-btn"
+                      :on-click
+                      #(swap! db assoc :editing (not editing))} "Edit"]])
+         " :: Stamps :: "
+         [:button {:class "big-btn"
+                   :on-click
+                   (fn []
+                     (stamp! :delete ))} "Delete"]
+         " | "
+         [:button {:class "big-btn"
+                   :on-click
+                   (fn []
+                     (stamp! :fix)) } "Fix"]]))
+    ))
 
 
 
@@ -253,7 +263,7 @@
         ]
     ;;(js/console.log (pr-str card))
 
-    [:div
+    [:div {:class :card-outer}
      [:div {:class :card-meta}
       [:span (get card "id")] " | "
       [:span (get card "hash")] " | Original type: "
@@ -289,27 +299,29 @@
    ])
 
 (defn main-container []
-  [:div {:class "main-container"}
+
+  [:div
    (if (-> @db :editing)
-     [:div
+     [:div {:class "edit-box"}
       [:textarea {:id "edit-field" :cols 80 :rows 40}
        (-> @db :raw)]]
      [:div
-
-      (card-list)])])
+      (card-list)]
+     )])
 
 ;;
 
 ; Main page
 (defn content []
-  [:div
+  [:div {:class "main-container"}
    [:div {:class "headerbar"}
     [:div
      [:div [nav-bar]]
      [:h2 (-> @db :current-page)
       [:span
        [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
-     ]]
+     ]
+    [:div [tool-bar]]]
    [main-container]])
 
 
