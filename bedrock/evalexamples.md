@@ -12,7 +12,7 @@ The next cards have examples of :evalraw and :evalmd
 
 (map 
   #(str % "\n") 
-  (range 10))
+  (filter even? (range 10)))
 
 ----
 :evalmd

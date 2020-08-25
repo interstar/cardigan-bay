@@ -1,21 +1,15 @@
 This is a place to play with wiki notation.
 
-----
-
-More testing stuff
+Let's see if this saves now!
 
 ----
-
-and yet more
-
-----
-
 :transclude 
 
 {:from "HelloWorld"}
  
-----
 
+
+----
 
 [[EmbeddingExamples]]
 
