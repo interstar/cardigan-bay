@@ -184,16 +184,19 @@
 
            [:button
             {:class "big-btn"
-             :on-click (fn [] (back!))} "<"]
+             :on-click (fn [] (back!))}
+            [:img {:src "icons/skip-back.svg"}] " Back"]
 
            [nav-input current]
            [:button
             {:class "big-btn"
-             :on-click (fn [] (go-new! @current))} "Go!"]
+             :on-click (fn [] (go-new! @current))}
+            [:img {:src "icons/arrow-right.svg"}] " Go!"]
 
            [:button
             {:class "big-btn"
-             :on-click (fn [] (forward! (-> @db :future last)))} ">" ]
+             :on-click (fn [] (forward! (-> @db :future last)))} ""
+            [:img {:src "icons/skip-forward.svg"}] " Forward"]
            ]
 
 
@@ -212,7 +215,8 @@
                       (fn []
                         (do
                           (swap! db assoc :editing (not editing))
-                          (reload!)))}  "Cancel"]
+                          (reload!)))}
+             [:img {:src "icons/x.svg"}] "Cancel"]
             [:button {:class "big-btn"
                       :on-click
                       (fn []
@@ -223,17 +227,22 @@
            [:span
             [:button {:class "big-btn"
                       :on-click
-                      #(swap! db assoc :editing (not editing))} "Edit"]])
-         " :: Stamps :: "
-         [:button {:class "big-btn"
-                   :on-click
-                   (fn []
-                     (stamp! :delete ))} "Delete"]
-         " | "
-         [:button {:class "big-btn"
-                   :on-click
-                   (fn []
-                     (stamp! :fix)) } "Fix"]]))
+                      #(swap! db assoc :editing (not editing))}
+                        [:img {:src "icons/edit.svg"}] " Edit"]])
+
+
+
+         (comment
+           " :: Stamps :: "
+           [:button {:class "big-btn"
+                     :on-click
+                     (fn []
+                       (stamp! :delete ))} "Delete"]
+           " | "
+           [:button {:class "big-btn"
+                     :on-click
+                     (fn []
+                       (stamp! :fix)) } "Fix"])]))
     ))
 
 
@@ -318,7 +327,7 @@
     [:div
      [:div [nav-bar]]
      [:h2 (-> @db :current-page)
-      [:span
+      [:span {:class "tslink"}
        [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
      ]
     [:div [tool-bar]]]

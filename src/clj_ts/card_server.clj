@@ -84,7 +84,8 @@
 ;; Logic delegation
 
 (defn regenerate-db! []
-  (set-state! :facts-db (ldb/regenerate-db (server-state))) )
+  (future
+    (set-state! :facts-db (ldb/regenerate-db (server-state)))) )
 
 (defn raw-db [] (-> (server-state) :facts-db))
 

@@ -25,6 +25,8 @@
                   (-> % last (string/lower-case))  )
          link-seq)))
 
+
+
 (defn regenerate-db [server-state]
   (let [path (-> server-state :page-dir)
         pages (java.nio.file.Files/newDirectoryStream path "*.md")
