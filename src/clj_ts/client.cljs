@@ -185,18 +185,18 @@
            [:button
             {:class "big-btn"
              :on-click (fn [] (back!))}
-            [:img {:src "icons/skip-back.svg"}] " Back"]
+            [:img {:src "/icons/skip-back.png"}] " Back"]
 
            [nav-input current]
            [:button
             {:class "big-btn"
              :on-click (fn [] (go-new! @current))}
-            [:img {:src "icons/arrow-right.svg"}] " Go!"]
+            [:img {:src "/icons/arrow-right.png"}] " Go!"]
 
            [:button
             {:class "big-btn"
              :on-click (fn [] (forward! (-> @db :future last)))} ""
-            [:img {:src "icons/skip-forward.svg"}] " Forward"]
+            [:img {:src "/icons/skip-forward.png"}] " Forward"]
            ]
 
 
@@ -216,19 +216,20 @@
                         (do
                           (swap! db assoc :editing (not editing))
                           (reload!)))}
-             [:img {:src "icons/x.svg"}] "Cancel"]
+             [:img {:src "/icons/x.png"}] " Cancel"]
             [:button {:class "big-btn"
                       :on-click
                       (fn []
                         (do
                           (swap! db assoc :editing (not editing))
-                          (save-page!)) )} "Save"]]
+                          (save-page!)) )}
+             [:img {:src "/icons/save.png"}] " Save"]]
 
            [:span
             [:button {:class "big-btn"
                       :on-click
                       #(swap! db assoc :editing (not editing))}
-                        [:img {:src "icons/edit.svg"}] " Edit"]])
+                        [:img {:src "/icons/edit.png"}] " Edit"]])
 
 
 

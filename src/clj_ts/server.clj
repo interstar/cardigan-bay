@@ -153,9 +153,23 @@
            (json/write-str result))})
 
 
+
+(defn icons-handler [request]
+  (let [uri (:uri request)
+        icon-name (second (re-matches  #"/icons/(\S+)" uri))
+        file (io/file (System/getProperty "user.dir") (str "." uri))]
+    (when (.isFile file)
+               {:status 200
+                :body file
+                :headers {"Content-Type" "image/png"}})
+
+))
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
-  (let [m (re-matches #"/view/(\S+)" uri)]
+  (let [qs (:query-string request)
+        m (re-matches #"/view/(\S+)" uri)]
+
     (cond
 
       (= uri "/startpage")
@@ -180,6 +194,9 @@
        :headers {"Content-Type" "application/rss+xml"}
        :body (card-server/rss-recent-changes )}
 
+      (re-matches  #"/icons/(\S+)" uri)
+      (icons-handler request)
+
       m
       (let [pagename (-> m second )]
         (do
@@ -192,12 +209,12 @@
       :otherwise
 
       (or
-          ; if the request is a static file
-          (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
-            (when (.isFile file)
-              {:status 200
-               :body file}))
-          (not-found "Page not found")))))
+       ; if the request is a static file
+       (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
+         (when (.isFile file)
+           {:status 200
+            :body file}))
+       (not-found "Page not found")))))
 
 
 
