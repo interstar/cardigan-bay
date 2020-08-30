@@ -259,6 +259,7 @@
 (defn one-card [card]
   (let [type (get card "delivered_type")
         data (get card "data")
+        metaid  (str "cardmeta" (get card "hash") )
         inner-html
         (condp = type
           ":raw"
@@ -274,7 +275,8 @@
     ;;(js/console.log (pr-str card))
 
     [:div {:class :card-outer}
-     [:div {:class :card-meta}
+     [:span [:button (str  "@" metaid)] ]
+     [:div {:class :card-meta :id metaid}
       [:span (get card "id")] " | "
       [:span (get card "hash")] " | Original type: "
       [:span (get card "type")] " | Delivered type: "
