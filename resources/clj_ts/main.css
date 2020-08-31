@@ -62,7 +62,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
     border-radius: 25px;
     background: #eeeeee;
     padding: 15px;
-    margin:1.5em;
+    margin-bottom:1.5em;
 }
 
 .card-meta {
