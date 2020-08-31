@@ -136,15 +136,13 @@ All the css is in `/resources/clj_ts/main.css`
 
 All the layout / widgets of the UI are defined (in hiccup format) in `src/clj_ts/client.cljs`
 
-**Most of the work on managing pages**, including parsing them into cards and handling the rendering of cards is in `src/clj_ts/pagestore.clj` 
+**Most of the work on managing pages**, including parsing them into cards and handling the rendering of cards is in `src/clj_ts/card_server.clj` and `src/clj_ts/pagestore.clj` 
 
-**If you want to creat a new card type** or edit how a particular type is being rendered, have a look in `pagestore.clj` too.
+**If you want to creat a new card type** or edit how a particular type is being rendered, have a look in  `card_server.clj` too.
 
 Cards that are not Markdown or raw-text are usually represented with their type, and a small map in EDN format, with the required parameters.
 
 **The core.logic stuff** happens in `src/clj_ts/logic.clj` If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
-
-I use my own [fsquery](https://github.com/interstar/FSQuery-CLJ) library to crawl the file system when building the logic db. 
 
 The convention for using logic queries is that calls to them are embedded in :system type cards. (See pagestore/system-card to see how to add a new system command. 
 
@@ -156,7 +154,7 @@ The convention for using logic queries is that calls to them are embedded in :sy
 
 Project ThoughtStorms is the code behind ThoughtStorms Wiki. The last version was the custom engine I wrote back in 2016 using Python.
 
-CardiganBay is, indeed, intended as the new engine to sit behind ThoughtStorms wiki. However it is not quite ready nor an exact clone. So ThoughtStorms is still running on that Python server at the moment.
+CardiganBay is, indeed, intended as the new engine to sit behind ThoughtStorms wiki. However it is not quite ready nor an exact clone. So ThoughtStorms is still running on that Python server **at the moment**.
 
 The plan is, though, that at some point, in the not too distant future, I'll move ThoughtStorms to this new wiki engine. At which point I don't plan to do any further work on that Python code-base nor on the Python libraries that underpin it.
 
