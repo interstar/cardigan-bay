@@ -256,10 +256,36 @@
       (double-bracket-links)))
 
 
+(defn card-bar [card]
+  (let [meta-id  (str "cardmeta" (get card "hash") )
+        state (r/atom {:toggle "none"})
+        toggle! (fn [e]
+                  (do
+                    (js/console.log "Here " (-> @state))
+                    (if (= (-> @state :toggle) "none")
+                      (swap! state #(conj % {:toggle "inline"}) )
+                      (swap! state #(conj % {:toggle "none"})))))]
+    (fn []
+      [:div {:class :card-meta}
+       [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
+        (if (= (-> @state :toggle) "none")
+          [:img {:src "/icons/eye.png"}]
+          [:img {:src "/icons/eye-off.png"}]
+          )
+
+        ]
+       [:span {:id meta-id :style {:display (-> @state :toggle)}}
+        [:span (get card "id")] " | "
+        [:span (get card "hash")] " | Original type: "
+        [:span (get card "type")] " | Delivered type: "
+        [:span (get card "delivered_type")]
+        ]
+       ])))
+
 (defn one-card [card]
   (let [type (get card "delivered_type")
         data (get card "data")
-        metaid  (str "cardmeta" (get card "hash") )
+
         inner-html
         (condp = type
           ":raw"
@@ -271,17 +297,12 @@
           ":stamp"
           (str data)
           (str "UNKNOWN TYPE(" type ") " data))
+
         ]
     ;;(js/console.log (pr-str card))
 
     [:div {:class :card-outer}
-     [:span [:button (str  "@" metaid)] ]
-     [:div {:class :card-meta :id metaid}
-      [:span (get card "id")] " | "
-      [:span (get card "hash")] " | Original type: "
-      [:span (get card "type")] " | Delivered type: "
-      [:span (get card "delivered_type")]
-      ]
+
      [:div
       {:class "card"
        :on-click
@@ -294,8 +315,9 @@
            (if (= classname "wikilink")
              (go-new! data))))
        :dangerouslySetInnerHTML
-       {:__html inner-html}} ]])
-  )
+       {:__html inner-html}} ]
+     [card-bar card]
+     ]))
 
 
 
