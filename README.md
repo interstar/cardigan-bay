@@ -51,7 +51,7 @@ I need a new wiki-engine that can
 
 Make sure you have Java on your machine. 
 
-Go to https://github.com/interstar/cardigan-bay/tree/master/deploy and download the zip file. 
+Go to https://github.com/interstar/cardigan-bay/releases/tag/0.0.3 and download the zip file. 
 
 Unzip it.
 
