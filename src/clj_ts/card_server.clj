@@ -303,7 +303,10 @@
 ;; transforms on pages
 
 (defn append-card-to-page! [page-name type body]
-  (let [page-body (pagestore/read-page (server-state) page-name)
+  (let [page-body (try
+                    (pagestore/read-page (server-state) page-name)
+                    (catch Exception e (str "New page : " page-name "\n\n"))
+                    )
         new-body (str page-body "----
 " type "
 " body)]
@@ -313,14 +316,7 @@
 (defn move-card [page-name hash destination-name]
   (let [from-cards (load->cards page-name)
         card (common/find-card-by-hash from-cards hash)
-
         stripped (into [] (common/remove-card-by-hash from-cards hash))
-
-        d0 (println hash)
-        d1 (println (str "From Cards ::: " (type from-cards) from-cards))
-
-        d2 (println (str "Card ::: " (type card) "++++ " card ))
-        d3 (println (str "Stripped ::: " (type stripped) stripped))
         stripped_raw (common/cards->raw stripped)
         ]
     (if (not (nil? card))

@@ -282,11 +282,11 @@
          [:span (get card "source_type")] " | Render type: "
          [:span (get card "render_type")]]
         [:div
-         (str card)
+
          [:form {:action "/api/movecard"}
           "Send to Another Page : "
           [:input { :name "to"}]
-          [:input { :name "hash"  :value (get card "hash")}]
+          [:input { :name "hash" :type "hidden" :value (get card "hash")}]
           [:input { :name "from" :type "hidden" :value (-> @db :current-page )}]
           [:img {:src "/icons/send.png"}]  [:input { :type "submit" :value "Send"}]
           ]
