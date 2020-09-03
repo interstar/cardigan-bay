@@ -178,7 +178,10 @@
            " || "
            [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
            " || "
-           [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]]
+           [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]
+
+
+           ]
           [:div {:id "nav2"}
 
            [:button
@@ -196,6 +199,9 @@
             {:class "big-btn"
              :on-click (fn [] (forward! (-> @db :future last)))} ""
             [:img {:src "/icons/skip-forward.png"}] " Forward"]
+
+           [:button {:class "big-btn"}
+            [:a {:href "/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
            ]
 
 
