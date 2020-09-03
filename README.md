@@ -98,17 +98,24 @@ clj -A:dev:app -d PATH/TO/PAGES PORT
 * Classic wiki, edit pages
 * create links using [[PageName]] format.
 * RecentChanges
-* List of Broken Links (links whose destinations don't exist)
+* **Automatic backlinks** (Because you guys all seem to love this) 
+* List of Broken Links (links whose destination pages don't exist)
 * List of Orphan Pages (pages without links to them)
+
 
 * Pages are sequences of cards, with card-types. 
 * Support for embedding from YouTube, BandCamp and SoundCloud
 * Support for embedding snippets of Clojure (to be executed on the server). Note that this is powerful but not secure. Be careful before enabling CardiganBay on a publicly accessible server.
+* Card oriented manipulation (eg. Move Card to another page)
+
 * Easily distributed in a JAR file.
 
 ### DISCLAIMER
 
-CardiganBay is currently actively developed Work-in-Progress and has some nice features. It also has some pretty rough edges, bugs, corner-cases, hardwired magic etc. And the current web-design is terrible. This software is probably not yet ready for usage in most of the real world except as a private notekeeping app. (Which is how I'm current using it.) And I don't recommend you currently use it.
+CardiganBay is currently actively developed Work-in-Progress and has some nice features. It also has some pretty rough edges, bugs, corner-cases, hardwired magic etc. And the current web-design is not quite so terrible as it was, but nothing to be proud of. 
+
+This software is probably not yet ready for usage in most of the real world except as a private notekeeping app. (Which is how I'm current using it.) I can't guarantee that a bug won't delete your data, so I highly recommend you only use this if 
+you are keeping backups of your pages (ideally in git or similar)
 
 OTH, if you're excited by the potential, please get involved. Send me a bug-report or feature request. Or start hacking. 
 
@@ -132,19 +139,54 @@ java -jar PATH/TO/clj-ts-0.1.0-SNAPSHOT-standalone.jar PATH/TO/PAGES PORT
 
 **Want to change the look of CardiganBay?**
 
-All the css is in `/resources/clj_ts/main.css`
+All the css is in 
 
-All the layout / widgets of the UI are defined (in hiccup format) in `src/clj_ts/client.cljs`
+* `resources/clj_ts/main.css`
 
-**Most of the work on managing pages**, including parsing them into cards and handling the rendering of cards is in `src/clj_ts/card_server.clj` and `src/clj_ts/pagestore.clj` 
+All the layout / widgets of the UI are defined (in hiccup format) in 
 
-**If you want to creat a new card type** or edit how a particular type is being rendered, have a look in  `card_server.clj` too.
+* `src/clj_ts/client.cljs`
+
+----
+
+
+
+**Most of the work on managing pages**, including parsing them into cards and handling the rendering of cards is in
+
+* `src/clj_ts/common.cljc` - common functions for parsing raw text into cards and manipulating lists of cards) that can be used both on the server and in the client.
+* `src/clj_ts/card_server.clj` - the main functionality for creating / manipulating the wiki full of cards. Look here for your  
+* `src/clj_ts/pagestore.clj` - the bit that deals with the file-system
+
+----
+
+**If you want to creat a new card type** or edit how a particular type is being rendered, have a look in  `src/clj_ts/card_server.clj` 
+
+But *also* look at `resources/gql_schema.edn` for enums related to graphql communication between client and server
 
 Cards that are not Markdown or raw-text are usually represented with their type, and a small map in EDN format, with the required parameters.
 
-**The core.logic stuff** happens in `src/clj_ts/logic.clj` If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
+----
 
-The convention for using logic queries is that calls to them are embedded in :system type cards. (See pagestore/system-card to see how to add a new system command. 
+**GraphQL Schema**
+
+Is in `resources/gql_schema.edn`. We're using graphql (via lacinia) for most communication between client and server. (Not all, for example card-move isn't yet). But eventually we should be doing all the things that it makes sense to do with gql with it.
+
+----
+
+**The core.logic stuff** happens in 
+
+* `src/clj_ts/logic.clj` 
+
+If you want to capture more information in logic format or ask new queries on it, that's the place to look at.
+
+The convention for using logic queries is that calls to them are embedded in :system type cards. (See `card-server/system-card` to see how to add a new system command.)
+
+----
+
+**Where's the web-server?**
+
+* `src/clj_ts/server.clj`
+
 
 ## Final Comments / Queries
 
