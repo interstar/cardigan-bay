@@ -120,9 +120,9 @@
 
 
 (defn ldb-query->mdlist-card [i title result qname f]
-  (let [items (apply str (map f result))]
-    (common/package-card i qname :markdown
-                  (str "*" title "* " "*(" (count result) " items)*\n\n" items ) )))
+  (let [items (apply str (map f result))
+        body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
+    (common/package-card i :system :markdown body body)))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
@@ -150,16 +150,17 @@
        i "Orphan Pages" (orphans) :orphanpages item1)
 
       :about
-      (common/package-card i :system :markdown
-                    (str "### System Information
+      (let [sr (str "### System Information
 
 **Wiki Name**,, " (-> (server-state) :wiki-name  )  "
 **PageStore Directory** (relative to code) ,, " (-> (server-state) :page-dir) "
 **Is Git Repo?**  ,, " (-> (server-state) :git-repo) "
-**Site Url Root** ,, " (-> (server-state) :site-url) ))
+**Site Url Root** ,, " (-> (server-state) :site-url) )]
+        (common/package-card i :system :markdown sr sr))
 
       ;; not recognised
-      (common/package-card i :system :raw (str "Not recognised system command in " data  " -- cmd " cmd )))
+      (let [d (str "Not recognised system command in " data  " -- cmd " cmd )]
+        (common/package-card i :system :raw d d )))
     ))
 
 
@@ -167,32 +168,32 @@
   (let [{:keys [from process]} (read-string data)
         raw (-> from (#(pagestore/read-page (server-state) %)) )
         return-type (if (nil? process) :markdown process)
-        head (str "*Transcluded from [[" from "]]* \n")]
-    (common/package-card i :transclude return-type (str head raw))
-    ))
+        head (str "*Transcluded from [[" from "]]* \n")
+        body (str head raw)]
+    (common/package-card i :transclude return-type body body)))
 
 (defn process-card [i card]
-  (let [[type, data] (common/raw-card->type-and-data card)]
-    (condp = type
-      :markdown (common/package-card i type :markdown data)
-      :raw (common/package-card i type :raw data)
+  (let [[source-type, data] (common/raw-card->type-and-data card)]
+    (condp = source-type
+      :markdown (common/package-card i source-type :markdown data data)
+      :raw (common/package-card i source-type :raw data data)
       :evalraw
-      (common/package-card i :evalraw :raw (server-eval data))
+      (common/package-card i :evalraw :raw data (server-eval data))
 
       :evalmd
-      (common/package-card i :evalmd :markdown (server-eval data))
+      (common/package-card i :evalmd :markdown data (server-eval data))
 
       :system
       (system-card i data)
 
       :embed
-      (common/package-card i type :html (embed/process data))
+      (common/package-card i source-type :html data (embed/process data))
 
       :transclude
       (transclude i data)
 
       ;; not recognised
-      (common/package-card i type type data)
+      (common/package-card i source-type source-type data data)
       )))
 
 (defn raw->cards [raw]
@@ -206,7 +207,10 @@
   (-> page-name
       (#(pagestore/read-page (server-state) %))
       raw->cards
-      (concat [(backlinks page-name)])))
+      ))
+
+(defn generate-system-cards [page-name]
+ [(backlinks page-name)] )
 
 (defn load-one-card [page-name hash]
   (let [cards (load->cards page-name)]
@@ -214,18 +218,17 @@
 
 ;; GraphQL resolvers
 
-(defn resolve-cooked-card [context arguments value]
+(defn resolve-card [context arguments value]
+  "Not yet tested"
   (let [{:keys [page_name hash]} arguments]
     (if (pagestore/page-exists? (server-state) page_name)
       (-> (load->cards page_name)
           (common/find-card-by-hash hash))
       (common/package-card 0 :markdown :markdown
+                           (str "Card " hash " doesn't exist in " page_name)
                            (str "Card " hash " doesn't exist in " page_name)))))
 
-(defn resolve-raw-card [context arguments value]
-  (-> (resolve-cooked-card context arguments value) (common/card->raw)))
-
-(defn resolve-raw-page [context arguments value]
+(defn resolve-source-page [context arguments value]
   (let [{:keys [page_name]} arguments]
     (if (pagestore/page-exists? (server-state) page_name)
       {:page_name page_name
@@ -234,7 +237,7 @@
        :body "PAGE DOES NOT EXIST"})))
 
 
-(defn resolve-cooked-page [context arguments value]
+(defn resolve-page [context arguments value]
   (let [{:keys [page_name]} arguments
         wiki-name (-> (server-state) :wiki-name)
         site-url (-> (server-state) :site-url)]
@@ -244,12 +247,13 @@
        :wiki_name wiki-name
        :site_url site-url
        :cards (load->cards page_name)
-       :editable true}
+       :system_cards (generate-system-cards page_name)
+       }
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
-       :editable true
        :cards (raw->cards "PAGE DOES NOT EXIST")
+       :system_cards []
        })))
 
 
@@ -262,11 +266,9 @@
 
       edn/read-string
 
-
-      (attach-resolvers {:resolve-raw-page resolve-raw-page
-                         :resolve-cooked-page resolve-cooked-page
-                         :resolve-raw-card resolve-raw-card
-                         :resolve-cooked-card resolve-cooked-card
+      (attach-resolvers {:resolve-source-page resolve-source-page
+                         :resolve-page resolve-page
+                         :resolve-card resolve-card
                          })
       schema/compile))
 
@@ -303,25 +305,9 @@
 (defn append-card-to-page! [page-name type body]
   (let [page-body (pagestore/read-page (server-state) page-name)
         new-body (str page-body "----
-:" type "
+" type "
 " body)]
     (write-page-to-file! page-name new-body )))
-
-
-
-
-
-
-(defn append-to-card! [page-name hash extra]
-  (let [cards (load->cards)
-        card (common/find-card-by-hash page-name hash)]
-    (if (nil? card)
-      (throw (Exception. (str "No card with hash " hash " in cards : " (pr-str cards)) ))
-
-      (let [new-cards (common/append-to-card-by-hash cards hash extra)])
-      )
-    ))
-
 
 
 (defn move-card [page-name hash destination-name]
@@ -332,17 +318,12 @@
 
         d0 (println hash)
         d1 (println (str "From Cards ::: " (type from-cards) from-cards))
-        d01 (println (str "Matches? "
-                          (apply str
-                                 (string/join
-                                  ","
-                                  (map #(str "\n[ === " hash "=== "
-                                             (common/match-hash % hash) " : " % "]" ) from-cards)))))
+
         d2 (println (str "Card ::: " (type card) "++++ " card ))
         d3 (println (str "Stripped ::: " (type stripped) stripped))
         stripped_raw (common/cards->raw stripped)
         ]
     (if (not (nil? card))
       (do
-        (append-card-to-page! destination-name (:raw_type card) (:raw_data card))
+        (append-card-to-page! destination-name (:source_type card) (:source_data card))
         (write-page-to-file! page-name stripped_raw)))))

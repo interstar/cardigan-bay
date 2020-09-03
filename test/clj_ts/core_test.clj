@@ -2,18 +2,21 @@
   (:require [clojure.test :refer :all]
             [clj-ts.common :as common]
 
-            [clj-ts.static-export :as static]
+           ;; [clj-ts.static-export :as static]
             [clj-ts.command-line :as command-line]
             ))
 
 
 (deftest basic-cards
   (testing "Making and analysing cards"
-    (let [c (common/package-card 1 :markdown :another "hello teenage america")]
-      (is (= (:type c) :markdown))
-      (is (= (:delivered_type c) :another))
+    (let [c (common/package-card
+             1
+             :markdown :another "hello teenage america" "goodbye cruel world" )]
+      (is (= (:source_type c) :markdown))
+      (is (= (:render_type c) :another))
       (is (= (:id c) 1))
-      (is (= (:data c) "hello teenage america")))))
+      (is (= (:source_data c) "hello teenage america"))
+      (is (= (:server_prepared_data c) "goodbye cruel world")))))
 
 (deftest raw-and-cards
   (testing "raw to card two way conversion"
@@ -23,8 +26,8 @@
 :unusual
 hello teenage america"
           [t2 d2] (common/raw-card->type-and-data r2)
-          c1 (common/package-card 1 t1 t1 d1)
-          c2 (common/package-card 2 t2 t2 d2)]
+          c1 (common/package-card 1 t1 t1 d1 d1)
+          c2 (common/package-card 2 t2 t2 d2 d2)]
       (is (= t1 :markdown))
       (is (= d1 "hello teenage america"))
       (is (= t2 :unusual))
@@ -33,32 +36,18 @@ hello teenage america"
       (is (= (common/card->raw c2) r2))
       )))
 
-(deftest append-to-card
-  (testing "appending to a single card"
-    (let [cards [(common/package-card 1 :markdown :markdown "hello")
-                 (common/package-card 2 :markdown :markdown "teenage")]
-          c2 (second cards)
-          c3 (common/append-to-card c2 " america")
-          cards2 (common/append-to-card-by-hash cards (:hash c2) " america" )
-          ]
-      (is (= (:data c3) "teenage america"))
-      (is (= (:id c3) (:id c2)))
-      (is (= (:type c3) (:type c2)))
-      (is (= (:delivered_type c3) (:delivered_type c2)))
 
-      (is (= (second cards2) c3))
-      )))
 
 (deftest basic-search-and-replace
   (testing "Searching cards"
-    (let [cards [(common/package-card 1 :a :b "hello")
-                 (common/package-card 2 :a :b "teenage")
-                 (common/package-card 3 :a :b "america")]
+    (let [cards [(common/package-card 1 :a :b "hello" "hello")
+                 (common/package-card 2 :a :b "teenage" "teenage")
+                 (common/package-card 3 :a :b "america" "america")]
           h (-> cards second :hash)
-          new-card (common/package-card 22 :b :a "boomer")
+          new-card (common/package-card 22 :b :a "boomer" "boomer")
           h2 (:hash new-card)
           c2 (common/sub-card cards #(= 2 (:id %)) new-card )
-          nc2 (common/package-card 33 :c :d "brazil")
+          nc2 (common/package-card 33 :c :d "brazil" "brazil")
           c3 (common/sub-card cards #(= 4 (:id %)) nc2)]
       (is (= 2 (->
                 (common/find-card-by-hash cards h)
@@ -70,9 +59,9 @@ hello teenage america"
 
 (deftest cards-test
   (testing "Cards"
-    (let [cards [(common/package-card 1 :markdown :boo "hello")
-                 (common/package-card 2 :a :b "teenage")
-                 (common/package-card 3 :a :b "america")]]
+    (let [cards [(common/package-card 1 :markdown :boo "hello" "hello")
+                 (common/package-card 2 :a :b "teenage" "teenage")
+                 (common/package-card 3 :a :b "america" "america")]]
       (is (= (common/cards->raw cards)
              "hello
 ----

@@ -1,28 +1,26 @@
 {:enums
- {:cardtype
-  {:description "A type that is attached to each card"
-   :values [:raw :markdown]}}
+ {:source_type
+  {:description "The original raw type of the card's source"
+   :values [:markdown :raw :evalraw :evalmd :system :embed :html]}
+
+  :render_type
+  {:description "A type that is attached to each card to specify how it should be rendered"
+   :values [:untouched :markdown]}}
 
 
  :objects
- {:RawCard
-  {:description "Raw version of a single card"
-   :fields
-   {:page_name {:type String}
-    :hash {:type String}
-    :data {:type String}}}
-
-  :Card
+ {:Card
   {:description "A card within the system"
    :fields
-   {:raw_type {:type String}
-    :delivered_type {:type String}
-    :raw_data {:type String}
+   {:source_type {:type String}
+    :render_type {:type String}
+    :source_data {:type String}
+    :server_prepared_data {:type String}
     :id {:type String}
-    :raw_hash {:type String}
+    :hash {:type String}
     }}
 
-  :RawPage
+  :SourcePage
   {:description "A page always has a representation whose body is nothing but a string of plaintext"
    :fields
    {:page_name {:type String}
@@ -36,36 +34,30 @@
     :cards {:type (list :Card)}
     :wiki_name {:type String}
     :site_url {:type String}
-    :editable {:type Boolean} }}}
+
+    :system_cards {:type (list :Card)}
+    }}}
 
 
  :queries
  {
-  :raw_page
-  {:type :RawPage
+  :source_page
+  {:type :SourcePage
    :description "Retrieve the raw version of a single page by its name"
    :args {:page_name {:type (non-null String)}}
-   :resolve :resolve-raw-page}
+   :resolve :resolve-source-page}
 
-  :cooked_page
+  :server_prepared_page
   {:type :Page
-   :description "Retrieve the cooked version of a single page by its name"
+   :description "Retrieve the server prepared version of a single page by its name"
    :args {:page_name {:type (non-null String)}}
-   :resolve :resolve-cooked-page}
+   :resolve :resolve-page}
 
 
-  :raw_card
-  {:type :RawCard
-   :description "Retrieve a raw version of a single card"
+  :card
+  {:type :Card
+   :description "Retrieve a single card"
    :args {:page_name {:type (non-null String)}
           :hash {:type (non-null String)}}
-   :resolve :resolve-raw-card}
-
-  :cooked_card
-  {:type :Card
-   :description "Retrieve a cooked version of a single card"
-   :args {:page_name {:type (non-null String)}
-          :hash {:type (non-null String)}
-          }
-   :resolve :resolve-cooked-card
+   :resolve :resolve-card
    }}}

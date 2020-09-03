@@ -6,6 +6,8 @@
             [clj-ts.command-line :as command-line]))
 
 
+;; Cards
+
 (defn raw-card->type-and-data [c]
   (let [card (string/trim c)
         rex #"^\s+:(\S+)" ]
@@ -16,28 +18,26 @@
        (string/replace-first c rex "")] ) ))
 
 
-(defn package-card [id, raw-type, delivered-type, raw-data]
-  {:raw_type raw-type
-   :delivered_type delivered-type
+(defn package-card [id, source-type, render-type, source-data server-prepared-data]
+  {:source_type source-type
+   :render_type render-type
+   :source_data source-data
+   :server_prepared_data server-prepared-data
    :id id
-   :raw_data raw-data
-   :raw_hash (-> raw-data (edn-hash) (uuid5))})
+   :hash (-> source-data (edn-hash) (uuid5))})
 
 
-(defn card->raw [{:keys [id raw_type raw_data]}]
-  (if  (=  type :markdown)
-    raw_data
-    (str "\n" raw_type "\n" (string/trim raw_data) )) )
+(defn card->raw [{:keys [id source_type source_data]}]
+  (if (= source_type :markdown)
+    source_data
+    (str "\n" source_type "\n" (string/trim source_data) )) )
 
-
-(defn append-to-card [card extra]
-  (package-card (:id card) (:raw_type card) (:delivered_type card) (str (:raw_data card) extra)))
-
-;; Cards in card list
 
 (defn match-hash [card hash]
-  (= (.toString (:raw_hash card))
+  (= (.toString (:hash card))
      (.toString hash)))
+
+;; Cards in card list
 
 (defn find-card-by-hash [cards hash]
   "Take a list of cards and return the one that matches hash or nil"
@@ -62,23 +62,17 @@
       )))
 
 
-
-(defn append-to-card-by-hash [cards hash extra]
-  (let [old (find-card-by-hash cards hash)
-        new (append-to-card old extra)]
-    (sub-card cards #(= hash (:hash %)) new)))
-
 (defn cards->raw [cards]
   (string/join "\n----" (map card->raw cards)))
 
 ;; Rendering / special Markup
 
-(defn auto-links [raw]
-    (string/replace raw #"\s+(http(s)?://(\S))\s+"
+(defn auto-links [text]
+    (string/replace text #"\s+(http(s)?://(\S))\s+"
                     (str "<a href=\"$1\">$1</span>")))
 
-(defn double-bracket-links [page]
-  (string/replace page #"\[\[(.+?)\]\]"
+(defn double-bracket-links [text]
+  (string/replace text #"\[\[(.+?)\]\]"
            (str "<span class=\"wikilink\" data=\"$1\">$1</span>")))
 
 
@@ -109,15 +103,7 @@
     ))
 
 
-(defn card->html [card]
-  (-> card :raw_data
-      (double-comma-table)
-      #?(:clj (md/md-to-html-string)
-         :cljs (md/md->html))
-      (auto-links)
-      (double-bracket-links)
 
-      ))
 
 ;; Cards with commands
 

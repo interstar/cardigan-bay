@@ -1,1 +1,1 @@
-clj -A:dev:app -n "BedROCK!" -s "https://bedrock.com/"
+clj -A:dev:app -n "BedROCK!" -s "https://example.com/"

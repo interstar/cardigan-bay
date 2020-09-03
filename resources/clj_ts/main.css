@@ -158,3 +158,12 @@ table .double-comma-table {
 .tslink {
     font-size: 0.7rem;
 }
+
+.footer {
+    font-size: 1rem;
+
+}
+
+.footer a {
+    color : blue;
+}

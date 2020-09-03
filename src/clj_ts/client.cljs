@@ -24,12 +24,12 @@
 (defonce db (r/atom
               {:current-page "HelloWorld"
                :raw ""
-               :cooked []
-               :editing false
+               :cards []
                :past ["HelloWorld"]
                :future []
                :wiki-name "Wiki Name"
-               :site-url "Site URL"}))
+               :site-url "Site URL"
+               :editing false}))
 
 
 ;; PageStore
@@ -39,20 +39,29 @@
   (let [lcpn (lower-case page-name)
 
         query (str "{\"query\" : \"query GetPage {
-  raw_page(page_name: \\\"" lcpn "\\\" ) {
+  source_page(page_name: \\\"" lcpn "\\\" ) {
     page_name
     body
   }
-  cooked_page(page_name:  \\\"" lcpn "\\\") {
+  server_prepared_page(page_name:  \\\"" lcpn "\\\") {
     page_name
     wiki_name
     site_url
     cards {
-      raw_type
       id
-      raw_data
-      raw_hash
-      delivered_type
+      hash
+      source_type
+      source_data
+      render_type
+      server_prepared_data
+    }
+    system_cards {
+      id
+      hash
+      source_type
+      source_data
+      render_type
+      server_prepared_data
     }
   }
 } \",\"variables\":null, \"operationName\":\"GetPage\"}")]
@@ -63,20 +72,23 @@
                    edn (-> e .-target .getResponseText .toString
                            (#(.parse js/JSON %)) js->clj )
                    data (-> edn (get "data"))
-                   raw (-> data (get "raw_page") (get "body"))
-                   cooked (-> data (get "cooked_page") (get "cards"))
-                   site-url (-> data (get "cooked_page") (get "site_url"))
-                   wiki-name (-> data (get "cooked_page") (get "wiki_name"))
+                   raw (-> data (get "source_page") (get "body"))
+                   cards (-> data (get "server_prepared_page") (get "cards"))
+                   system-cards (-> data (get "server_prepared_page") (get "system_cards"))
+                   site-url (-> data (get "server_prepared_page") (get "site_url"))
+                   wiki-name (-> data (get "server_prepared_page") (get "wiki_name"))
                    ]
 
-               (js/console.log "DDDD " (str cooked))
+               (js/console.log "Cards " cards)
+               (js/console.log "System Cards " system-cards)
 
                (swap! db assoc
                       :current-page page-name
                       :site-url site-url
                       :wiki-name wiki-name
                       :raw  raw
-                      :cooked cooked
+                      :cards cards
+                      :system-cards system-cards
                       :past new-past
                       :future new-future)
                ))
@@ -146,21 +158,6 @@
 
 
 ;; Rendering Views
-(comment
-  (defn process-card [i card]
-    (let [[type, data] (raw-card->type-and-data card)]
-      (condp = type
-        :markdown (package-card i type :markdown data)
-        :raw (package-card i type :raw data)
-        :server-eval (package-card i type :calculated data)
-        (package-card i type type data)
-        )))
-
-  (defn raw->cards [raw]
-    (let [cards (string/split  raw #"----")]
-      (map process-card (iterate inc 0) cards))))
-
-
 
 (defn nav-input [value]
   [:input {:type "text"
@@ -251,8 +248,7 @@
 
 
 (defn card->html [card]
-  (js/console.log (str "XXXCXXX " card))
-  (-> (get card "raw_data")
+  (-> (get card "server_prepared_data")
       (double-comma-table)
       (md/md->html)
       (auto-links)
@@ -268,7 +264,7 @@
                     (if (= (-> @state :toggle) "none")
                       (swap! state #(conj % {:toggle "block"}) )
                       (swap! state #(conj % {:toggle "none"})))))]
-    (fn []
+    (fn [card]
       [:div {:class :card-meta}
        [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
         (if (= (-> @state :toggle) "none")
@@ -282,15 +278,15 @@
         [:div [:h4 "Card Bar"]]
         [:div
          [:span "ID: " (get card "id")] " | Hash: "
-         [:span (get card "raw_hash")] " | Original type: "
-         [:span (get card "type")] " | Delivered type: "
-         [:span (get card "delivered_type")]]
+         [:span (get card "hash")] " | Source type: "
+         [:span (get card "source_type")] " | Render type: "
+         [:span (get card "render_type")]]
         [:div
          (str card)
          [:form {:action "/api/movecard"}
           "Send to Another Page : "
           [:input { :name "to"}]
-          [:input { :name "hash"  :value (get card "raw_hash")}]
+          [:input { :name "hash"  :value (get card "hash")}]
           [:input { :name "from" :type "hidden" :value (-> @db :current-page )}]
           [:img {:src "/icons/send.png"}]  [:input { :type "submit" :value "Send"}]
           ]
@@ -299,11 +295,10 @@
        ])))
 
 (defn one-card [card]
-  (let [type (get card "delivered_type")
-        data (get card "raw_data")
-
+  (let [rtype (get card "render_type")
+        data (get card "server_prepared_data")
         inner-html
-        (condp = type
+        (condp = rtype
           ":raw"
           (str "<pre>" data "</pre>")
           ":markdown"
@@ -312,9 +307,7 @@
           (str data)
           ":stamp"
           (str data)
-          (str "UNKNOWN TYPE(" type ") " data))
-
-        ]
+          (str "UNKNOWN TYPE(" type ") " data))]
     ;;(js/console.log (pr-str card))
 
     [:div {:class :card-outer}
@@ -339,12 +332,24 @@
 
 (defn card-list []
   [:div
-   (try
-     (let [cards (-> @db :cooked  )]
-       (for [card cards]
-         (one-card card) ))
-     (catch :default e
-       (js/alert e)))
+   [:div
+    (try
+      (let [cards (-> @db :cards)]
+        (for [card cards]
+          (one-card card))
+        )
+      (catch :default e
+        (js/alert e)))
+
+    ]
+   [:div
+    (try
+      (let [cards (-> @db :system-cards)]
+        (for [card cards]
+          (one-card card))
+        )
+      (catch :default e
+        (js/alert e)))]
    ])
 
 (defn main-container []
@@ -371,7 +376,12 @@
        [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
      ]
     [:div [tool-bar]]]
-   [main-container]])
+   [main-container]
+   [:div {:class "footer"}
+    [:span
+     [:span "This is " (-> @db :wiki-name) " wiki!"]
+     [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
+     [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "] "(c) Phil Jones 2020"]]])
 
 
 ;; tells reagent to begin rendering

@@ -18,3 +18,8 @@ The next cards have examples of :evalraw and :evalmd
 :evalmd
 
 (map #(str "* Item number **" % "**\n") (range 10))
+
+----
+:evalmd
+
+(str "This is some text with a link to [[SandBox]]")
