@@ -4,6 +4,7 @@ This is your default local wiki (affectionately known as BedRock).
 
 And you are on the initial page which is called HelloWorld.
 
+
 ----
 
 As you can see, in [[CardiganBay]] pages are broken into a series of cards. 
