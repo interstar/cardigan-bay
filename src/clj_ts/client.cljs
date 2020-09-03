@@ -10,7 +10,7 @@
 
 
             [markdown.core :as md]
-            [clj-ts.common :refer [raw-card->type-and-data package-card
+            [clj-ts.common :refer [raw-card->type-and-data
                                    double-comma-table
                                    double-bracket-links auto-links ]]
             ;;[clj-ts.common :refer [card->html ]]
@@ -48,10 +48,10 @@
     wiki_name
     site_url
     cards {
-      type
+      raw_type
       id
-      data
-      hash
+      raw_data
+      raw_hash
       delivered_type
     }
   }
@@ -68,6 +68,8 @@
                    site-url (-> data (get "cooked_page") (get "site_url"))
                    wiki-name (-> data (get "cooked_page") (get "wiki_name"))
                    ]
+
+               (js/console.log "DDDD " (str cooked))
 
                (swap! db assoc
                       :current-page page-name
@@ -144,19 +146,19 @@
 
 
 ;; Rendering Views
+(comment
+  (defn process-card [i card]
+    (let [[type, data] (raw-card->type-and-data card)]
+      (condp = type
+        :markdown (package-card i type :markdown data)
+        :raw (package-card i type :raw data)
+        :server-eval (package-card i type :calculated data)
+        (package-card i type type data)
+        )))
 
-(defn process-card [i card]
-  (let [[type, data] (raw-card->type-and-data card)]
-    (condp = type
-      :markdown (package-card i type :markdown data)
-      :raw (package-card i type :raw data)
-      :server-eval (package-card i type :calculated data)
-      (package-card i type type data)
-      )))
-
-(defn raw->cards [raw]
-  (let [cards (string/split  raw #"----")]
-    (map process-card (iterate inc 0) cards)))
+  (defn raw->cards [raw]
+    (let [cards (string/split  raw #"----")]
+      (map process-card (iterate inc 0) cards))))
 
 
 
@@ -249,7 +251,8 @@
 
 
 (defn card->html [card]
-  (-> (get card "data")
+  (js/console.log (str "XXXCXXX " card))
+  (-> (get card "raw_data")
       (double-comma-table)
       (md/md->html)
       (auto-links)
@@ -261,9 +264,9 @@
         state (r/atom {:toggle "none"})
         toggle! (fn [e]
                   (do
-                    (js/console.log "Here " (-> @state))
+
                     (if (= (-> @state :toggle) "none")
-                      (swap! state #(conj % {:toggle "inline"}) )
+                      (swap! state #(conj % {:toggle "block"}) )
                       (swap! state #(conj % {:toggle "none"})))))]
     (fn []
       [:div {:class :card-meta}
@@ -274,17 +277,30 @@
           )
 
         ]
-       [:span {:id meta-id :style {:display (-> @state :toggle)}}
-        [:span (get card "id")] " | "
-        [:span (get card "hash")] " | Original type: "
-        [:span (get card "type")] " | Delivered type: "
-        [:span (get card "delivered_type")]
+       [:div {:id meta-id :style {:spacing-top "5px" :display (-> @state :toggle)
+                                  }}
+        [:div [:h4 "Card Bar"]]
+        [:div
+         [:span "ID: " (get card "id")] " | Hash: "
+         [:span (get card "raw_hash")] " | Original type: "
+         [:span (get card "type")] " | Delivered type: "
+         [:span (get card "delivered_type")]]
+        [:div
+         (str card)
+         [:form {:action "/api/movecard"}
+          "Send to Another Page : "
+          [:input { :name "to"}]
+          [:input { :name "hash"  :value (get card "raw_hash")}]
+          [:input { :name "from" :type "hidden" :value (-> @db :current-page )}]
+          [:img {:src "/icons/send.png"}]  [:input { :type "submit" :value "Send"}]
+          ]
+         ]
         ]
        ])))
 
 (defn one-card [card]
   (let [type (get card "delivered_type")
-        data (get card "data")
+        data (get card "raw_data")
 
         inner-html
         (condp = type
@@ -326,7 +342,6 @@
    (try
      (let [cards (-> @db :cooked  )]
        (for [card cards]
-
          (one-card card) ))
      (catch :default e
        (js/alert e)))

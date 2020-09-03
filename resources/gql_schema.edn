@@ -15,11 +15,11 @@
   :Card
   {:description "A card within the system"
    :fields
-   {:type {:type String}
+   {:raw_type {:type String}
     :delivered_type {:type String}
-    :data {:type String}
+    :raw_data {:type String}
     :id {:type String}
-    :hash {:type String}
+    :raw_hash {:type String}
     }}
 
   :RawPage

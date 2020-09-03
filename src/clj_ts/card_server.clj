@@ -43,6 +43,7 @@
 (defn set-site-url! [url]
   (set-state! :site-url url))
 
+
 (defn set-facts-db! [facts]
   (set-state! :facts-db))
 
@@ -118,10 +119,10 @@
 
 
 
-(defn ldb-query->mdlist-card [i result qname f]
+(defn ldb-query->mdlist-card [i title result qname f]
   (let [items (apply str (map f result))]
     (common/package-card i qname :markdown
-                  (str "*" (count result) " items*\n\n" items ) )))
+                  (str "*" title "* " "*(" (count result) " items)*\n\n" items ) )))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
@@ -131,22 +132,22 @@
         cmd (:command info)]
     (condp = cmd
       :allpages
-      (ldb-query->mdlist-card i (all-pages) :allpages item1)
+      (ldb-query->mdlist-card i "All Pages" (all-pages) :allpages item1)
 
       :alllinks
       (ldb-query->mdlist-card
-       i (links) :alllinks
+       i "All Links" (links) :alllinks
        (fn [[a b]] (str "* [[" a "]] **->** [[" b "]]\n")))
 
 
       :brokenlinks
       (ldb-query->mdlist-card
-       i (broken-links) :brokenlinks
+       i "Broken Internal Links" (broken-links) :brokenlinks
        (fn [[a b]] (str "* [[" a "]] **X->** [[" b "]]\n")))
 
       :orphanpages
       (ldb-query->mdlist-card
-       i (orphans) :orphanpages item1)
+       i "Orphan Pages" (orphans) :orphanpages item1)
 
       :about
       (common/package-card i :system :markdown
@@ -176,10 +177,10 @@
       :markdown (common/package-card i type :markdown data)
       :raw (common/package-card i type :raw data)
       :evalraw
-      (common/package-card i type :raw (server-eval data))
+      (common/package-card i :evalraw :raw (server-eval data))
 
       :evalmd
-      (common/package-card i type :markdown (server-eval data))
+      (common/package-card i :evalmd :markdown (server-eval data))
 
       :system
       (system-card i data)
@@ -292,7 +293,7 @@
 ;; Backlinks
 
 (defn backlinks [page-name]
-  (ldb-query->mdlist-card "backlinks" (links-to page-name) :calculated
+  (ldb-query->mdlist-card "backlinks" "Backlinks" (links-to page-name) :calculated
                           (fn [[a b]] (str "* [[" a "]] \n"))))
 
 
@@ -308,18 +309,40 @@
 
 
 
-(defn find-card-by-hash [page-name hash]
-  (common/find-card-by-hash (load->cards) hash)
-)
+
 
 
 (defn append-to-card! [page-name hash extra]
   (let [cards (load->cards)
-        card (find-card-by-hash page-name hash)
-]
+        card (common/find-card-by-hash page-name hash)]
     (if (nil? card)
       (throw (Exception. (str "No card with hash " hash " in cards : " (pr-str cards)) ))
 
       (let [new-cards (common/append-to-card-by-hash cards hash extra)])
       )
     ))
+
+
+
+(defn move-card [page-name hash destination-name]
+  (let [from-cards (load->cards page-name)
+        card (common/find-card-by-hash from-cards hash)
+
+        stripped (into [] (common/remove-card-by-hash from-cards hash))
+
+        d0 (println hash)
+        d1 (println (str "From Cards ::: " (type from-cards) from-cards))
+        d01 (println (str "Matches? "
+                          (apply str
+                                 (string/join
+                                  ","
+                                  (map #(str "\n[ === " hash "=== "
+                                             (common/match-hash % hash) " : " % "]" ) from-cards)))))
+        d2 (println (str "Card ::: " (type card) "++++ " card ))
+        d3 (println (str "Stripped ::: " (type stripped) stripped))
+        stripped_raw (common/cards->raw stripped)
+        ]
+    (if (not (nil? card))
+      (do
+        (append-card-to-page! destination-name (:raw_type card) (:raw_data card))
+        (write-page-to-file! page-name stripped_raw)))))

@@ -1,6 +1,6 @@
 Pages which have no other pages linking to them.
 
-[Database](/clj_ts/db)
+[Database](/system/db)
 
 ----
 :system

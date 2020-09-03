@@ -161,9 +161,19 @@
     (when (.isFile file)
                {:status 200
                 :body file
-                :headers {"Content-Type" "image/png"}})
+                :headers {"Content-Type" "image/png"}})))
 
-))
+(defn move-card-handler [request]
+  (let [ps (:params request)]
+    (card-server/move-card (:from ps) (:hash ps) (:to ps))
+    {:status 200
+     :headers {"Content-Type" "text/html"}
+     :body (str
+            "<head>
+  <meta http-equiv=\"Refresh\" content=\"0; URL=/view/"
+(:to ps)
+"\">
+</head>")}))
 
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
@@ -186,13 +196,19 @@
       (= uri "/clj_ts/graphql")
       (graphql-handler request)
 
-      (= uri "/clj_ts/db")
+      (= uri "/system/db")
       (raw-db request)
+
+      (= uri "/api/movecard")
+      (move-card-handler request)
+
 
       (= uri "/rss/recentchanges")
       {:status 200
        :headers {"Content-Type" "application/rss+xml"}
        :body (card-server/rss-recent-changes )}
+
+
 
       (re-matches  #"/icons/(\S+)" uri)
       (icons-handler request)

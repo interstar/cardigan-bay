@@ -6,8 +6,6 @@
             [clj-ts.command-line :as command-line]))
 
 
-;; Manage Cards
-
 (defn raw-card->type-and-data [c]
   (let [card (string/trim c)
         rex #"^\s+:(\S+)" ]
@@ -18,31 +16,40 @@
        (string/replace-first c rex "")] ) ))
 
 
-(defn package-card [id, type, deltype, data]
-  {:type type
-   :delivered_type deltype
+(defn package-card [id, raw-type, delivered-type, raw-data]
+  {:raw_type raw-type
+   :delivered_type delivered-type
    :id id
-   :data data
-   :hash (-> data (edn-hash) (uuid5))})
+   :raw_data raw-data
+   :raw_hash (-> raw-data (edn-hash) (uuid5))})
 
 
-(defn card->raw [{:keys [id type data]}]
+(defn card->raw [{:keys [id raw_type raw_data]}]
   (if  (=  type :markdown)
-    data
-    (str "\n" type "\n" (string/trim data) )))
+    raw_data
+    (str "\n" raw_type "\n" (string/trim raw_data) )) )
 
 
 (defn append-to-card [card extra]
-  (package-card (:id card) (:type card) (:delivered_type card) (str (:data card) extra)))
+  (package-card (:id card) (:raw_type card) (:delivered_type card) (str (:raw_data card) extra)))
 
 ;; Cards in card list
 
+(defn match-hash [card hash]
+  (= (.toString (:raw_hash card))
+     (.toString hash)))
+
 (defn find-card-by-hash [cards hash]
   "Take a list of cards and return the one that matches hash or nil"
-  (let [results (filter #(= hash (:hash %)) cards )]
+  (let [results (filter #(match-hash % hash) cards )]
     (if (> (count results) 0)
       (first results)
       nil)))
+
+(defn remove-card-by-hash [cards hash]
+  "Take a list of cards and return the list without the card that matches hash"
+  (remove #(match-hash % hash) cards)
+   )
 
 (defn sub-card [cards p new-card]
   "Replace the first card that matches p with new-card. If no card matches, return cards unchanged"
@@ -53,6 +60,7 @@
       cards
       (concat before [new-card] after)
       )))
+
 
 
 (defn append-to-card-by-hash [cards hash extra]
@@ -102,7 +110,7 @@
 
 
 (defn card->html [card]
-  (-> card :data
+  (-> card :raw_data
       (double-comma-table)
       #?(:clj (md/md-to-html-string)
          :cljs (md/md->html))

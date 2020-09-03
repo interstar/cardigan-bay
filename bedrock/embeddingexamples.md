@@ -4,7 +4,7 @@ Some examples of card types that embed media from other sites :
 * YouTube
 * SoundCloud
 * BandCamp
-* Generica oEmbed. This is also pulling from soundcloud but note that it could be anywhere. The source of the data is specified in the :api argument.
+* Generic oEmbed. This is also pulling from soundcloud but note that it could be anywhere. The source of the data is specified in the :api argument.
 
 ----
 :embed
