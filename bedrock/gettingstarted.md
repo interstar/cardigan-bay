@@ -47,7 +47,7 @@ For example, the next card after this has a :raw type.
 
 This card has a :raw type. 
 
-We treat it as plain-text and don't interpret it as markdown.
+We treat it as plain-text and **don't** interpret it as markdown.
 
 ----
 
