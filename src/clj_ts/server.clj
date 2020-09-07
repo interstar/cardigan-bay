@@ -175,12 +175,18 @@
 "\">
 </head>")}))
 
+(defn bookmarklet-handler [request]
+  "Bookmarklet Handler")
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
   (let [qs (:query-string request)
         m (re-matches #"/view/(\S+)" uri)]
 
     (cond
+
+      (= uri "/")
+      (get-start-page request)
 
       (= uri "/startpage")
       (get-start-page request)
@@ -203,12 +209,14 @@
       (move-card-handler request)
 
 
-      (= uri "/rss/recentchanges")
+      (= uri "/api/rss/recentchanges")
       {:status 200
        :headers {"Content-Type" "application/rss+xml"}
        :body (card-server/rss-recent-changes )}
 
 
+      (= uri "/api/bookmarklet")
+      (bookmarklet-handler request)
 
       (re-matches  #"/icons/(\S+)" uri)
       (icons-handler request)

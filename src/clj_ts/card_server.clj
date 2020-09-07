@@ -218,8 +218,9 @@
 
 ;; GraphQL resolvers
 
-(defn resolve-card [context arguments value]
-  "Not yet tested"
+(defn resolve-card
+    "Not yet tested"
+  [context arguments value]
   (let [{:keys [page_name hash]} arguments]
     (if (pagestore/page-exists? (server-state) page_name)
       (-> (load->cards page_name)

@@ -50,7 +50,10 @@
   (generic-oembed "https://soundcloud.com/oembed" (:url data)))
 
 (defn bandcamp [{:keys [id url description]}]
-  (str "<div class=\"embed_div\"><div class='bandcamp-embedded'><iframe style='border: 0; width: 550px; height: 555px;' src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/' seamless><a href='" url "'>" description "</a></iframe></div></div>")
+  (str "<div class=\"embed_div\"><div class='bandcamp-embedded'>
+<iframe style='border: 0; width: 550px; height: 555px;'
+src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/'
+seamless><a href='" url "'>" description "</a></iframe></div></div>")
   )
 
 (defn twitter [data]

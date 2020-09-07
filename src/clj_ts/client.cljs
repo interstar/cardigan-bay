@@ -29,7 +29,8 @@
                :future []
                :wiki-name "Wiki Name"
                :site-url "Site URL"
-               :editing false}))
+               :editing false
+               :mode :page}))
 
 
 ;; PageStore
@@ -201,7 +202,7 @@
             [:img {:src "/icons/skip-forward.png"}] " Forward"]
 
            [:button {:class "big-btn"}
-            [:a {:href "/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
+            [:a {:href "/api/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
            ]
 
 
@@ -361,13 +362,17 @@
 (defn main-container []
 
   [:div
-   (if (-> @db :editing)
-     [:div {:class "edit-box"}
-      [:textarea {:id "edit-field" :cols 80 :rows 40}
-       (-> @db :raw)]]
+   (if (= :page (-> @db :mode ))
      [:div
-      (card-list)]
-     )])
+      (if (-> @db :editing)
+        [:div {:class "edit-box"}
+         [:textarea {:id "edit-field" :cols 80 :rows 40}
+          (-> @db :raw)]]
+        [:div
+         (card-list)]
+        )]
+     [:div
+      [:h2 "Bookmark"]])])
 
 ;;
 
@@ -402,7 +407,7 @@
  "keypress"
  (fn [e]
    (let [kc (.-charCode e)]
-     (if (= 69 kc)
+     (if (and (.ctrlKey e) (= 69 kc))
        (swap! db assoc
               :editing true))
      (-> js/document (.getElementById "edit-field") (.focus) )

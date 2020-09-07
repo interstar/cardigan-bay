@@ -39,20 +39,23 @@
 
 ;; Cards in card list
 
-(defn find-card-by-hash [cards hash]
+(defn find-card-by-hash
   "Take a list of cards and return the one that matches hash or nil"
+  [cards hash]
   (let [results (filter #(match-hash % hash) cards )]
     (if (> (count results) 0)
       (first results)
       nil)))
 
-(defn remove-card-by-hash [cards hash]
+(defn remove-card-by-hash
   "Take a list of cards and return the list without the card that matches hash"
+  [cards hash]
   (remove #(match-hash % hash) cards)
    )
 
-(defn sub-card [cards p new-card]
+(defn sub-card
   "Replace the first card that matches p with new-card. If no card matches, return cards unchanged"
+  [cards p new-card]
   (let [un-p #(not (p %))
         before (take-while un-p cards)
         after (rest (drop-while un-p cards))]
@@ -79,6 +82,8 @@
 (defn tag [t s] (str "<" t ">" s "</" t ">"))
 (defn td [s] (tag "td" s))
 (defn tr [s] (tag "tr" s))
+(defn th [s] (tag "th" s))
+
 
 (defn double-comma-table [raw]
   (loop [lines (string/split-lines raw) in-table false build [  ] ]
@@ -94,9 +99,9 @@
                   row (tr (apply str (for [i items] (td i))))]
               (if in-table
                 (recur (rest lines) true (conj build row))
-                (recur (rest lines) true (conj build "<table class='double-comma-table'>" row))))
+                (recur (rest lines) true (conj build "<div class=\".embed_div\" ><table class='double-comma-table'>" row))))
             (if in-table
-              (recur (rest lines) false (conj build "</table>" line ) )
+              (recur (rest lines) false (conj build "</table></div>" line ) )
               (recur (rest lines) false (conj build line )))
             )
           ))
