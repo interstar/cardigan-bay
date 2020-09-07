@@ -2,6 +2,11 @@
  :aliases
 
  {
+  :eastwood
+      {:main-opts ["-m" "eastwood.lint" {:source-paths ["src"]}]
+       :extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}}
+
+
   :clj-kondo
   {:extra-deps {clj-kondo {:mvn/version "RELEASE"}}
    :main-opts ["-m" "clj-kondo.main"]}
