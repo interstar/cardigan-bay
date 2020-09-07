@@ -31,7 +31,14 @@
         id (->
             (re-matches #"https://www.youtube.com/watch\?v=(\S+)" url)
             second) ]
-     (str "<div class='youtube-embedded'><iframe width='400' height='271' src='http://www.youtube.com/embed/" id  "' frameborder='0' allowfullscreen></iframe></div>")
+     (str "<div class=\"embed_div\">
+<div class='youtube-embedded'>
+<iframe src='http://www.youtube.com/embed/" id  "'
+        style=\"position: absolute; top:0; left:0; width:100%; height:100%;\"
+        frameborder='0' allowfullscreen>
+</iframe>
+</div>
+</div>")
      ))
 
 
@@ -43,7 +50,7 @@
   (generic-oembed "https://soundcloud.com/oembed" (:url data)))
 
 (defn bandcamp [{:keys [id url description]}]
-  (str "<div class='bandcamp-embedded'><iframe style='border: 0; width: 550px; height: 555px;' src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/' seamless><a href='" url "'>" description "</a></iframe></div>")
+  (str "<div class=\"embed_div\"><div class='bandcamp-embedded'><iframe style='border: 0; width: 550px; height: 555px;' src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/' seamless><a href='" url "'>" description "</a></iframe></div></div>")
   )
 
 (defn twitter [data]
