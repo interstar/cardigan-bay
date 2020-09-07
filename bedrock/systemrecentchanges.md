@@ -1,3 +1,4 @@
+* [[IntroductionToCardiganBay]] (Mon Sep 07 00:03:16 BRT 2020)
 * [[EmbeddingExamples]] (Thu Sep 03 20:18:54 BRT 2020)
 * [[GettingStarted]] (Thu Sep 03 20:14:21 BRT 2020)
 * [[HackerOnBoarding]] (Thu Sep 03 13:27:44 BRT 2020)
@@ -10,7 +11,6 @@
 * [[OrphanPages]] (Wed Sep 02 15:57:23 BRT 2020)
 * [[CardiganBay]] (Sun Aug 30 21:46:56 BRT 2020)
 * [[gettingstarted]] (Tue Aug 25 03:51:34 BRT 2020)
-* [[IntroductionToCardiganBay]] (Thu Apr 16 19:26:44 BRT 2020)
 * [[EvalExamples]] (Sat Apr 04 13:55:34 BRT 2020)
 * [[AboutThisWiki]] (Sat Mar 28 18:06:36 BRT 2020)
 * [[RecentChanges]] (Tue Mar 17 02:09:09 BRT 2020)
