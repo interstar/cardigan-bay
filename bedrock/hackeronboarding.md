@@ -48,4 +48,16 @@ The convention for using logic queries is that calls to them are embedded in :sy
 
 **Where's the web-server?**
 
-* `src/clj_ts/server.clj`
+* `src/clj_ts/server.clj`----
+:markdown
+
+## Starting the Wiki
+
+In development mode :
+
+```
+clj -A:dev:app [ARGS]
+```
+
+
+
