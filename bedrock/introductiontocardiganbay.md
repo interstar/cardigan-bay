@@ -44,7 +44,7 @@ The wiki-engine should
 * Manage several wikis from a single instance of the engine. And to be able to perform operations that cut across them. Eg. to migrate or copy pages or cards from one to the other, to do diffs etc.
 * Be able to publish collections of pages as stand-alone sites.
 * Be able, increasingly, to analyse and ask questions about the contents of the wiki. To help us classify, fix broken links, merge pages, discover interesting insights and overviews.
-* Accept executable code, making it active notebook similar to JuPyter Notebook etc.
+* Accept executable code, making it an active notebook similar to JuPyter Notebook etc.
 * Support user customization. Where possible, customization information should live within the wiki and be editable by the user.
 
 ----
