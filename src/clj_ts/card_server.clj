@@ -172,6 +172,13 @@
         body (str head raw)]
     (common/package-card i :transclude return-type body body)))
 
+(defn bookmark-card [data]
+  (let [{:keys [url timestamp]} (read-string data)]
+    (str "
+Bookmarked " timestamp  ",, <" url ">
+
+")))
+
 (defn process-card [i card]
   (let [[source-type, data] (common/raw-card->type-and-data card)]
     (condp = source-type
@@ -191,6 +198,9 @@
 
       :transclude
       (transclude i data)
+
+      :bookmark
+      (common/package-card i :bookmark :markdown data (bookmark-card data))
 
       ;; not recognised
       (common/package-card i source-type source-type data data)

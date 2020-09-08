@@ -176,7 +176,15 @@
 </head>")}))
 
 (defn bookmarklet-handler [request]
-  "Bookmarklet Handler")
+  (let [url (-> request :params :url)
+        new-card (str "{:url \"" url "\" :timestamp \""
+                      (java.time.LocalDateTime/now) "\"  }")
+        ]
+    (do
+      (card-server/append-card-to-page! "InQueue" :bookmark new-card )
+      {:status 303
+       :headers {"Location" "/view/InQueue"} }))
+)
 
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
@@ -186,7 +194,8 @@
     (cond
 
       (= uri "/")
-      (get-start-page request)
+      {:status 303
+       :headers {"Location" "/index.html"} }
 
       (= uri "/startpage")
       (get-start-page request)

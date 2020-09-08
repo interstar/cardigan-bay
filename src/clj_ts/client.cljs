@@ -117,7 +117,8 @@
       (fn [e]
         (go
           (<! (timeout 1000))
-          (reload!)
+----
+:bookmark          (reload!)
           (r/force-update-all)))
       "POST"
       (pr-str {:page page-name
@@ -392,7 +393,9 @@
     [:span
      [:span "This is " (-> @db :wiki-name) " wiki!"]
      [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
-     [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "] "(c) Phil Jones 2020"]]])
+     [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
+     "(c) Phil Jones 2020  | "
+     [:a {:href "javascript:(function(){window.location='http://localhost:4545/api/bookmarklet?url='+document.URL;})();"} "Bookmark to this Wiki"]] ]])
 
 
 ;; tells reagent to begin rendering
