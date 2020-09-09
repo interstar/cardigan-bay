@@ -8,8 +8,6 @@
 
 
 
-
-
 ;; Basic functions
 
 (defn page-name->file-path [server-state page-name ]

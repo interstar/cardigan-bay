@@ -182,6 +182,9 @@
            " || "
            [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]
 
+           " || "
+           [:a {:href "/api/exportallpages"} "Export All Pages"]
+
 
            ]
           [:div {:id "nav2"}
@@ -204,7 +207,11 @@
 
            [:button {:class "big-btn"}
             [:a {:href "/api/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
+
+
            ]
+
+
 
 
           ] ))))
@@ -236,7 +243,12 @@
             [:button {:class "big-btn"
                       :on-click
                       #(swap! db assoc :editing (not editing))}
-                        [:img {:src "/icons/edit.png"}] " Edit"]])
+             [:img {:src "/icons/edit.png"}] " Edit"]
+
+            [:button {:class "big-btn"}
+             [:a {:href (str "/api/exportpage?page=" (-> @db :current-page))}
+              [:img {:src "/icons/package.png"}]
+              " Export"]]])
 
 
 

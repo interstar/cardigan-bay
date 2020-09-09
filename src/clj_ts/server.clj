@@ -8,6 +8,7 @@
 
             [clj-ts.card-server :as card-server]
             [clj-ts.common :as common]
+            [clj-ts.static-export :as export]
 
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
@@ -186,6 +187,21 @@
        :headers {"Location" "/view/InQueue"} }))
 )
 
+(defn export-page-handler [request]
+  (let [page-name (-> request :params :page)]
+    (do
+      (println "In Export Handler. Page is  " page-name)
+      (export/export-page page-name (card-server/server-state))
+      {:status 303
+       :headers {"Location" (str  "/view/" page-name)}})
+    ))
+
+(defn export-all-pages-handler [request]
+  (do
+    (export/export-all-pages (card-server/server-state))
+    {:status 303
+     :headers {"Location" "/view/HelloWorld" }}))
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
   (let [qs (:query-string request)
@@ -217,7 +233,6 @@
       (= uri "/api/movecard")
       (move-card-handler request)
 
-
       (= uri "/api/rss/recentchanges")
       {:status 200
        :headers {"Content-Type" "application/rss+xml"}
@@ -226,6 +241,12 @@
 
       (= uri "/api/bookmarklet")
       (bookmarklet-handler request)
+
+      (= uri "/api/exportpage")
+      (export-page-handler request)
+
+      (= uri "/api/exportallpages")
+      (export-all-pages-handler request)
 
       (re-matches  #"/icons/(\S+)" uri)
       (icons-handler request)
