@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [clj-ts.common :as common]
 
+
            ;; [clj-ts.static-export :as static]
             [clj-ts.command-line :as command-line]
             ))

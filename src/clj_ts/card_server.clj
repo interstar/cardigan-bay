@@ -7,14 +7,57 @@
    [clj-ts.common :as common]
    [clj-ts.embed :as embed]
 
-
-
    [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
    [com.walmartlabs.lacinia.schema :as schema]
    [clojure.java.io :as io]
    [clojure.edn :as edn]
    [clj-rss.core :as rss]
    ])
+
+
+;; CARD-SERVER-STATE record
+;; is the DEFINITIVE REPRESENTATION of card server state
+
+
+(defprotocol CardServer
+  (wiki-name [cs])
+  (site-url [cs])
+  (facts-db [cs])
+  (page-dir [cs])
+  (git-repo? [cs])
+  (start-page [cs])
+  (export-page-dir [cs])
+  (export-page-extension [cs])
+  (export-page-root [cs])
+  (export-template [cs])
+  )
+
+
+(deftype CardServerRecord [cs-rec]
+  CardServer
+  (wiki-name [cs]
+    (:wiki-name cs-rec))
+  (site-url [cs]
+    (:site-url cs-rec))
+  (facts-db [cs]
+    (:facts-db [cs-rec]))
+  (page-dir [cs]
+    (:page-dir [cs-rec]))
+  (git-repo? [cs]
+    (:git-repo? [cs-rec]))
+  (start-page [cs]
+    (:start-page [cs-rec]))
+  (export-page-dir [cs]
+    (:export-page-dir cs-rec (str (page-dir cs) "/exported")))
+  (export-page-extension [cs]
+    (:export-page-extension cs-rec ""))
+  (export-page-root [cs]
+    (:export-page-root cs-rec "./"))
+  (export-template [cs]
+    (:export-template cs-rec nil))
+
+  )
+
 
 
 ;; State Management is done at the card-server level
@@ -86,7 +129,8 @@
 
 (defn regenerate-db! []
   (future
-    (set-state! :facts-db (ldb/regenerate-db (server-state)))) )
+    (set-state! :facts-db (ldb/regenerate-db (server-state)))
+    (println "Finished building logic db")) )
 
 (defn raw-db [] (-> (server-state) :facts-db))
 

@@ -198,7 +198,11 @@
 
 (defn export-all-pages-handler [request]
   (do
-    (export/export-all-pages (card-server/server-state))
+    (println "Exporting all pages ... in background")
+    (future
+      (do
+        (export/export-all-pages (card-server/server-state))
+        (println "Export finished")))
     {:status 303
      :headers {"Location" "/view/HelloWorld" }}))
 
