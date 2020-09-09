@@ -5,7 +5,7 @@ The card-types :evalraw and :evalmd allow us to embed Clojure code in a page whi
 
 To run. the code must be correct (without bugs or causing exceptions). And not try to use external resources or include libraries etc. 
 
-:evalraw evaluates the code and returns the result as a raw string, to be rendered as returned. :evalmd assumes that the code returned will itself be in markdown format and therefore should be run through the markdown 
+:evalraw evaluates the code and returns the result as a raw string, to be rendered as returned. :evalmd assumes that the code returned will itself be in markdown format and therefore should be run through the markdown renderer.
 
 The next cards have examples of :evalraw and :evalmd
 
@@ -25,6 +25,13 @@ The next cards have examples of :evalraw and :evalmd
 :evalmd
 
 (str "This is some text with a link to [[SandBox]]")
+
+----
+:evalmd
+
+(for [x (range 10)] 
+   (str x ",," (* x x) ",," (* x x x) "\n")
+)
 
 ----
 ### IMPORTANT
