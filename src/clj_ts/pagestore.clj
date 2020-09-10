@@ -11,7 +11,7 @@
 ;; Basic functions
 
 (defn page-name->file-path [server-state page-name ]
-  (let [mdn (str (string/lower-case page-name) ".md")
+  (let [mdn (str page-name ".md")
         d (.page-dir server-state)]
     (.resolve d mdn)))
 

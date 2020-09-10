@@ -37,7 +37,7 @@
 
 
 (defn load-page! [page-name new-past new-future]
-  (let [lcpn (lower-case page-name)
+  (let [lcpn page-name
 
         query (str "{\"query\" : \"query GetPage {
   source_page(page_name: \\\"" lcpn "\\\" ) {

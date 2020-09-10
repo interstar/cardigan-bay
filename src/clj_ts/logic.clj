@@ -12,6 +12,9 @@
 
 (pldb/db-rel link from to)
 (pldb/db-rel page p)
+(pldb/db-rel good-name lc capture)
+
+
 
 
 
@@ -26,7 +29,7 @@
   (let [text (-> path .toFile slurp)
         link-seq (re-seq #"\[\[(.+?)\]\]" text)]
     (map #(vector (path->pagename path)
-                  (-> % last (string/lower-case))  )
+                  (-> % last )  )
          link-seq)))
 
 

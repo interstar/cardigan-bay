@@ -29,7 +29,7 @@
   (string/replace text #"\[\[(.+?)\]\]"
                   (fn [[_ m]]
                     (str "<a class=\"external-link\" href=\""
-                         (export-link (string/lower-case m) server-state)"\">"
+                         (export-link m server-state)"\">"
                          m "</a>"))))
 
 (defn card->html
