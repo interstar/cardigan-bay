@@ -236,7 +236,9 @@
 **Wiki Name**,, " (-> (server-state) .wiki-name  )  "
 **PageStore Directory** (relative to code) ,, " (-> (server-state) .page-dir) "
 **Is Git Repo?**  ,, " (-> (server-state) .git-repo?) "
-**Site Url Root** ,, " (-> (server-state) .site-url) )]
+**Site Url Root** ,, " (-> (server-state) .site-url) "
+**Export Dir** ,, " (-> (server-state) .export-page-dir)
+                    )]
         (common/package-card i :system :markdown sr sr))
 
       ;; not recognised

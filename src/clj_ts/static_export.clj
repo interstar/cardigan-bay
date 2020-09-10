@@ -72,7 +72,9 @@
                [:body
                 [:h2 page-name]
                 [:div
-                 rendered]]]
+                 rendered]
+                [:div {:class "system"}
+                 (card->html (card-server/backlinks page-name) server-state)]]]
               )
         file (export-file-path page-name server-state)
         ]
@@ -81,11 +83,11 @@
     (spit file page)))
 
 (defn export-all-pages [server-state]
-  (doseq [p-name (remove #(or (= % "alllinks")
-                              (= % "allpages")
-                              (= % "brokenlinks")
-                              (= % "orphanpages")
-                              (= % "recentchanges")
+  (doseq [p-name (remove #(or (= % "AllLinks")
+                              (= % "AllPages")
+                              (= % "BrokenLinks")
+                              (= % "OrphanPages")
+                              (= % "RecentChanges")
                               (= % "systemrecentchanges"))
                          (card-server/all-pages))]
     (export-page p-name server-state)
