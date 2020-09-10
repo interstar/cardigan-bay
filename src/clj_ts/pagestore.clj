@@ -40,7 +40,18 @@
       (spit (.toString x) data))))
 
 
-
+(defn similar-page-names [server-state p-name]
+  (let [all-pages (java.nio.file.Files/newDirectoryStream
+                   (.page-dir server-state) "*.md")
+        all-names (map #(-> (.getFileName %)
+                            .toString
+                            (string/split #"\.")
+                            butlast
+                            last)
+                       all-pages) ]
+    (filter #(= (string/lower-case %) (string/lower-case p-name) ) all-names )
+    )
+  )
 
 
 

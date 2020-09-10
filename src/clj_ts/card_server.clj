@@ -345,7 +345,16 @@ Bookmarked " timestamp  ",, <" url ">
        :wiki_name wiki-name
        :site_url site-url
        :cards (raw->cards "PAGE DOES NOT EXIST")
-       :system_cards []
+       :system_cards
+       (let [sim-names (map
+                        #(str "\n- [[" % "]]")
+                        (pagestore/similar-page-names
+                         (server-state) page_name))  ]
+         (if (empty? sim-names) []
+             [(common/package-card
+               :similarly_name_pages :system :markdown ""
+               (str "Here are some similarly named pages :"
+                    (apply str sim-names)))]))
        })))
 
 
