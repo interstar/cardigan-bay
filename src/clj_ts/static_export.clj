@@ -5,6 +5,7 @@
             [markdown.core :as md]
             [clj-ts.common :as common]
             [clj-ts.card-server :as card-server]
+            [clj-ts.pagestore :as pagestore]
             ))
 
 
@@ -23,14 +24,22 @@
    (.export-page-internal-link-path server-state) page-id (.export-page-extension server-state))
   )
 
+
+
 (defn double-bracket-links
   "Turn the internal double-bracket-links into real links in the exported pages"
   [text server-state ]
-  (string/replace text #"\[\[(.+?)\]\]"
-                  (fn [[_ m]]
-                    (str "<a class=\"external-link\" href=\""
-                         (export-link m server-state)"\">"
-                         m "</a>"))))
+  (let [replace-link
+        (fn [[_ m]]
+          (do
+            (if (pagestore/page-exists? server-state m)
+              (str "<a class=\"external-link\" href=\""
+                   (export-link m server-state)"\">"
+                   m "</a>")
+              (str "<em>" m "</em>"))))]
+    (string/replace text
+                    #"\[\[(.+?)\]\]"
+                    replace-link)))
 
 (defn card->html
   "HTML for an exported card"
