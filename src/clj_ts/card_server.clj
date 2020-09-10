@@ -100,15 +100,20 @@
   (atom (new CardServerRecord {:start-page "HelloWorld" :git-repo? false})))
 
 
-(defn server-state [] @card-server-state)
+(defn server-state
+  "Other modules should always get the card-server data through calling this function.
+  Rather than relying on knowing the name of the atom"
+  [] @card-server-state)
 
-(defn set-state! [key val]
+(defn set-state!
+  "The official API call to update any of the key-value pairs in the card-server state"
+  [key val]
   (let [current (-> (server-state) .as-map)
         new-state (assoc current key val)]
     (reset! card-server-state (CardServerRecord. new-state))
 ))
 
-
+;; convenience functions for updating state
 (defn set-wiki-name! [wname]
   (set-state! :wiki-name wname))
 
