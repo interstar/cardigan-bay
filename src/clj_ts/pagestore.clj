@@ -11,15 +11,15 @@
 ;; Basic functions
 
 (defn page-name->file-path [server-state page-name ]
-  (let [mdn (str (string/lower-case page-name) ".md")]
-    (-> server-state :page-dir
-        (#(.resolve % mdn)) )))
+  (let [mdn (str (string/lower-case page-name) ".md")
+        d (.page-dir server-state)]
+    (.resolve d mdn)))
 
 
 (defn dedouble [s] (string/replace s #"\/\/" "/"))
 
 (defn page-name->url [server-state page-name]
-  (dedouble (str (-> server-state :site-url) "/view/" page-name))
+  (dedouble (str (-> server-state .site-url) "/view/" page-name))
   )
 
 
@@ -72,7 +72,7 @@
 
 
 
-(defn cwd [server-state] (-> server-state :page-dir))
+(defn cwd [server-state] (-> server-state .page-dir))
 
 (defn assert-valid [new-pd s]
   (do

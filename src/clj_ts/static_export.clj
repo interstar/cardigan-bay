@@ -8,17 +8,23 @@
             ))
 
 
-(defn render [raw page-name server-root ext]
-  (let [cards (card-server/raw->cards raw)
-        ]
-    cards))
 
-(defn static-page-url [server-state]
-  (str (-> server-state :site-url) "/view/"))
+
+(defn export-file-path [page-name server-state]
+  (str (.export-page-dir server-state) page-name (.export-page-extension server-state)))
+
+
+(defn export-link [page-id server-state]
+  (str
+   (.export-page-internal-link-path server-state) page-id (.export-page-extension server-state))
+  )
 
 (defn double-bracket-links [text server-state ]
   (string/replace text #"\[\[(.+?)\]\]"
-                  (str "<a class=\"external-link\" href=\"" (static-page-url server-state) "$1\">$1</a>")))
+                  (fn [[_ m]]
+                    (str "<a class=\"external-link\" href=\""
+                         (export-link (string/lower-case m) server-state)"\">"
+                         m "</a>"))))
 
 (defn card->html [card server-state]
   (let [html
@@ -34,13 +40,7 @@
 ")))
 
 
-(defn default-export-dir [server-state]
-  (str (:page-dir server-state) "/exported/"))
 
-(defn export-file [page-name server-state]
-  (let [full-name
-        (str (default-export-dir server-state) page-name )]
-    full-name))
 
 (defn export-page [page-name server-state]
   (let [cards (-> page-name card-server/load->cards)
@@ -57,8 +57,10 @@
                 [:div
                  rendered]]]
               )
-        file (export-file page-name server-state)
+        file (export-file-path page-name server-state)
         ]
+    (println "Exporting " page-name)
+    (println "Outfile = " file)
     (spit file page)))
 
 (defn export-all-pages [server-state]
@@ -69,6 +71,5 @@
                               (= % "recentchanges")
                               (= % "systemrecentchanges"))
                          (card-server/all-pages))]
-    (println "Exporting " p-name)
     (export-page p-name server-state)
     ))

@@ -28,7 +28,7 @@
 
 
 (defn regenerate-db [server-state]
-  (let [path (-> server-state :page-dir)
+  (let [path (.page-dir server-state)
         pages (java.nio.file.Files/newDirectoryStream path "*.md")
         pages2 (java.nio.file.Files/newDirectoryStream path "*.md")
 
@@ -60,14 +60,14 @@
 
 (defn all-pages [server-state]
   (sort
-   (pldb/with-db (:facts-db server-state)
+   (pldb/with-db (.facts-db server-state)
      (logic/run* [p]
        (page p))
      )) )
 
 
 (defn links [server-state]
-  (pldb/with-db (:facts-db server-state)
+  (pldb/with-db (.facts-db server-state)
     (logic/run* [p q]
       (link p q)
       (page p)
@@ -75,14 +75,14 @@
       )))
 
 (defn links-to [server-state target]
-  (pldb/with-db (:facts-db server-state)
+  (pldb/with-db (.facts-db server-state)
     (logic/run* [p q]
       (link p q)
       (logic/== target q)
       )))
 
 (defn broken-links [server-state]
-  (pldb/with-db (:facts-db server-state)
+  (pldb/with-db (.facts-db server-state)
     (logic/run* [p q]
       (link p q)
       (logic/nafc page q)
@@ -90,7 +90,7 @@
 
 
 (defn orphans [server-state]
-  (pldb/with-db (:facts-db server-state)
+  (pldb/with-db (.facts-db server-state)
     (logic/run* [q]
       (logic/fresh [p]
         (page q)

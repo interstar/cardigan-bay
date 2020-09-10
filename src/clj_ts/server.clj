@@ -120,7 +120,7 @@
 (defn get-start-page [request]
   {:status 200
    :headers {"Content-Type" "text/text"}
-   :body (-> (card-server/server-state) :start-page)})
+   :body (-> (card-server/server-state) .start-page)})
 
 ;; GraphQL handler
 

@@ -1,12 +1,16 @@
 (ns clj-ts.core-test
   (:require [clojure.test :refer :all]
             [clj-ts.common :as common]
+            [clj-ts.card-server :as card-server]
 
-
-           ;; [clj-ts.static-export :as static]
             [clj-ts.command-line :as command-line]
             ))
 
+
+(deftest card-server-stuff
+  (testing "Card Server stuff"
+    (println "AAAA "
+             (-> (card-server/server-state) .as-map))))
 
 (deftest basic-cards
   (testing "Making and analysing cards"

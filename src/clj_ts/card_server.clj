@@ -1,6 +1,7 @@
 (ns clj-ts.card-server
   [:require
    [clojure.string :as string]
+   [clojure.pprint :refer [pprint]]
 
    [clj-ts.logic :as ldb]
    [clj-ts.pagestore :as pagestore]
@@ -15,47 +16,80 @@
    ])
 
 
-;; CARD-SERVER-STATE record
-;; is the DEFINITIVE REPRESENTATION of card server state
+
+;; Card Server State is ALL the global state for the application.
+;; NOTHING mutable should be stored anywhere else but in the card-server-state atom.
+
+;; The data is in the format of something that implements the CardServer protocol,
+;; Currently a CardServerRecord which contains a map of the stateful data
+
+;; The reason for this is that some of these pieces of data can either be given
+;; explicitly OR if they aren't explicitly given, defaults can be calculated
+;; from other data.
+
+;; For example, a directory for exporting flat copies of pages can be given explicitly
+;; Or if not, is calculated as being the "/exported/" subdirectory of the page-dir
+
+;; The reason for the CardServerRecord, then, rather than a standard map,
+;; is that we can encapsulate all these decisions (what the defaults are and how to
+;; calculate them) in one place and hide them within accessors of the class.
+;; Other parts of the code don't need to know one way or the other whether the data
+;; they are accessing was explicitly put into the record or if it a calculated default.
 
 
 (defprotocol CardServer
   (wiki-name [cs])
   (site-url [cs])
+  (port-no [cs])
   (facts-db [cs])
   (page-dir [cs])
   (git-repo? [cs])
   (start-page [cs])
   (export-page-dir [cs])
   (export-page-extension [cs])
-  (export-page-root [cs])
+  (export-page-internal-link-path [cs])
   (export-template [cs])
+  (as-map [cs])
   )
 
 
 (deftype CardServerRecord [cs-rec]
   CardServer
   (wiki-name [cs]
-    (:wiki-name cs-rec))
+    (:wiki-name cs-rec "Yet Another CardiganBay Wiki"))
   (site-url [cs]
-    (:site-url cs-rec))
+    (:site-url cs-rec "/"))
+  (port-no [cs]
+    (:port-no cs-rec 4545))
   (facts-db [cs]
-    (:facts-db [cs-rec]))
+    (:facts-db cs-rec))
   (page-dir [cs]
-    (:page-dir [cs-rec]))
+    (:page-dir cs-rec "./bedrock"))
   (git-repo? [cs]
-    (:git-repo? [cs-rec]))
+    (:git-repo? cs-rec))
   (start-page [cs]
-    (:start-page [cs-rec]))
+    (:start-page cs-rec "HelloWorld"))
   (export-page-dir [cs]
-    (:export-page-dir cs-rec (str (page-dir cs) "/exported")))
+    (:export-page-dir cs-rec (str (page-dir cs) "/exported/")))
   (export-page-extension [cs]
-    (:export-page-extension cs-rec ""))
-  (export-page-root [cs]
+    (:export-page-extension cs-rec ".html"))
+  (export-page-internal-link-path [cs]
     (:export-page-root cs-rec "./"))
   (export-template [cs]
     (:export-template cs-rec nil))
-
+  (as-map [cs]
+    {:wiki-name (wiki-name cs)
+     :site-url (site-url cs)
+     :port-no (port-no cs)
+     :facts-db (facts-db cs)
+     :page-dir (page-dir cs)
+     :git-repo? (git-repo? cs)
+     :start-page (start-page cs)
+     :export-page-dir (export-page-dir cs)
+     :export-page-extension (export-page-extension cs)
+     :export-page-internal-link-path (export-page-internal-link-path cs)
+     :export-template (export-template cs)
+     })
   )
 
 
@@ -63,21 +97,16 @@
 ;; State Management is done at the card-server level
 
 (def card-server-state
-  (atom {:start-page "HelloWorld"}))
+  (atom (new CardServerRecord {:start-page "HelloWorld" :git-repo? false})))
 
 
-(defn server-state []
-  ;; THIS IS THE DEFINITIVE REPRESENTATION OF CARD-SERVER STATE TO BE SHARED BETWEEN MODULES
-  {:wiki-name (-> @card-server-state :wiki-name)
-   :site-url (-> @card-server-state :site-url)
-   :facts-db (-> @card-server-state :facts-db)
-   :page-dir (-> @card-server-state :page-dir)
-   :git-repo? (-> @card-server-state :git-repo?)
-   :start-page (-> @card-server-state :start-page)
-   })
+(defn server-state [] @card-server-state)
 
 (defn set-state! [key val]
-  (swap! card-server-state assoc key val))
+  (let [current (-> (server-state) .as-map)
+        new-state (assoc current key val)]
+    (reset! card-server-state (CardServerRecord. new-state))
+))
 
 
 (defn set-wiki-name! [wname]
@@ -112,10 +141,10 @@
     (pagestore/assert-valid new-pd "card-server/update-pagedir!")
     (let [git-path (.resolve new-pd ".git")
           git? (-> git-path .toFile .exists)]
-      (swap! card-server-state assoc :page-dir new-pd)
-      (swap! card-server-state assoc :git-repo? git?)
-      (regenerate-db!)
-      )))
+      (set-state! :page-dir new-pd)
+      (set-state! :git-repo? git?)
+      (regenerate-db!))
+    ))
 
 (defn page-exists? [page-name]
   (pagestore/page-exists? (server-state) page-name))
@@ -196,10 +225,10 @@
       :about
       (let [sr (str "### System Information
 
-**Wiki Name**,, " (-> (server-state) :wiki-name  )  "
-**PageStore Directory** (relative to code) ,, " (-> (server-state) :page-dir) "
-**Is Git Repo?**  ,, " (-> (server-state) :git-repo) "
-**Site Url Root** ,, " (-> (server-state) :site-url) )]
+**Wiki Name**,, " (-> (server-state) .wiki-name  )  "
+**PageStore Directory** (relative to code) ,, " (-> (server-state) .page-dir) "
+**Is Git Repo?**  ,, " (-> (server-state) .git-repo?) "
+**Site Url Root** ,, " (-> (server-state) .site-url) )]
         (common/package-card i :system :markdown sr sr))
 
       ;; not recognised
@@ -294,8 +323,8 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn resolve-page [context arguments value]
   (let [{:keys [page_name]} arguments
-        wiki-name (-> (server-state) :wiki-name)
-        site-url (-> (server-state) :site-url)]
+        wiki-name (-> (server-state) .wiki-name)
+        site-url (-> (server-state) .site-url)]
 
     (if (pagestore/page-exists? (server-state) page_name)
       {:page_name page_name
