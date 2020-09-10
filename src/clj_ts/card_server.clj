@@ -127,7 +127,8 @@
 (defn set-start-page! [pagename]
   (set-state! :start-page pagename))
 
-
+(defn set-export-dir! [exdir]
+  (set-state! :export-page-dir exdir))
 
 
 ;; PageStore delegation
@@ -166,7 +167,7 @@
     (set-state! :facts-db (ldb/regenerate-db (server-state)))
     (println "Finished building logic db")) )
 
-(defn raw-db [] (-> (server-state) :facts-db))
+(defn raw-db [] (-> (server-state) .facts-db))
 
 (defn all-pages [] (ldb/all-pages (server-state)))
 
@@ -182,7 +183,9 @@
 
 ;; Card Processing
 
-(defn server-eval [data]
+(defn server-eval
+  "Evaluate Clojure code embedded in a card. Evaluated on the server. Be careful."
+  [data]
   (let [code (read-string data)
         evaluated
         (try

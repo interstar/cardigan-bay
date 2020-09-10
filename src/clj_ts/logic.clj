@@ -3,6 +3,10 @@
    [clojure.core.logic :as logic]
    [clojure.core.logic.pldb :as pldb]
    [clojure.string :as string]
+   [clojure.core.async
+             :as a
+             :refer [>! <! >!! <!! go chan buffer close! thread
+                     alts! alts!! timeout]]
 
 ))
 

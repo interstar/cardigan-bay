@@ -231,7 +231,7 @@
       (= uri "/clj_ts/graphql")
       (graphql-handler request)
 
-      (= uri "/system/db")
+      (= uri "/api/system/db")
       (raw-db request)
 
       (= uri "/api/movecard")
@@ -283,18 +283,23 @@
    :default 4545
    :parse-fn #(Integer/parseInt %)
    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+
   ["-d" "--directory DIR" "Pages directory"
    :default "./bedrock/"
-   :parse-fn str
-   ]
+   :parse-fn str]
+
   ["-n" "--name NAME" "Wiki Name"
    :default "Yet Another CardiganBay Wiki"
    :parse-fn str]
+
   ["-s" "--site SITE" "Site Root URL "
    :default "/"
    :parse-fn str
    ]
-  ]
+
+  ["-e" "--export-dir DIR" "Export Directory"
+   :default "./bedrock/exported/"
+   :parse-fn str]]
 
   )
 
@@ -314,7 +319,8 @@
                        (.toAbsolutePath)
                        (.normalize))
         name (:name opts)
-        site-root (:site opts)]
+        site-root (:site opts)
+        export-dir (:export-dir opts)]
     (println "Welcome to Cardigan Bay")
 
     (assert (-> page-dir-path .toFile .exists )
@@ -323,9 +329,12 @@
     (assert (-> page-dir-path .toFile .isDirectory)
             (str "page-store " page-dir" is not a directory."))
 
+
+
     (card-server/update-pagedir! page-dir-path)
     (card-server/set-site-url! site-root)
     (card-server/set-wiki-name! name)
+    (card-server/set-export-dir! export-dir)
 
     (println
      (str "Cardigan Bay Started.
