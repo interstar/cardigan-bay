@@ -15,6 +15,11 @@ body {
 
 }
 
+@media only screen and (max-width: 600px) {
+  body {
+      font-size: 1.2rem;
+  }
+}
 
 
 h1, h2, h3, h4, h5, h6 {
@@ -32,7 +37,7 @@ h1, h2, h3, h4, h5, h6 {
   hyphens: auto;
 }
 
-.navbar span {
+#nav1 span {
       cursor: pointer;
 }
 
@@ -63,6 +68,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
     background: #eeeeee;
     padding: 15px;
     margin-bottom:1.5em;
+}
+
+@media only screen and (max-width: 600px) {
+    .card-outer {
+    background: #ddddff;
+    }
 }
 
 .card-meta {
@@ -172,11 +183,14 @@ button:hover {
 
 .footer {
     font-size: 1rem;
-
 }
 
 .footer a {
     color : blue;
+}
+
+.breadcrumbs {
+    font-size: 1rem;
 }
 
 .embed_div {

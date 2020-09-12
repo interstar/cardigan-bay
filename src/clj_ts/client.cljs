@@ -176,6 +176,8 @@
     (fn []
        (let [editing (-> @db :editing)]
          [:div {:class "navbar"}
+          [:div {:class "breadcrumbs"}
+           [:span (-> @db :wiki-name )]]
           [:div {:id "nav1"}
 
            [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
@@ -407,7 +409,7 @@
    [main-container]
    [:div {:class "footer"}
     [:span
-     [:span "This is " (-> @db :wiki-name) " wiki!"]
+     [:span "This " (-> @db :wiki-name) " wiki!"]
      [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
      [:span [:a {:href "/api/system/db"} "DB"] " || "]
      [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
