@@ -28,17 +28,22 @@
 
 (defn youtube [data]
   (let [url (:url data)
+        title (:title data)
+        caption (:caption data)
         id (->
             (re-matches #"https://www.youtube.com/watch\?v=(\S+)" url)
             second) ]
-     (str "<div class=\"embed_div\">
-<div class='youtube-embedded'>
+    (str
+     (if  title (str "<div><h3>" title "</h3></div>") "")
+     "<div class=\"embed_div\">"
+     "   <div class='youtube-embedded'>
 <iframe src='http://www.youtube.com/embed/" id  "'
         style=\"position: absolute; top:0; left:0; width:100%; height:100%;\"
         frameborder='0' allowfullscreen>
 </iframe>
 </div>
-</div>")
+""</div>"
+     (if caption (str "<div class='embed-caption'>" caption "</div>") ""))
      ))
 
 
@@ -49,11 +54,15 @@
 (defn soundcloud [data]
   (generic-oembed "https://soundcloud.com/oembed" (:url data)))
 
-(defn bandcamp [{:keys [id url description]}]
-  (str "<div class=\"embed_div\"><div class='bandcamp-embedded'>
+(defn bandcamp [{:keys [id url description title caption]}]
+  (str
+   (if  title (str "<div><h3>" title "</h3></div>") "")
+   "<div class=\"embed_div\"><div class='bandcamp-embedded'>
 <iframe style='border: 0; width: 550px; height: 555px;'
 src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/'
-seamless><a href='" url "'>" description "</a></iframe></div></div>")
+seamless><a href='" url "'>" description "</a></iframe></div></div>"
+   (if caption (str "<div class='embed-caption'>" caption "</div>") "")
+   )
   )
 
 (defn twitter [data]
