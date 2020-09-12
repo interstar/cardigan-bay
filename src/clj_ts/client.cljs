@@ -30,7 +30,8 @@
                :wiki-name "Wiki Name"
                :site-url "Site URL"
                :editing false
-               :mode :page}))
+               :mode :page
+               :port 4545}))
 
 
 ;; PageStore
@@ -48,6 +49,7 @@
     page_name
     wiki_name
     site_url
+    port
     cards {
       id
       hash
@@ -78,6 +80,7 @@
                    system-cards (-> data (get "server_prepared_page") (get "system_cards"))
                    site-url (-> data (get "server_prepared_page") (get "site_url"))
                    wiki-name (-> data (get "server_prepared_page") (get "wiki_name"))
+                   port (-> data (get "server_prepared_page") (get "port"))
                    ]
 
                (js/console.log "Cards " cards)
@@ -87,6 +90,7 @@
                       :current-page page-name
                       :site-url site-url
                       :wiki-name wiki-name
+                      :port port
                       :raw  raw
                       :cards cards
                       :system-cards system-cards
@@ -408,7 +412,8 @@
      [:span [:a {:href "/api/system/db"} "DB"] " || "]
      [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
      "(c) Phil Jones 2020  | "
-     [:a {:href "javascript:(function(){window.location='http://localhost:4545/api/bookmarklet?url='+document.URL;})();"} "Bookmark to this Wiki"]] ]])
+     [:a {:href
+          (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]])
 
 
 ;; tells reagent to begin rendering

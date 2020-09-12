@@ -130,6 +130,8 @@
 (defn set-export-dir! [exdir]
   (set-state! :export-page-dir exdir))
 
+(defn set-port! [port]
+  (set-state! :port-no port))
 
 ;; PageStore delegation
 
@@ -334,18 +336,21 @@ Bookmarked " timestamp  ",, <" url ">
 (defn resolve-page [context arguments value]
   (let [{:keys [page_name]} arguments
         wiki-name (-> (server-state) .wiki-name)
-        site-url (-> (server-state) .site-url)]
+        site-url (-> (server-state) .site-url)
+        port (-> (server-state) .port-no)]
 
     (if (pagestore/page-exists? (server-state) page_name)
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
+       :port port
        :cards (load->cards page_name)
        :system_cards (generate-system-cards page_name)
        }
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
+       :port port
        :cards (raw->cards "PAGE DOES NOT EXIST")
        :system_cards
        (let [sim-names (map

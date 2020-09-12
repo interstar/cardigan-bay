@@ -335,6 +335,7 @@
     (card-server/set-site-url! site-root)
     (card-server/set-wiki-name! name)
     (card-server/set-export-dir! export-dir)
+    (card-server/set-port! port)
 
     (println
      (str "Cardigan Bay Started.
