@@ -37,6 +37,9 @@
   (= (.toString (:hash card))
      (.toString hash)))
 
+(defn neh [card hash]
+  (not (match-hash card hash)))
+
 ;; Cards in card list
 
 (defn find-card-by-hash
@@ -68,11 +71,34 @@
 (defn move-card-up
   "Move a card (id by hash) one up"
   [cards hash]
-  )
+  (let [c (find-card-by-hash cards hash)]
+    (if (nil? c) cards
+        (let [before (take-while #(neh % hash) cards)
+              after (rest (drop-while #(neh % hash) cards))
+              res (remove nil?
+                          (concat
+                           (butlast before)
+                           [c]
+                           [(last before)]
+                           after))]
+          res
+          ))))
 
 (defn move-card-down
   "Move a card (id by hash) one down"
   [cards hash]
+  (let [c (find-card-by-hash cards hash)]
+    (if (nil? c) cards
+        (let [before (take-while #(neh % hash) cards)
+              after (rest (drop-while #(neh % hash) cards))
+              res (remove nil?
+                          (concat
+                           before
+                           [(first after)]
+                           [c]
+                           (rest after)))]
+          res
+          )))
   )
 
 (defn cards->raw [cards]
