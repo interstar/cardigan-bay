@@ -176,6 +176,16 @@
 "\">
 </head>")}))
 
+(defn reorder-card-handler [request]
+  (let [ps (:params request)
+        page-name (:page ps)
+        hash (:hash ps)
+        direction (:direction ps)]
+    (println )
+    (card-server/reorder-card page-name hash direction)
+    {:status 303
+     :headers {"Location" (str  "/view/" page-name)}}))
+
 (defn bookmarklet-handler [request]
   (let [url (-> request :params :url)
         new-card (str "{:url \"" url "\" :timestamp \""
@@ -236,6 +246,9 @@
 
       (= uri "/api/movecard")
       (move-card-handler request)
+
+      (= uri "/api/reordercard")
+      (reorder-card-handler request)
 
       (= uri "/api/rss/recentchanges")
       {:status 200

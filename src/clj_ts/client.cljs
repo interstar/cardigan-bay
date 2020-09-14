@@ -286,7 +286,6 @@
         state (r/atom {:toggle "none"})
         toggle! (fn [e]
                   (do
-
                     (if (= (-> @state :toggle) "none")
                       (swap! state #(conj % {:toggle "block"}) )
                       (swap! state #(conj % {:toggle "none"})))))]
@@ -307,8 +306,8 @@
          [:span (get card "hash")] " | Source type: "
          [:span (get card "source_type")] " | Render type: "
          [:span (get card "render_type")]]
-        [:div
 
+        [:div
          [:form {:action "/api/movecard"}
           "Send to Another Page : "
           [:input { :name "to"}]
@@ -316,7 +315,21 @@
           [:input { :name "from" :type "hidden" :value (-> @db :current-page )}]
           [:img {:src "/icons/send.png"}]  [:input { :type "submit" :value "Send"}]
           ]
+         [:form {:action "/api/reordercard"}
+          [:input {:name "direction" :type "hidden" :value "up"}]
+          [:input {:name "page" :type "hidden" :value (-> @db :current-page)}]
+          [:input { :name "hash" :type "hidden" :value (get card "hash")}]
+          [:img {:src "/icons/chevrons-up.png"}]
+          [:input {:type "submit" :value "Up"}]]
+         [:form {:action "/api/reordercard"}
+          [:input {:name "direction" :type "hidden" :value "down"}]
+          [:input { :name "hash" :type "hidden" :value (get card "hash")}]
+          [:input {:name "page" :type "hidden" :value (-> @db :current-page)}]
+          [:img {:src "/icons/chevrons-down.png"}]
+          [:input {:type "submit" :value "Down"}]]
          ]
+
+
         ]
        ])))
 

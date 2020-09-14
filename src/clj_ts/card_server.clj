@@ -431,3 +431,11 @@ Bookmarked " timestamp  ",, <" url ">
       (do
         (append-card-to-page! destination-name (:source_type card) (:source_data card))
         (write-page-to-file! page-name stripped_raw)))))
+
+(defn reorder-card [page-name hash direction]
+  (let [cards (load->cards page-name)
+        new-cards (if (= "up" direction)
+          (common/move-card-up cards hash)
+          (common/move-card-down cards hash))
+        ]
+    (write-page-to-file! page-name (common/cards->raw new-cards))))
