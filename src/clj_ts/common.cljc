@@ -65,8 +65,19 @@
       )))
 
 
+(defn move-card-up
+  "Move a card (id by hash) one up"
+  [cards hash]
+  )
+
+(defn move-card-down
+  "Move a card (id by hash) one down"
+  [cards hash]
+  )
+
 (defn cards->raw [cards]
   (string/join "\n----" (map card->raw cards)))
+
 
 ;; Rendering / special Markup
 
@@ -90,7 +101,7 @@
     (if (empty? lines)
       (if in-table
         (str (string/join "\n" build)
-             "\n</table>")
+             "\n</table></div>")
         (string/join "\n" build) )
 
         (let [line (first lines)]
@@ -99,7 +110,7 @@
                   row (tr (apply str (for [i items] (td i))))]
               (if in-table
                 (recur (rest lines) true (conj build row))
-                (recur (rest lines) true (conj build "<div class=\".embed_div\" ><table class='double-comma-table'>" row))))
+                (recur (rest lines) true (conj build "<div class=\"embed_div\"><table class='double-comma-table'>" row))))
             (if in-table
               (recur (rest lines) false (conj build "</table></div>" line ) )
               (recur (rest lines) false (conj build line )))

@@ -85,14 +85,14 @@ america")))))
   (testing "Double comma table"
     (is (= (common/double-comma-table "hello world") "hello world"))
     (is (= (common/double-comma-table "hello,, world")
-           "<table class='double-comma-table'>
+           "<div class=\"embed_div\"><table class='double-comma-table'>
 <tr><td>hello</td><td> world</td></tr>
-</table>"))
+</table></div>"))
     (is (= (common/double-comma-table "hello\nteenage,,america")
            "hello
-<table class='double-comma-table'>
+<div class=\"embed_div\"><table class='double-comma-table'>
 <tr><td>teenage</td><td>america</td></tr>
-</table>"))))
+</table></div>"))))
 
 
 (comment
