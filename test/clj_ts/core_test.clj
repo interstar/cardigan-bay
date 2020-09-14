@@ -95,19 +95,39 @@ america")))))
 </table></div>"))))
 
 
-(comment
-  (deftest static-render
-    (testing "Static Rendering"
-      (let [p1 "
-### Hello Teenage America
+(defn acard [id]
+  (common/package-card id :markdown :markdown id id))
 
-* [[AnotherGreenWorld]]" ]
-        (is (= (static/render p1 "HelloTeenageAmerica" "http://server.com/" ".html")
-               "<h3>Hello Teenage America</h3>
+(defn hs [cards]
+  (map #(:hash %) cards))
 
-<ul>
-<li><a href='http://server.com/HelloTeenageAmerica.html'>HelloTeenageAmerica</a></li>
-</ul>")) ))))
+
+
+(deftest card-reordering
+  (testing "Card re-ordering"
+    (let [cards (map acard (range 10))
+          hc1 (-> cards first :hash)
+          hc4 (-> cards (nth 3) :hash)
+          hcl (-> cards last :hash)]
+      (is (= (hs (common/move-card-up cards hc1)) (hs cards)))
+
+      (is (= (hs (common/move-card-up cards hc4))
+             (hs (concat (take 2 cards)
+                         [(nth cards 3)]
+                         [(nth cards 2)]
+                          (drop 4 cards)
+                          ))))
+
+      (is (= (hs (common/move-card-down cards hcl)) (hs cards)))
+
+      (is (= (hs (common/move-card-down cards hc4))
+             (hs (concat (take 3 cards)
+                         [(nth cards 4)]
+                         [(nth cards 3)]
+                         (drop 5 cards)))))
+
+      )))
+
 
 (deftest command-line
   (testing "Command line"
