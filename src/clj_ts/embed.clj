@@ -1,6 +1,7 @@
 (ns clj-ts.embed
   (:require [org.httpkit.client :as http]
             [org.httpkit.sni-client :as sni]
+            [clojure.string :as string]
             [clojure.data.json :as json]))
 
 
@@ -51,6 +52,21 @@
   (generic-oembed "https://www.youtube.com/oembed" (:url data) )
   )
 
+(defn vimeo [data]
+  (let [url (:url data)
+        caption (:caption data)
+        id (-> url (string/split #"/") last)
+        title (:title data)]
+    (str
+     (if title (str "<div><h3>" title "</h3></div>"))
+     "<div class=\"embed-div\"><div class=\"vimeo-embedded\">
+<iframe src='https://player.vimeo.com/video/" id "' width='640' height='360' frameborder='0' allow='autoplay; fullscreen' allowfullscreen></iframe>
+<p><a href='https://vimeo.com/" id "'>" caption "</a></p>
+</div></div>
+")
+    ))
+
+
 (defn soundcloud [data]
   (generic-oembed "https://soundcloud.com/oembed" (:url data)))
 
@@ -82,6 +98,9 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
     (condp = (:type data)
       :youtube
       (youtube data)
+
+      :vimeo
+      (vimeo data)
 
       :bandcamp
       (bandcamp data)
