@@ -57,6 +57,8 @@
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
 
 
+    cljstache {:mvn/version "2.0.6"}
+
     org.clojure/data.json #:mvn{:version "0.2.6"},
     org.clojure/clojure #:mvn{:version "1.10.1"},
     reagent #:mvn{:version "0.8.0-alpha2"},
