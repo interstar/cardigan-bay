@@ -6,6 +6,7 @@
             [clj-ts.common :as common]
             [clj-ts.card-server :as card-server]
             [clj-ts.pagestore :as pagestore]
+            [cljstache.core :refer [render]]
             ))
 
 
@@ -59,36 +60,58 @@
 
 
 
-(defn export-page [page-name server-state]
+
+
+(def tpl
+  (try
+    (slurp "resources/clj_ts/export_template/index.html" )
+    (catch Exception e
+      (do (println "ERROR FINDING TEMPLATE " e "
+USING DEFAULT")
+          (hiccup/html
+           [:html
+            [:head]
+            [:body
+             [:div {:class "navbar"}]
+             [:div
+              [:h1 "{{page-title}}"]]
+             [:div
+              "{{{page-main-content}}}"]]])))))
+
+(def main-css
+  (try
+    (slurp "resources/clj_ts/main.css" )
+    (catch Exception e
+      (do (println "ERROR FINDING CSS TEMPLATE " e)
+          ""))))
+
+
+(defn export-page [page-name server-state tpl]
   (let [cards (-> page-name card-server/load->cards)
         rendered (string/join "\n" (map #(card->html % server-state) cards))
-        page (hiccup/html
-
-              [:html
-               [:head
-                [:link {:rel "stylesheet" :type "text/css" :href "main.css" }]
-
-                ]
-               [:body
-                [:h2 page-name]
-                [:div
-                 rendered]
-                [:div {:class "system"}
-                 (card->html (card-server/backlinks page-name) server-state)]]]
-              )
+        insert-page (hiccup/html
+                     [:div
+                      [:div
+                       rendered]
+                      [:div {:class "system"}
+                       (card->html (card-server/backlinks page-name) server-state)]]
+                     )
+        page (render tpl {:page-title page-name :page-main-content insert-page :time (java.time.LocalDateTime/now) :wiki-name (.wiki-name server-state)})
         file (export-file-path page-name server-state)
         ]
     (println "Exporting " page-name)
     (println "Outfile = " file)
-    (spit file page)))
+    (spit file page)
+    (spit (str (.export-page-dir server-state) "main.css") main-css  )))
 
 (defn export-all-pages [server-state]
-  (doseq [p-name (remove #(or (= % "AllLinks")
-                              (= % "AllPages")
-                              (= % "BrokenLinks")
-                              (= % "OrphanPages")
-                              (= % "RecentChanges")
+  (doseq [p-name (remove #(or
                               (= % "systemrecentchanges"))
                          (card-server/all-pages))]
-    (export-page p-name server-state)
+
+    (export-page p-name server-state tpl)
     ))
+
+(defn export-one-page [page-name server-state]
+  (export-page page-name server-state tpl)
+  )

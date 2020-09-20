@@ -201,7 +201,7 @@
   (let [page-name (-> request :params :page)]
     (do
       (println "In Export Handler. Page is  " page-name)
-      (export/export-page page-name (card-server/server-state))
+      (export/export-one-page page-name (card-server/server-state))
       {:status 303
        :headers {"Location" (str  "/view/" page-name)}})
     ))

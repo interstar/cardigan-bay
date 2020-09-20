@@ -72,7 +72,7 @@
   (export-page-dir [cs]
     (:export-page-dir cs-rec (str (page-dir cs) "/exported/")))
   (export-page-extension [cs]
-    (:export-page-extension cs-rec ".html"))
+    (:export-page-extension cs-rec ""))
   (export-page-internal-link-path [cs]
     (:export-page-root cs-rec "./"))
   (export-template [cs]
