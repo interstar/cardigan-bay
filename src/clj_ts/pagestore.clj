@@ -71,7 +71,7 @@
                  )
         ]
 
-    (spit (.toString  file-path) (string/join "\n" (take 30 newlist)))))
+    (spit (.toString  file-path) (string/join "\n" (take 60 newlist)))))
 
 
 (defn write-page-to-file! [server-state p-name body ]

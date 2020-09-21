@@ -6,12 +6,13 @@ body {
     line-height: 1.618;
     max-width: 48em;
     margin: auto;
-    color: #4a4a4a;
     background-color: #f9f9f9;
     padding: 13px;
 
 
-    background-color:#cccccc;
+   /* background-color:#cccccc;*/
+    background-color:#333366;
+    color: #eeeeee;
 
 }
 
@@ -66,6 +67,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 .card-outer {
     border-radius: 25px;
     background: #eeeeee;
+    color:#333333;
     padding: 15px;
     margin-bottom:1.5em;
 }
@@ -90,6 +92,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 #content {
 	margin: 10px;
 	padding: 50px;
+
 }
 
 blockquote {
@@ -111,7 +114,8 @@ blockquote {
 
 
 .main-container {
-   background-color:#cccccc;
+   /*background-color:#cccccc;*/
+   background-color:#333366;
 
    padding:2%;
 }

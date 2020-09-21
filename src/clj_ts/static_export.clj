@@ -85,6 +85,13 @@ USING DEFAULT")
       (do (println "ERROR FINDING CSS TEMPLATE " e)
           ""))))
 
+(def cb-image
+  (try
+    (slurp "resources/clj_ts/cardigan-bay.png" )
+    (catch Exception e
+      (do (println "ERROR finding CardiganBay PICTURE " e)
+          "")))  )
+
 
 (defn export-page [page-name server-state tpl]
   (let [cards (-> page-name card-server/load->cards)
@@ -103,6 +110,7 @@ USING DEFAULT")
     (println "Outfile = " file)
     (spit file page)
     (spit (str (.export-page-dir server-state) "main.css") main-css  )))
+
 
 (defn export-all-pages [server-state]
   (doseq [p-name (remove #(or

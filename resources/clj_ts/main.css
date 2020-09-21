@@ -153,6 +153,7 @@ button:hover {
 .navbar {
     /*padding:20px;*/
     border:10px;
+    Background:dark-blue;
 }
 
 #navinputbox {
