@@ -1,5 +1,15 @@
 ### Hacker Roadmap
 
+**Where is the source?**
+
+On GitHub : <https://github.com/interstar/cardigan-bay>
+
+On GitLab : <https://gitlab.com/interstar/cardigan-bay>
+
+
+----
+
+
 **Want to change the look of CardiganBay?**
 
 All the css is in 
@@ -10,15 +20,18 @@ All the layout / widgets of the UI are defined (in hiccup format) in
 
 * `src/clj_ts/client.cljs`
 
-----
 
+----
 
 
 **Most of the work on managing pages**, including parsing them into cards and handling the rendering of cards is in
 
 * `src/clj_ts/common.cljc` - common functions for parsing raw text into cards and manipulating lists of cards) that can be used both on the server and in the client.
-* `src/clj_ts/card_server.clj` - the main functionality for creating / manipulating the wiki full of cards. Look here for your  
-* `src/clj_ts/pagestore.clj` - the bit that deals with the file-system
+
+* `src/clj_ts/card_server.clj` - the main functionality for creating / manipulating the wiki full of cards. Look here first for the main "actions" the system can do.
+
+* `src/clj_ts/pagestore.clj` - the bit that deals with the pages stored as plain files in the file-syste
+
 
 ----
 
@@ -26,13 +39,15 @@ All the layout / widgets of the UI are defined (in hiccup format) in
 
 But *also* look at `resources/gql_schema.edn` for enums related to graphql communication between client and server
 
-Cards that are not Markdown or raw-text are usually represented with their type, and a small map in EDN format, with the required parameters.
+Cards that are not Markdown or raw-text are usually written with their type, and a small map in [EDN](https://github.com/edn-format/edn) format of the required parameters. EDN is similar to JSON but (IMHO) slightly more elegant and expressive.  
+
 
 ----
 
 **GraphQL Schema**
 
-Is in `resources/gql_schema.edn`. We're using graphql (via lacinia) for most communication between client and server. (Not all, for example card-move isn't yet). But eventually we should be doing all the things that it makes sense to do with gql with it.
+Is in `resources/gql_schema.edn`. We're using graphql (via lacinia) for most communication between client and server. (Not all, eg. card-move isn't yet). But eventually we should be doing all the things that it makes sense to do with gql with it.
+
 
 ----
 
@@ -44,12 +59,21 @@ If you want to capture more information in logic format or ask new queries on it
 
 The convention for using logic queries is that calls to them are embedded in :system type cards. (See `card-server/system-card` to see how to add a new system command.)
 
+
 ----
 
 **Where's the web-server?**
 
-* `src/clj_ts/server.clj`----
-:markdown
+* `src/clj_ts/server.clj`
+
+
+----
+**I want to change the look of the exported flat pages**
+
+* `/resources/clj_ts/export_template/` has the index.html and main.css that are used when exporting the wiki as flat files.
+
+
+----
 
 ## Starting the Wiki
 
@@ -58,6 +82,13 @@ In development mode :
 ```
 clj -A:dev:app [ARGS]
 ```
+**What ARGS**?
 
+```
+clj -A:dev:app -n "WikiName" -s "http://myserver.com/" -d "/PATH/TO/PAGE/DIRECTORY" -e "/PATH/TO/EXPORT/DIRECTORY" -p PORT
+```
 
+**What about building it as a JAR?**
+
+See my [[BuildScript]]
 
