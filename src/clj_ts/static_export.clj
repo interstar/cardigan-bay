@@ -59,9 +59,6 @@
 
 
 
-
-
-
 (def tpl
   (try
     (slurp "resources/clj_ts/export_template/index.html" )
@@ -95,6 +92,10 @@ USING DEFAULT")
 
 (defn export-page [page-name server-state tpl]
   (let [cards (-> page-name card-server/load->cards)
+        file (export-file-path page-name server-state)
+
+        last-mod (pagestore/last-modified server-state page-name)
+
         rendered (string/join "\n" (map #(card->html % server-state) cards))
         insert-page (hiccup/html
                      [:div
@@ -103,8 +104,13 @@ USING DEFAULT")
                       [:div {:class "system"}
                        (card->html (card-server/backlinks page-name) server-state)]]
                      )
-        page (render tpl {:page-title page-name :page-main-content insert-page :time (java.time.LocalDateTime/now) :wiki-name (.wiki-name server-state)})
-        file (export-file-path page-name server-state)
+        page (render tpl
+                     {:page-title page-name
+                      :page-main-content insert-page
+                      :time (java.time.LocalDateTime/now)
+                      :last-modified last-mod
+                      :wiki-name (.wiki-name server-state)})
+
         ]
     (println "Exporting " page-name)
     (println "Outfile = " file)

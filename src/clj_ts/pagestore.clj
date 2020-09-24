@@ -27,6 +27,9 @@
   (-> (page-name->file-path server-state p-name) .toFile .exists))
 
 
+(defn last-modified [server-state p-name]
+  (-> (page-name->file-path server-state p-name) .toFile .lastModified (#(java.util.Date. %))))
+
 (defn read-page [server-state page]
   (if (instance? java.nio.file.Path page)
     (-> page .toFile slurp)
