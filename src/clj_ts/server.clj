@@ -327,33 +327,30 @@
 
         port (:port opts)
         page-dir (:directory opts)
-        page-dir-path (->
-                       (java.nio.file.Paths/get page-dir (make-array java.lang.String 0))
-                       (.toAbsolutePath)
-                       (.normalize))
         name (:name opts)
         site-root (:site opts)
-        export-dir (:export-dir opts)]
-    (println "Welcome to Cardigan Bay")
+        export-dir (:export-dir opts)
 
-    (assert (-> page-dir-path .toFile .exists )
-            (str "Given page-store directory " page-dir " does not exist."))
+        d0
+        (println "Welcome to Cardigan Bay")
 
-    (assert (-> page-dir-path .toFile .isDirectory)
-            (str "page-store " page-dir" is not a directory."))
+        [page-dir-path system-dir-path export-dir-path]
+        (pagestore/dir-names->checked-paths)
+        ]
 
+    (card-server/update-pagedir! page-dir-path system-dir-path)
+    (card-server/set-export-dir! export-dir)
 
-
-    (card-server/update-pagedir! page-dir-path)
     (card-server/set-site-url! site-root)
     (card-server/set-wiki-name! name)
-    (card-server/set-export-dir! export-dir)
     (card-server/set-port! port)
 
     (println
      (str "Cardigan Bay Started.
 
 Page Directory is " (card-server/cwd) "
+
+System Directory is " (card-server) "
 
 Port is " port "
 

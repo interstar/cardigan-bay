@@ -42,10 +42,10 @@
   (site-url [cs])
   (port-no [cs])
   (facts-db [cs])
-  (page-dir [cs])
-  (git-repo? [cs])
+
   (start-page [cs])
-  (export-page-dir [cs])
+  (page-store [cs])
+
   (export-page-extension [cs])
   (export-page-internal-link-path [cs])
   (export-template [cs])
@@ -63,14 +63,15 @@
     (:port-no cs-rec 4545))
   (facts-db [cs]
     (:facts-db cs-rec))
-  (page-dir [cs]
-    (:page-dir cs-rec "./bedrock"))
-  (git-repo? [cs]
-    (:git-repo? cs-rec))
+
   (start-page [cs]
     (:start-page cs-rec "HelloWorld"))
-  (export-page-dir [cs]
-    (:export-page-dir cs-rec (str (page-dir cs) "/exported/")))
+
+  (page-store [cs]
+    {:pre (assert (not (nil? (:page-store cs-rec))))}
+    (:page-store cs-rec))
+
+
   (export-page-extension [cs]
     (:export-page-extension cs-rec ""))
   (export-page-internal-link-path [cs]
@@ -82,10 +83,10 @@
      :site-url (site-url cs)
      :port-no (port-no cs)
      :facts-db (facts-db cs)
-     :page-dir (page-dir cs)
-     :git-repo? (git-repo? cs)
+
      :start-page (start-page cs)
-     :export-page-dir (export-page-dir cs)
+     :page-store (-> (page-store cs) .as-map)
+
      :export-page-extension (export-page-extension cs)
      :export-page-internal-link-path (export-page-internal-link-path cs)
      :export-template (export-template cs)
@@ -222,7 +223,6 @@
        i "All Links" (links) :alllinks
        (fn [[a b]] (str "* [[" a "]] **->** [[" b "]]\n")))
 
-
       :brokenlinks
       (ldb-query->mdlist-card
        i "Broken Internal Links" (broken-links) :brokenlinks
@@ -231,6 +231,11 @@
       :orphanpages
       (ldb-query->mdlist-card
        i "Orphan Pages" (orphans) :orphanpages item1)
+
+      :recentchanges
+      (let [src (pagestore/read-system-file (server-state) "recentchanges") ]
+        (common/package-card
+         "recentchanges" :system :markdown src src))
 
       :about
       (let [sr (str "### System Information

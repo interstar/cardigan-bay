@@ -1,8 +1,7 @@
 These are the most recent edits made within the wiki.
 
 ----
-:transclude
+:system
 
-{:from "systemrecentchanges"
- :process :markdown}
+{:command :recentchanges}
 
