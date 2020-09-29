@@ -67,11 +67,11 @@
     (:start-page cs-rec "HelloWorld"))
 
   (page-store [cs]
-    {:pre (assert (not (nil? (:page-store cs-rec))))}
+    {:pre (assert (not (nil? (:page-store cs))))}
     (:page-store cs-rec))
 
   (page-exporter [cs]
-    {:pre [(not (nil? (:page-exporter cs-rec)))]}
+    {:pre [(not (nil? (:page-exporter cs)))]}
     (:page-exporter)
     )
 
@@ -129,7 +129,7 @@
   (set-state! :port-no port))
 
 (defn set-page-store! [page-store]
-  {:pre [(= (type page-store) common/IPageStore)]}
+  {:pre [(satisfies? common/IPageStore page-store)]}
   (set-state! :page-store page-store))
 
 (defn set-page-exporter! [page-exporter]

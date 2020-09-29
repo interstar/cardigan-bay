@@ -29,8 +29,8 @@
   (as-map [ex])
   (page-name->export-file-path [ex page-name])
   (page-name->exported-link [ex page-name])
-  (export-page [ex page-name tpl] )
   (load-template [ex])
+  (report [ex])
   )
 
 ;; Cards

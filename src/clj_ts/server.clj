@@ -9,6 +9,7 @@
             [clj-ts.card-server :as card-server]
             [clj-ts.common :as common]
             [clj-ts.static-export :as export]
+            [clj-ts.pagestore :as pagestore]
 
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
@@ -330,11 +331,14 @@
 
         page-dir (:directory opts)
         export-dir (:export-dir opts)
+
+        ps (pagestore/make-page-store page-dir export-dir)
+        pe (export/make-page-exporter ps "" "/view/")
         ]
 
     (println "Welcome to Cardigan Bay")
-    (card-server/update-pagedir! page-dir export-dir)
-    (card-server/set-export-dir! export-dir)
+    (card-server/set-page-store! ps)
+    (card-server/set-page-exporter! pe)
 
     (card-server/set-site-url! site-root)
     (card-server/set-wiki-name! name)
@@ -343,9 +347,11 @@
     (println
      (str "Cardigan Bay Started.
 
-Page Directory is " (card-server/cwd) "
+Page Directory is "  (-> ps :page-path .toString) "
 
-System Directory is " (card-server) "
+System Directory is " (-> ps :system-path .toString) "
+
+Export Directory is " (-> ps :export-path .toString) "
 
 Port is " port "
 

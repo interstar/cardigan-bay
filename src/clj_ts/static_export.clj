@@ -10,6 +10,43 @@
             ))
 
 
+
+
+(defn double-bracket-links
+  "Turn the internal double-bracket-links into real links in the exported pages"
+  [text ps ]
+  (let [replace-link
+        (fn [[_ m]]
+          (do
+            (if (.page-exists? ps m)
+              (str "<a class=\"exported-internal-link\" href=\""
+                   (.page-name->exported-link ps m)"\">"
+                   m "</a>")
+              (str "<em>" m "</em>"))))]
+    (string/replace text
+                    #"\[\[(.+?)\]\]"
+                    replace-link)))
+
+(defn card->html
+  "HTML for an exported card"
+  [card ps]
+  (let [html
+        (-> (get card :server_prepared_data)
+            (common/double-comma-table)
+            (md/md-to-html-string)
+            (common/auto-links)
+            (double-bracket-links ps))]
+    (str "<div class=\"card-outer\">
+<div class=\"card\">
+" html
+         "</div></div>
+")))
+
+
+
+
+
+
 (deftype PageExporter [page-store export-extension export-link-pattern]
   common/IPageExporter
 
@@ -17,6 +54,13 @@
     {:page-store page-store
      :export-extension export-extension
      :export-link-pattern export-link-pattern})
+
+  (report [ex]
+    (str "A PageExporter
+Export Extension :\t" (:export-extension ex) "
+Export Link Pattern :\t" (:export-link-pattern ex) "
+Page Store ::
+" (.report (:page-store ex))))
 
   (page-name->export-file-path [ex page-name]
     (-> ex :page-store .export-path
@@ -42,22 +86,30 @@ USING DEFAULT")
                 [:h1 "{{page-title}}"]]
                [:div
                 "{{{page-main-content}}}"]]])))))
+)
+
+(defn make-page-exporter [page-store export-extension export-link-pattern]
+  (let [ex  (->PageExporter page-store export-extension export-link-pattern)]
+    (println (.report ex))
+    ex))
 
 
-  (export-page [ex page-name tpl]
-    (let [ps (.page-store ex)
+(defn export-page [page-name server-state tpl]
+  (let [ps (.page-store server-state)
+        ex (.page-export server-state)
+
         cards (card-server/load->cards page-name)
         last-mod (.last-modified ps page-name)
 
         file-name (-> (.page-name->export-file-path ex page-name) .toString)
 
-        rendered (string/join "\n" (map #(card->html % server-state) cards))
+        rendered (string/join "\n" (map #(card->html % ps) cards))
         insert-page (hiccup/html
                      [:div
                       [:div
                        rendered]
                       [:div {:class "system"}
-                       (card->html (card-server/backlinks page-name) server-state)]]
+                       (card->html (card-server/backlinks page-name) ps)]]
                      )
         page (render tpl
                      {:page-title page-name
@@ -68,58 +120,19 @@ USING DEFAULT")
 
         ]
     (println "Exporting " page-name)
-    (println "Outfile = " file)
+    (println "Outfile = " file-name)
     (spit file-name page)
 ))
-  )
-
-
-
-(defn double-bracket-links
-  "Turn the internal double-bracket-links into real links in the exported pages"
-  [text ps ]
-  (let [replace-link
-        (fn [[_ m]]
-          (do
-            (if (.page-exists? ps m)
-              (str "<a class=\"exported-internal-link\" href=\""
-                   (.page-name->exported-link ps m)"\">"
-                   m "</a>")
-              (str "<em>" m "</em>"))))]
-    (string/replace text
-                    #"\[\[(.+?)\]\]"
-                    replace-link)))
-
-(defn card->html
-  "HTML for an exported card"
-  [card server-state]
-  (let [html
-        (-> (get card :server_prepared_data)
-            (common/double-comma-table)
-            (md/md-to-html-string)
-            (common/auto-links)
-            (double-bracket-links (.page-store server-state) ))]
-    (str "<div class=\"card-outer\">
-<div class=\"card\">
-" html
-         "</div></div>
-")))
-
-
-
-
-
-
-
 
 
 
 
 (defn export-all-pages [server-state]
-  (doseq [p-name (card-server/all-pages)]
-    (.export-page  (.page-export server-state) tpl)
-    ))
+  (let [tpl (-> server-state .page-export .load-template)]
+    (doseq [p-name (card-server/all-pages)]
+      (export-page p-name server-state tpl)
+      )))
 
 (defn export-one-page [page-name server-state]
-  (export-page page-name server-state tpl)
+  (export-page page-name server-state (-> server-state .page-export .load-template))
   )
