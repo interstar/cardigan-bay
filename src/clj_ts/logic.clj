@@ -34,11 +34,9 @@
 
 
 
-(defn regenerate-db [server-state]
-  (let [path (.page-dir server-state)
-        pages (java.nio.file.Files/newDirectoryStream path "*.md")
-        pages2 (java.nio.file.Files/newDirectoryStream path "*.md")
-
+(defn regenerate-db [page-store]
+  (let [pages (.pages-as-new-directory-stream page-store)
+        pages2 (.pages-as-new-directory-stream page-store)
         all-page-names
         (map path->pagename pages)
 

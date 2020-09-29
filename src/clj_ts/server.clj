@@ -322,23 +322,18 @@
   (let [
         as (if *command-line-args* *command-line-args* args)
         xs (parse-opts as cli-options)
-
         opts (get xs :options)
 
         port (:port opts)
-        page-dir (:directory opts)
         name (:name opts)
         site-root (:site opts)
+
+        page-dir (:directory opts)
         export-dir (:export-dir opts)
-
-        d0
-        (println "Welcome to Cardigan Bay")
-
-        [page-dir-path system-dir-path export-dir-path]
-        (pagestore/dir-names->checked-paths)
         ]
 
-    (card-server/update-pagedir! page-dir-path system-dir-path)
+    (println "Welcome to Cardigan Bay")
+    (card-server/update-pagedir! page-dir export-dir)
     (card-server/set-export-dir! export-dir)
 
     (card-server/set-site-url! site-root)

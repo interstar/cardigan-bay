@@ -8,6 +8,7 @@
    [clj-ts.common :as common]
    [clj-ts.embed :as embed]
 
+
    [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
    [com.walmartlabs.lacinia.schema :as schema]
    [clojure.java.io :as io]
@@ -45,10 +46,8 @@
 
   (start-page [cs])
   (page-store [cs])
+  (page-exporter [cs])
 
-  (export-page-extension [cs])
-  (export-page-internal-link-path [cs])
-  (export-template [cs])
   (as-map [cs])
   )
 
@@ -71,13 +70,13 @@
     {:pre (assert (not (nil? (:page-store cs-rec))))}
     (:page-store cs-rec))
 
+  (page-exporter [cs]
+    {:pre [(not (nil? (:page-exporter cs-rec)))]}
+    (:page-exporter)
+    )
 
-  (export-page-extension [cs]
-    (:export-page-extension cs-rec ""))
-  (export-page-internal-link-path [cs]
-    (:export-page-root cs-rec "./"))
-  (export-template [cs]
-    (:export-template cs-rec nil))
+
+
   (as-map [cs]
     {:wiki-name (wiki-name cs)
      :site-url (site-url cs)
@@ -86,10 +85,7 @@
 
      :start-page (start-page cs)
      :page-store (-> (page-store cs) .as-map)
-
-     :export-page-extension (export-page-extension cs)
-     :export-page-internal-link-path (export-page-internal-link-path cs)
-     :export-template (export-template cs)
+     :page-exporter (-> (page-exporter cs) .as-map)
      })
   )
 
@@ -128,40 +124,46 @@
 (defn set-start-page! [pagename]
   (set-state! :start-page pagename))
 
-(defn set-export-dir! [exdir]
-  (set-state! :export-page-dir exdir))
 
 (defn set-port! [port]
   (set-state! :port-no port))
+
+(defn set-page-store! [page-store]
+  {:pre [(= (type page-store) common/IPageStore)]}
+  (set-state! :page-store page-store))
+
+(defn set-page-exporter! [page-exporter]
+  {:pre [(= (type page-exporter) common/IPageExporter)]}
+  (set-state! :page-exporer page-exporter))
 
 ;; PageStore delegation
 
 (declare regenerate-db!)
 
 (defn write-page-to-file! [p-name body]
-  (do
-    (pagestore/write-page-to-file! (server-state) p-name body)
+  (let [ps (.page-store (server-state))]
+    (.write-page-to-file! ps p-name body)
     (regenerate-db!)
     ))
 
 
-(defn update-pagedir! [new-pd]
-  (do
-    (pagestore/assert-valid new-pd "card-server/update-pagedir!")
-    (let [git-path (.resolve new-pd ".git")
-          git? (-> git-path .toFile .exists)]
-      (set-state! :page-dir new-pd)
-      (set-state! :git-repo? git?)
-      (regenerate-db!))
+(defn update-pagedir! [new-pd new-ed]
+  (let [
+        new-ps (pagestore/make-page-store
+                new-pd
+                new-ed)]
+    (set-page-store! new-ps)
+    (regenerate-db!)
     ))
 
 (defn page-exists? [page-name]
-  (pagestore/page-exists? (server-state) page-name))
+  (-> (.page-store (server-state))
+      (.page-exists? page-name)))
 
 (defn read-page [page-name]
-  (pagestore/read-page (server-state) page-name))
+  (-> (.page-store (server-state))
+      (.read-page page-name)))
 
-(defn cwd [] (pagestore/cwd (server-state)))
 
 ;; Logic delegation
 
@@ -233,18 +235,19 @@
        i "Orphan Pages" (orphans) :orphanpages item1)
 
       :recentchanges
-      (let [src (pagestore/read-system-file (server-state) "recentchanges") ]
+      (let [src (pagestore/load-recent-changes) ]
         (common/package-card
          "recentchanges" :system :markdown src src))
 
       :about
-      (let [sr (str "### System Information
+      (let [ps (.page-store (server-state))
+            sr (str "### System Information
 
 **Wiki Name**,, " (-> (server-state) .wiki-name  )  "
-**PageStore Directory** (relative to code) ,, " (-> (server-state) .page-dir) "
-**Is Git Repo?**  ,, " (-> (server-state) .git-repo?) "
-**Site Url Root** ,, " (-> (server-state) .site-url) "
-**Export Dir** ,, " (-> (server-state) .export-page-dir)
+**PageStore Directory** (relative to code) ,, " (:page-path ps) "
+**Is Git Repo?**  ,, " (:git-repo? ps) "
+**Site Url Root** ,, " (:site-url ps) "
+**Export Dir** ,, " (:export-path ps)
                     )]
         (common/package-card i :system :markdown sr sr))
 
@@ -305,7 +308,7 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn load->cards [page-name]
   (-> page-name
-      (#(pagestore/read-page (server-state) %))
+      (-> (server-state) .page-store (.read-page page-name))
       raw->cards
       ))
 
@@ -321,8 +324,9 @@ Bookmarked " timestamp  ",, <" url ">
 (defn resolve-card
     "Not yet tested"
   [context arguments value]
-  (let [{:keys [page_name hash]} arguments]
-    (if (pagestore/page-exists? (server-state) page_name)
+  (let [{:keys [page_name hash]} arguments
+        ps (.page-store (server-state))]
+    (if (.page-exists? ps page_name)
       (-> (load->cards page_name)
           (common/find-card-by-hash hash))
       (common/package-card 0 :markdown :markdown
@@ -330,8 +334,9 @@ Bookmarked " timestamp  ",, <" url ">
                            (str "Card " hash " doesn't exist in " page_name)))))
 
 (defn resolve-source-page [context arguments value]
-  (let [{:keys [page_name]} arguments]
-    (if (pagestore/page-exists? (server-state) page_name)
+  (let [{:keys [page_name]} arguments
+        ps (.page-store (server-state))]
+    (if (.page-exists? ps page_name)
       {:page_name page_name
        :body (pagestore/read-page (server-state) page_name)}
       {:page_name page_name
@@ -340,11 +345,12 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn resolve-page [context arguments value]
   (let [{:keys [page_name]} arguments
+        ps (-> (server-state) .page-store)
         wiki-name (-> (server-state) .wiki-name)
         site-url (-> (server-state) .site-url)
         port (-> (server-state) .port-no)]
 
-    (if (pagestore/page-exists? (server-state) page_name)
+    (if (.page-exists? ps page_name)
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
@@ -360,8 +366,8 @@ Bookmarked " timestamp  ",, <" url ">
        :system_cards
        (let [sim-names (map
                         #(str "\n- [[" % "]]")
-                        (pagestore/similar-page-names
-                         (server-state) page_name))  ]
+                        (.similar-page-names
+                         ps page_name))  ]
          (if (empty? sim-names) []
              [(common/package-card
                :similarly_name_pages :system :markdown ""
