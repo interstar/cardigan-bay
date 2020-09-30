@@ -118,7 +118,7 @@
 
 (defn write-page-to-file! [p-name body]
   (let [ps (.page-store (server-state))]
-    (.write-page-to-file! ps p-name body)
+    (.write-page! ps p-name body)
     (regenerate-db!)
     ))
 
