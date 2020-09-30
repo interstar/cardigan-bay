@@ -4,6 +4,7 @@
             [hiccup.page :as hpage]
             [markdown.core :as md]
             [clj-ts.common :as common]
+            [clj-ts.types :as types]
             [clj-ts.card-server :as card-server]
             [clj-ts.pagestore :as pagestore]
             [cljstache.core :refer [render]]
@@ -48,7 +49,7 @@
 
 
 (deftype PageExporter [page-store export-extension export-link-pattern]
-  common/IPageExporter
+  types/IPageExporter
 
   (as-map [ex]
     {:page-store page-store
@@ -56,11 +57,12 @@
      :export-link-pattern export-link-pattern})
 
   (report [ex]
+    (println "AAA " ex)
     (str "A PageExporter
 Export Extension :\t" (:export-extension ex) "
 Export Link Pattern :\t" (:export-link-pattern ex) "
 Page Store ::
-" (.report (:page-store ex))))
+" (.page-store ex)))
 
   (page-name->export-file-path [ex page-name]
     (-> ex :page-store .export-path
@@ -129,7 +131,7 @@ USING DEFAULT")
 
 (defn export-all-pages [server-state]
   (let [tpl (-> server-state .page-export .load-template)]
-    (doseq [p-name (card-server/all-pages)]
+    (doseq [p-name (.all-pages server-state)]
       (export-page p-name server-state tpl)
       )))
 

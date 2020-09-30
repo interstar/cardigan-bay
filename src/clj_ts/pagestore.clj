@@ -1,7 +1,7 @@
 (ns clj-ts.pagestore
   (:require
    [clojure.string :as string]
-   [clj-ts.common :refer [IPageStore]])
+   [clj-ts.types :refer [IPageStore]])
   )
 
 ;; Diagnostic T

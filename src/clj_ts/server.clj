@@ -115,7 +115,7 @@
     (card-server/regenerate-db!)
     {:status 200
      :headers {"Content-Type" "text/html"}
-     :body (str "<pre>" (with-out-str (pp/pprint (card-server/raw-db))) "</pre>" )}))
+     :body (str "<pre>" (with-out-str (pp/pprint (.raw-db (card-server/server-state)))) "</pre>" )}))
 
 
 (defn get-start-page [request]
@@ -333,31 +333,31 @@
         export-dir (:export-dir opts)
 
         ps (pagestore/make-page-store page-dir export-dir)
-        pe (export/make-page-exporter ps "" "/view/")
-        ]
+        pe (export/make-page-exporter ps "" "/view/") ]
 
     (println "Welcome to Cardigan Bay")
-    (card-server/set-page-store! ps)
-    (card-server/set-page-exporter! pe)
 
-    (card-server/set-site-url! site-root)
-    (card-server/set-wiki-name! name)
-    (card-server/set-port! port)
+    (card-server/initialize-state! name site-root port "HelloWorld" nil ps pe)
 
+    (println "Cardigan Bay Started")
+    (println (.as-map ps))
     (println
-     (str "Cardigan Bay Started.
+     (str "Page Directory is "  (-> ps .as-map :page-path .toString) "
 
-Page Directory is "  (-> ps :page-path .toString) "
+System Directory is " (-> ps .as-map :system-path .toString) "
 
-System Directory is " (-> ps :system-path .toString) "
+Export Directory is " (-> ps .as-map :export-path .toString)
+          ))
 
-Export Directory is " (-> ps :export-path .toString) "
+    (println (card-server/server-state))
+    (println
+     (str "
 
-Port is " port "
+Port is " (-> (card-server/server-state) :port-no ) "
 
-Wiki Name is " name "
+Wiki Name is " (-> (card-server/server-state) :wiki-name) "
 
-Site URL is " site-root))
+Site URL is " (-> (card-server/server-state) :site-url)))
 
     (-> #'handler
         (wrap-content-type)

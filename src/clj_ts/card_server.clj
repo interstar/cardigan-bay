@@ -6,6 +6,7 @@
    [clj-ts.logic :as ldb]
    [clj-ts.pagestore :as pagestore]
    [clj-ts.common :as common]
+   [clj-ts.types :as types]
    [clj-ts.embed :as embed]
 
 
@@ -21,94 +22,66 @@
 ;; Card Server State is ALL the global state for the application.
 ;; NOTHING mutable should be stored anywhere else but in the card-server-state atom.
 
-;; The data is in the format of something that implements the CardServer protocol,
-;; Currently a CardServerRecord which contains a map of the stateful data
+;; Card Server state is just a defrecord.
+;; But two components : the page-store and page-exporter are
+;; deftypes in their own right.
+;; page-store has all the file-system information that the wiki reads and writes.
+;; page-exporter the other info for exporting flat files
 
-;; The reason for this is that some of these pieces of data can either be given
-;; explicitly OR if they aren't explicitly given, defaults can be calculated
-;; from other data.
-
-;; For example, a directory for exporting flat copies of pages can be given explicitly
-;; Or if not, is calculated as being the "/exported/" subdirectory of the page-dir
-
-;; The reason for the CardServerRecord, then, rather than a standard map,
-;; is that we can encapsulate all these decisions (what the defaults are and how to
-;; calculate them) in one place and hide them within accessors of the class.
-;; Other parts of the code don't need to know one way or the other whether the data
-;; they are accessing was explicitly put into the record or if it a calculated default.
-
-
-(defprotocol CardServer
-  (wiki-name [cs])
-  (site-url [cs])
-  (port-no [cs])
-  (facts-db [cs])
-
-  (start-page [cs])
-  (page-store [cs])
-  (page-exporter [cs])
-
-  (as-map [cs])
-  )
-
-
-(deftype CardServerRecord [cs-rec]
-  CardServer
-  (wiki-name [cs]
-    (:wiki-name cs-rec "Yet Another CardiganBay Wiki"))
-  (site-url [cs]
-    (:site-url cs-rec "/"))
-  (port-no [cs]
-    (:port-no cs-rec 4545))
-  (facts-db [cs]
-    (:facts-db cs-rec))
-
-  (start-page [cs]
-    (:start-page cs-rec "HelloWorld"))
-
-  (page-store [cs]
-    {:pre (assert (not (nil? (:page-store cs))))}
-    (:page-store cs-rec))
-
-  (page-exporter [cs]
-    {:pre [(not (nil? (:page-exporter cs)))]}
-    (:page-exporter)
-    )
+(defprotocol ICardServerRecord)
 
 
 
-  (as-map [cs]
-    {:wiki-name (wiki-name cs)
-     :site-url (site-url cs)
-     :port-no (port-no cs)
-     :facts-db (facts-db cs)
+(defmacro dnn [cs m & args]
+  `(let [db# (:facts-db ~cs)]
+     (println db#)
+     (println "In dnn " (type db#))
+     (println (satisfies? ldb/IFactsDb db#))
+     (if (nil? db#) :not-available
+         (. db# ~m ~@args))
+     ))
 
-     :start-page (start-page cs)
-     :page-store (-> (page-store cs) .as-map)
-     :page-exporter (-> (page-exporter cs) .as-map)
-     })
-  )
+
+
+(defrecord CardServerRecord
+    [wiki-name site-root port-no start-page facts-db page-store page-exporter]
+  ldb/IFactsDb
+  (raw-db [cs] (dnn cs raw-db))
+  (all-pages [cs] (dnn cs all-pages) )
+  (all-links [cs] (dnn cs all-links) )
+  (broken-links [cs] (dnn cs broken-links))
+  (orphan-pages [cs] (dnn cs orphan-pages))
+  (links-to [cs p-name] (dnn cs links-to p-name))
+
+)
 
 
 
 ;; State Management is done at the card-server level
 
-(def card-server-state
-  (atom (new CardServerRecord {:start-page "HelloWorld" :git-repo? false})))
+(def the-server-state  (atom :dummy))
 
+(defn initialize-state! [wiki-name site-url port-no start-page logic-db page-store page-exporter]
+  (reset! the-server-state
+          (->CardServerRecord
+           wiki-name
+           site-url
+           port-no
+           start-page
+           logic-db
+           page-store
+           page-exporter) )
+  )
 
 (defn server-state
   "Other modules should always get the card-server data through calling this function.
   Rather than relying on knowing the name of the atom"
-  [] @card-server-state)
+  [] @the-server-state)
 
 (defn set-state!
   "The official API call to update any of the key-value pairs in the card-server state"
   [key val]
-  (let [current (-> (server-state) .as-map)
-        new-state (assoc current key val)]
-    (reset! card-server-state (CardServerRecord. new-state))
-))
+  (swap! the-server-state assoc key val))
 
 ;; convenience functions for updating state
 (defn set-wiki-name! [wname]
@@ -117,24 +90,27 @@
 (defn set-site-url! [url]
   (set-state! :site-url url))
 
-
-(defn set-facts-db! [facts]
-  (set-state! :facts-db))
-
 (defn set-start-page! [pagename]
   (set-state! :start-page pagename))
-
 
 (defn set-port! [port]
   (set-state! :port-no port))
 
+(defn set-facts-db! [facts]
+  {:pre [(satisfies? ldb/IFactsDb facts)]}
+  (do
+    (println "YYYY " facts)
+    (set-state! :facts-db)))
+
 (defn set-page-store! [page-store]
-  {:pre [(satisfies? common/IPageStore page-store)]}
+  {:pre [(satisfies? types/IPageStore page-store)]}
   (set-state! :page-store page-store))
 
 (defn set-page-exporter! [page-exporter]
-  {:pre [(= (type page-exporter) common/IPageExporter)]}
+  {:pre [(= (type page-exporter) types/IPageExporter)]}
   (set-state! :page-exporer page-exporter))
+
+
 
 ;; PageStore delegation
 
@@ -165,24 +141,15 @@
       (.read-page page-name)))
 
 
+
 ;; Logic delegation
 
 (defn regenerate-db! []
   (future
-    (set-state! :facts-db (ldb/regenerate-db (server-state)))
+    (set-facts-db! (ldb/regenerate-db (server-state)))
     (println "Finished building logic db")) )
 
-(defn raw-db [] (-> (server-state) .facts-db))
 
-(defn all-pages [] (ldb/all-pages (server-state)))
-
-(defn links [] (ldb/links (server-state)))
-
-(defn broken-links [] (ldb/broken-links (server-state)))
-
-(defn orphans [] (ldb/orphans (server-state)))
-
-(defn links-to [target] (ldb/links-to (server-state) target))
 
 
 
@@ -206,33 +173,38 @@
 
 
 (defn ldb-query->mdlist-card [i title result qname f]
-  (let [items (apply str (map f result))
-        body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
-    (common/package-card i :system :markdown body body)))
+  (if (= (result :not-available)
+         (common/package-card i :system :markdown
+                              "Fact Database Not Currently Available"
+                              "Fact Database Not Currently Available" ))
+    (let [items (apply str (map f result))
+          body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
+      (common/package-card i :system :markdown body body))))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
 
 (defn system-card [i data]
   (let [info (read-string data)
-        cmd (:command info)]
+        cmd (:command info)
+        db (-> (server-state) :facts-db)]
     (condp = cmd
       :allpages
-      (ldb-query->mdlist-card i "All Pages" (all-pages) :allpages item1)
+      (ldb-query->mdlist-card i "All Pages" (.all-pages db) :allpages item1)
 
       :alllinks
       (ldb-query->mdlist-card
-       i "All Links" (links) :alllinks
+       i "All Links" (.all-links db) :alllinks
        (fn [[a b]] (str "* [[" a "]] **->** [[" b "]]\n")))
 
       :brokenlinks
       (ldb-query->mdlist-card
-       i "Broken Internal Links" (broken-links) :brokenlinks
+       i "Broken Internal Links" (.broken-links db) :brokenlinks
        (fn [[a b]] (str "* [[" a "]] **X->** [[" b "]]\n")))
 
       :orphanpages
       (ldb-query->mdlist-card
-       i "Orphan Pages" (orphans) :orphanpages item1)
+       i "Orphan Pages" (.orphan-pages db) :orphanpages item1)
 
       :recentchanges
       (let [src (pagestore/load-recent-changes) ]
@@ -307,10 +279,10 @@ Bookmarked " timestamp  ",, <" url ">
 (declare backlinks)
 
 (defn load->cards [page-name]
-  (-> page-name
-      (-> (server-state) .page-store (.read-page page-name))
-      raw->cards
-      ))
+  (-> (server-state) .page-store
+      (.read-page page-name)
+       raw->cards)
+  )
 
 (defn generate-system-cards [page-name]
  [(backlinks page-name)] )
@@ -345,10 +317,10 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn resolve-page [context arguments value]
   (let [{:keys [page_name]} arguments
-        ps (-> (server-state) .page-store)
-        wiki-name (-> (server-state) .wiki-name)
-        site-url (-> (server-state) .site-url)
-        port (-> (server-state) .port-no)]
+        ps (:page-store (server-state))
+        wiki-name (:wiki-name (server-state))
+        site-url (:site-url (server-state))
+        port (:port-no (server-state))]
 
     (if (.page-exists? ps page_name)
       {:page_name page_name
@@ -414,7 +386,8 @@ Bookmarked " timestamp  ",, <" url ">
 ;; Backlinks
 
 (defn backlinks [page-name]
-  (ldb-query->mdlist-card "backlinks" "Backlinks" (links-to page-name) :calculated
+  (ldb-query->mdlist-card "backlinks" "Backlinks" (.links-to (server-state) page-name)
+                          :calculated
                           (fn [[a b]] (str "* [[" a "]] \n"))))
 
 

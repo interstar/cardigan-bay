@@ -10,12 +10,10 @@
 
 ))
 
+;; Relations in the DB
 (pldb/db-rel link from to)
 (pldb/db-rel page p)
 (pldb/db-rel good-name lc capture)
-
-
-
 
 
 ;; Diagnostic T
@@ -32,6 +30,61 @@
                   (-> % last )  )
          link-seq)))
 
+
+
+
+
+(defprotocol IFactsDb
+  (raw-db [db])
+  (all-pages [db])
+  (all-links [db])
+  (broken-links [db])
+  (orphan-pages [db])
+  (links-to [db target])
+  )
+
+(deftype FactsDb [facts]
+    IFactsDb
+
+    (raw-db [facts] facts)
+
+    (all-pages [facts]
+      (sort
+       (pldb/with-db facts
+         (logic/run* [p]
+           (page p))
+         )) )
+
+    (all-links [facts]
+      (pldb/with-db facts
+        (logic/run* [p q]
+          (link p q)
+          )))
+
+    (links-to [facts target]
+      (pldb/with-db (facts)
+        (logic/run* [p q]
+          (link p q)
+          (logic/== target q)
+          )))
+
+    (broken-links [facts]
+      (pldb/with-db facts
+        (logic/run* [p q]
+          (link p q)
+          (logic/nafc page q)
+          )))
+
+    (orphan-pages [facts]
+      (pldb/with-db facts
+        (logic/run* [q]
+          (logic/fresh [p]
+            (page q)
+            (logic/conda
+             [(link p q) logic/fail]
+             [logic/succeed])))))
+
+    )
 
 
 (defn regenerate-db [page-store]
@@ -58,47 +111,5 @@
          ((fn [db] (reduce add-link db all-links)))
          )
         ]
-    new-db
+    (->FactsDb  new-db)
     ))
-
-
-
-(defn all-pages [server-state]
-  (sort
-   (pldb/with-db (.facts-db server-state)
-     (logic/run* [p]
-       (page p))
-     )) )
-
-
-(defn links [server-state]
-  (pldb/with-db (.facts-db server-state)
-    (logic/run* [p q]
-      (link p q)
-      (page p)
-      (page q)
-      )))
-
-(defn links-to [server-state target]
-  (pldb/with-db (.facts-db server-state)
-    (logic/run* [p q]
-      (link p q)
-      (logic/== target q)
-      )))
-
-(defn broken-links [server-state]
-  (pldb/with-db (.facts-db server-state)
-    (logic/run* [p q]
-      (link p q)
-      (logic/nafc page q)
-      )))
-
-
-(defn orphans [server-state]
-  (pldb/with-db (.facts-db server-state)
-    (logic/run* [q]
-      (logic/fresh [p]
-        (page q)
-        (logic/conda
-         [(link p q) logic/fail]
-         [logic/succeed])))))
