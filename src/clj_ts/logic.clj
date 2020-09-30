@@ -62,17 +62,16 @@
           )))
 
     (links-to [this target]
-      (do
+      (let [f (.raw-db this)]
         (println "IN Logic links-to " target)
-        (println this)
-        (println "FACTS :: " facts)
+        (println "FACTS :: " f)
         (let [x
-              (pldb/with-db facts
+              (pldb/with-db f
                 (logic/run* [p q]
                   (link p q)
                   (logic/== target q)
                   ))]
-          (println "JJJJJ " x)
+          (println "Result " x)
           x)))
 
     (broken-links [this]
