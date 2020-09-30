@@ -340,7 +340,7 @@
     (card-server/initialize-state! name site-root port "HelloWorld" nil ps pe)
 
     (println "Cardigan Bay Started")
-    (println (.as-map ps))
+
     (println
      (str "Page Directory is "  (-> ps .as-map :page-path .toString) "
 
@@ -349,7 +349,6 @@ System Directory is " (-> ps .as-map :system-path .toString) "
 Export Directory is " (-> ps .as-map :export-path .toString)
           ))
 
-    (println (card-server/server-state))
     (println
      (str "
 
@@ -358,6 +357,8 @@ Port is " (-> (card-server/server-state) :port-no ) "
 Wiki Name is " (-> (card-server/server-state) :wiki-name) "
 
 Site URL is " (-> (card-server/server-state) :site-url)))
+
+    (card-server/regenerate-db!)
 
     (-> #'handler
         (wrap-content-type)

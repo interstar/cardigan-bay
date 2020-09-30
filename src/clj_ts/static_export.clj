@@ -15,13 +15,13 @@
 
 (defn double-bracket-links
   "Turn the internal double-bracket-links into real links in the exported pages"
-  [text ps ]
+  [text pe ]
   (let [replace-link
         (fn [[_ m]]
           (do
-            (if (.page-exists? ps m)
+            (if (.page-exists? (.page-store pe) m)
               (str "<a class=\"exported-internal-link\" href=\""
-                   (.page-name->exported-link ps m)"\">"
+                   (.page-name->exported-link pe m)"\">"
                    m "</a>")
               (str "<em>" m "</em>"))))]
     (string/replace text
@@ -30,13 +30,13 @@
 
 (defn card->html
   "HTML for an exported card"
-  [card ps]
+  [card pe]
   (let [html
         (-> (get card :server_prepared_data)
             (common/double-comma-table)
             (md/md-to-html-string)
             (common/auto-links)
-            (double-bracket-links ps))]
+            (double-bracket-links pe))]
     (str "<div class=\"card-outer\">
 <div class=\"card\">
 " html
@@ -65,7 +65,7 @@ Page Store ::
 " (.page-store ex)))
 
   (page-name->export-file-path [ex page-name]
-    (-> ex :page-store .export-path
+    (-> ex .page-store .export-path
         (.resolve (str page-name export-extension))))
 
   (page-name->exported-link [ex page-id]
@@ -75,6 +75,8 @@ Page Store ::
   (load-template [ex]
     (try
       (let [tpl-path (.resolve (:system-path page-store) "index.html")]
+        (println "Loading template
+" tpl-path)
         (slurp (.toString tpl-path)))
       (catch Exception e
         (do (println "ERROR FINDING TEMPLATE " e "
@@ -97,21 +99,20 @@ USING DEFAULT")
 
 
 (defn export-page [page-name server-state tpl]
-  (let [ps (.page-store server-state)
-        ex (.page-export server-state)
-
+  (let [ps (:page-store server-state)
+        ex (:page-exporter server-state)
         cards (card-server/load->cards page-name)
         last-mod (.last-modified ps page-name)
-
         file-name (-> (.page-name->export-file-path ex page-name) .toString)
 
-        rendered (string/join "\n" (map #(card->html % ps) cards))
+        rendered (string/join "\n" (map #(card->html % ex) cards))
+
         insert-page (hiccup/html
                      [:div
                       [:div
                        rendered]
                       [:div {:class "system"}
-                       (card->html (card-server/backlinks page-name) ps)]]
+                       (card->html (card-server/backlinks page-name) ex)]]
                      )
         page (render tpl
                      {:page-title page-name
@@ -130,11 +131,14 @@ USING DEFAULT")
 
 
 (defn export-all-pages [server-state]
-  (let [tpl (-> server-state .page-export .load-template)]
-    (doseq [p-name (.all-pages server-state)]
-      (export-page p-name server-state tpl)
-      )))
+  (if (not= :not-available (.all-pages server-state))
+    :not-exported
+    (let [tpl (-> server-state :page-exporter .load-template)]
+      (doseq [p-name (.all-pages server-state)]
+        (export-page p-name server-state tpl)
+        ))))
 
 (defn export-one-page [page-name server-state]
-  (export-page page-name server-state (-> server-state .page-export .load-template))
+  (let [tpl (-> server-state :page-exporter .load-template)]
+    (export-page page-name server-state tpl))
   )

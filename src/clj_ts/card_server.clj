@@ -34,9 +34,6 @@
 
 (defmacro dnn [cs m & args]
   `(let [db# (:facts-db ~cs)]
-     (println db#)
-     (println "In dnn " (type db#))
-     (println (satisfies? ldb/IFactsDb db#))
      (if (nil? db#) :not-available
          (. db# ~m ~@args))
      ))
@@ -99,8 +96,8 @@
 (defn set-facts-db! [facts]
   {:pre [(satisfies? ldb/IFactsDb facts)]}
   (do
-    (println "YYYY " facts)
-    (set-state! :facts-db)))
+    (println "IN SET FACTS =============================================================")
+    (set-state! :facts-db facts)))
 
 (defn set-page-store! [page-store]
   {:pre [(satisfies? types/IPageStore page-store)]}
@@ -146,8 +143,11 @@
 
 (defn regenerate-db! []
   (future
-    (set-facts-db! (ldb/regenerate-db (server-state)))
-    (println "Finished building logic db")) )
+    (println "Starting to rebuild logic db")
+    (let [f (ldb/regenerate-db (:page-store  (server-state))) ]
+      (println "FACTS ARE THESE " f)
+      (set-facts-db! f )
+      (println "Finished building logic db"))) )
 
 
 
@@ -173,11 +173,12 @@
 
 
 (defn ldb-query->mdlist-card [i title result qname f]
-  (if (= (result :not-available)
+  (if (= result :not-available
          (common/package-card i :system :markdown
                               "Fact Database Not Currently Available"
                               "Fact Database Not Currently Available" ))
-    (let [items (apply str (map f result))
+    (let [d0 (println "###############################"   result)
+          items (apply str (map f result))
           body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
       (common/package-card i :system :markdown body body))))
 
@@ -187,7 +188,8 @@
 (defn system-card [i data]
   (let [info (read-string data)
         cmd (:command info)
-        db (-> (server-state) :facts-db)]
+        db (-> (server-state) :facts-db)
+        ps (-> (server-state) :page-store)]
     (condp = cmd
       :allpages
       (ldb-query->mdlist-card i "All Pages" (.all-pages db) :allpages item1)
@@ -207,13 +209,12 @@
        i "Orphan Pages" (.orphan-pages db) :orphanpages item1)
 
       :recentchanges
-      (let [src (pagestore/load-recent-changes) ]
+      (let [src (pagestore/load-recent-changes ps) ]
         (common/package-card
          "recentchanges" :system :markdown src src))
 
       :about
-      (let [ps (.page-store (server-state))
-            sr (str "### System Information
+      (let [sr (str "### System Information
 
 **Wiki Name**,, " (-> (server-state) .wiki-name  )  "
 **PageStore Directory** (relative to code) ,, " (:page-path ps) "
@@ -386,9 +387,16 @@ Bookmarked " timestamp  ",, <" url ">
 ;; Backlinks
 
 (defn backlinks [page-name]
-  (ldb-query->mdlist-card "backlinks" "Backlinks" (.links-to (server-state) page-name)
-                          :calculated
-                          (fn [[a b]] (str "* [[" a "]] \n"))))
+  (let [bl (.links-to (server-state) page-name)]
+    (println "IN BACKLINKS " bl)
+    (if (= bl :not-available) (common/package-card
+                                :backlinks :system :markdown
+                                "Backlinks Not Available"
+                                "Backlinks Not Available")
+
+        (ldb-query->mdlist-card "backlinks" "Backlinks" bl
+                                :calculated
+                                (fn [[a b]] (str "* [[" a "]] \n"))))))
 
 
 

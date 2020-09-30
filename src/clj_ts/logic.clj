@@ -13,7 +13,7 @@
 ;; Relations in the DB
 (pldb/db-rel link from to)
 (pldb/db-rel page p)
-(pldb/db-rel good-name lc capture)
+
 
 
 ;; Diagnostic T
@@ -46,36 +46,43 @@
 (deftype FactsDb [facts]
     IFactsDb
 
-    (raw-db [facts] facts)
+    (raw-db [this] facts)
 
-    (all-pages [facts]
+    (all-pages [this]
       (sort
        (pldb/with-db facts
          (logic/run* [p]
            (page p))
          )) )
 
-    (all-links [facts]
+    (all-links [this]
       (pldb/with-db facts
         (logic/run* [p q]
           (link p q)
           )))
 
-    (links-to [facts target]
-      (pldb/with-db (facts)
-        (logic/run* [p q]
-          (link p q)
-          (logic/== target q)
-          )))
+    (links-to [this target]
+      (do
+        (println "IN Logic links-to " target)
+        (println this)
+        (println "FACTS :: " facts)
+        (let [x
+              (pldb/with-db facts
+                (logic/run* [p q]
+                  (link p q)
+                  (logic/== target q)
+                  ))]
+          (println "JJJJJ " x)
+          x)))
 
-    (broken-links [facts]
+    (broken-links [this]
       (pldb/with-db facts
         (logic/run* [p q]
           (link p q)
           (logic/nafc page q)
           )))
 
-    (orphan-pages [facts]
+    (orphan-pages [this]
       (pldb/with-db facts
         (logic/run* [q]
           (logic/fresh [p]
@@ -96,6 +103,7 @@
         all-links (-> pages2
                       (#(map extract-links %))
                       (#(apply concat %)))
+
         add-page
         (fn [db page-name]
           (-> db (pldb/db-fact page page-name)))

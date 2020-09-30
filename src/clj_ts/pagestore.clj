@@ -68,8 +68,7 @@
          ))
 
   (similar-page-names [this p-name]
-    (let [all-pages (java.nio.file.Files/newDirectoryStream
-                     (.resolve page-path "*.md"))
+    (let [all-pages (.pages-as-new-directory-stream this)
           all-names (map #(-> (.getFileName %)
                               .toString
                               (string/split #"\.")
@@ -156,6 +155,9 @@
                  (str "* [[" pagename "]] (" (.toString (java.util.Date.)) ")")
                  curlist
                  )]
+    (println "updating recent changes")
+    (println newlist)
+    (println ps)
     (.write-system-file! ps pn (string/join "\n" (take 80 newlist)) )
 ))
 
