@@ -62,14 +62,12 @@
           )))
 
     (links-to [this target]
-      (let [f (.raw-db this)]
-        (let [x
-              (pldb/with-db f
-                (logic/run* [p q]
-                  (link p q)
-                  (logic/== target q)
-                  ))]
-          x)))
+      (let [db (.raw-db this)]
+        (pldb/with-db db
+          (logic/run* [p q]
+            (link p q)
+            (logic/== target q)
+            ))))
 
     (broken-links [this]
       (pldb/with-db facts
