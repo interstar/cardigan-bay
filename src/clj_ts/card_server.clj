@@ -189,12 +189,12 @@
       :alllinks
       (ldb-query->mdlist-card
        i "All Links" (.all-links db) :alllinks
-       (fn [[a b]] (str "* [[" a "]] **->** [[" b "]]\n")))
+       (fn [[a b]] (str "[[" a "]],, &#8594;,, [[" b "]]\n")))
 
       :brokenlinks
       (ldb-query->mdlist-card
        i "Broken Internal Links" (.broken-links db) :brokenlinks
-       (fn [[a b]] (str "* [[" a "]] **X->** [[" b "]]\n")))
+       (fn [[a b]] (str "[[" a "]],, &#8603;,, [[" b "]]\n")))
 
       :orphanpages
       (ldb-query->mdlist-card

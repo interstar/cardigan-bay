@@ -306,17 +306,28 @@
    :default "Yet Another CardiganBay Wiki"
    :parse-fn str]
 
-  ["-s" "--site SITE" "Site Root URL "
+  ["-s" "--site SITE" "Site URL "
    :default "/"
    :parse-fn str
    ]
 
+  ["-i" "--init INIT" "Start Page"
+   :default "HelloWorld"
+   :parse-fn str]
+
+  ["-l" "--links LINK" "Internal Links"
+   :default "./"
+   :parse-fn str]
+
+  ["-x" "--extension EXPORTED_EXTENSION" "Exported Extension"
+   :default ".html"
+   :parse-fn str]
+
   ["-e" "--export-dir DIR" "Export Directory"
    :default "./bedrock/exported/"
-   :parse-fn str]]
+   :parse-fn str]
 
-  )
-
+  ])
 
 
 ; runs when the server starts
@@ -326,21 +337,14 @@
         xs (parse-opts as cli-options)
         opts (get xs :options)
 
-        port (:port opts)
-        name (:name opts)
-        site-root (:site opts)
-
-        page-dir (:directory opts)
-        export-dir (:export-dir opts)
-
-        ps (pagestore/make-page-store page-dir export-dir)
-        pe (export/make-page-exporter ps "" "/view/") ]
+        ps (pagestore/make-page-store (:directory opts) (:export-dir opts))
+        pe (export/make-page-exporter ps "" (:links opts))]
 
     (println "
 Welcome to Cardigan Bay
 =======================")
 
-    (card-server/initialize-state! name site-root port "HelloWorld" nil ps pe)
+    (card-server/initialize-state! (:name opts) (:site opts) (:port opts) (:init opts) nil ps pe)
 
     (println
      (str "
@@ -374,4 +378,4 @@ PageExporter Report
         (wrap-params)
         (wrap-reload)
         (wrap-resource "clj_ts")
-        (run-server {:port port}))) )
+        (run-server {:port (:port opts)}))) )

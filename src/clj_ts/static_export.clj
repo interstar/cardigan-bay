@@ -70,7 +70,7 @@ Export Link Pattern :\t" (ep (:export-link-pattern ex))))
 
   (load-template [ex]
     (try
-      (let [tpl-path (.resolve (:system-path page-store) "index.html")]
+      (let [tpl-path (.resolve (.system-path page-store) "index.html")]
         (println "Loading template
 " tpl-path)
         (slurp (.toString tpl-path)))

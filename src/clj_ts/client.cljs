@@ -182,6 +182,8 @@
 
            [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
            " || "
+           [:span {:on-click (fn [] (go-new! "InQueue")) } "InQueue"]
+           " || "
            [:span {:on-click (fn [] (go-new! "AboutThisWiki"))} "AboutThisWiki"]
            " || "
            [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
