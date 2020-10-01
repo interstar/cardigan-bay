@@ -1,6 +1,6 @@
 Pages which have no other pages linking to them.
 
-[Database](/system/db)
+[Database](/api/system/db)
 
 ----
 :system
