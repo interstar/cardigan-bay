@@ -7,14 +7,18 @@ body {
     max-width: 48em;
     margin: auto;
     color: #4a4a4a;
-    background-color: #f9f9f9;
     padding: 13px;
 
 
-    background-color:#cccccc;
+    background-color:#cce3f3;
 
 }
 
+@media only screen and (max-width: 600px) {
+  body {
+      font-size: 1.2rem;
+  }
+}
 
 
 h1, h2, h3, h4, h5, h6 {
@@ -32,7 +36,7 @@ h1, h2, h3, h4, h5, h6 {
   hyphens: auto;
 }
 
-.navbar span {
+#nav1 span {
       cursor: pointer;
 }
 
@@ -40,29 +44,33 @@ h1, h2, h3, h4, h5, h6 {
 
 .wikiname {color: #555555; text-align: right;}
 
-.headerbar {
-	padding:10px;
-	margin: 0;
-/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#a7cfdf+0,331554+100 */
 
-/*
-background: -moz-linear-gradient(45deg, #a7cfdf  0%, #7375A4 100% );
-background: -webkit-linear-gradient(45deg, #a7cfdf  0%, #7375A4 100%);
-background: linear-gradient(45deg, #a7cfdf  0%, #737594 100%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#7375A4',GradientType=1 );
-	width:100%;
-*/
-
+.page-header {
+    /*
+    background:url("http://nooranch.com/blogged/thoughtstorms/thunder.png");
+    background-size:cover;
+*/    
+    padding:0.5em;
+    border-radius: 25px;
+    margin-bottom:1.5em;
+    color:#443333   ;
 }
 
-.headerbar a {color:black;}
-
+.page-header a {
+    color:bb6e3e;
+}
 
 .card-outer {
-    border-radius: 25px;
-    background: #eeeeee;
-    padding: 15px;
+    border-radius: 10px;
+    background: #444455;
+    padding: 5px;
     margin-bottom:1.5em;
+}
+
+@media only screen and (max-width: 600px) {
+    .card-outer {
+    background: #ddddff;
+    }
 }
 
 .card-meta {
@@ -71,9 +79,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 
 .card {
     background-color:white;
-    padding: 10px;
+    padding: 1em;
     margin: 2px;
-    border-radius: 15px;
+    border-radius: 10px;
 }
 
 #content {
@@ -108,7 +116,7 @@ text {
     /*      font-family:Verdana; */
 }
 
-a {color:39cccc;}
+a {color:e59131;}
 
 .wikilink {color:#85144b;}
 
@@ -142,6 +150,7 @@ button:hover {
 .navbar {
     /*padding:20px;*/
     border:10px;
+    Background:dark-blue;
 }
 
 #navinputbox {
@@ -172,11 +181,15 @@ button:hover {
 
 .footer {
     font-size: 1rem;
-
+    color: white;
 }
 
 .footer a {
-    color : blue;
+    color : azure;
+}
+
+.breadcrumbs {
+    font-size: 1rem;
 }
 
 .embed_div {
