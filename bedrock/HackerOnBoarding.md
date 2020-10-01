@@ -90,5 +90,5 @@ clj -A:dev:app -n "WikiName" -s "http://myserver.com/" -d "/PATH/TO/PAGE/DIRECTO
 
 **What about building it as a JAR?**
 
-See my [[BuildScript]]
+See [[MyBuildScript]]
 
