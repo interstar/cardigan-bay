@@ -125,8 +125,7 @@
 
     (assert (-> export-dir-path .toFile .isDirectory)
             (str "export-path " export-dir-as-string " is not a directory."))
-    (println "Created PageStore :")
-    (println (.report ps))
+
     ps))
 
 
@@ -155,9 +154,7 @@
                  (str "* [[" pagename "]] (" (.toString (java.util.Date.)) ")")
                  curlist
                  )]
-    (println "updating recent changes")
-    (println newlist)
-    (println ps)
+    (println "Updating recentchanges ... adding " pagename)
     (.write-system-file! ps pn (string/join "\n" (take 80 newlist)) )
 ))
 

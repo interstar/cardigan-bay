@@ -182,7 +182,7 @@
         page-name (:page ps)
         hash (:hash ps)
         direction (:direction ps)]
-    (println )
+
     (card-server/reorder-card page-name hash direction)
     {:status 303
      :headers {"Location" (str  "/view/" page-name)}}))
@@ -318,6 +318,7 @@
   )
 
 
+
 ; runs when the server starts
 (defn -main [& args]
   (let [
@@ -335,28 +336,35 @@
         ps (pagestore/make-page-store page-dir export-dir)
         pe (export/make-page-exporter ps "" "/view/") ]
 
-    (println "Welcome to Cardigan Bay")
+    (println "
+Welcome to Cardigan Bay
+=======================")
 
     (card-server/initialize-state! name site-root port "HelloWorld" nil ps pe)
 
-    (println "Cardigan Bay Started")
-
-    (println
-     (str "Page Directory is "  (-> ps .as-map :page-path .toString) "
-
-System Directory is " (-> ps .as-map :system-path .toString) "
-
-Export Directory is " (-> ps .as-map :export-path .toString)
-          ))
-
     (println
      (str "
+CardServer Created.
 
-Port is " (-> (card-server/server-state) :port-no ) "
+Wiki Name is :\t"
+          (:wiki-name (card-server/server-state)) "
+Site URL is :\t" (:site-url (card-server/server-state)) "
+Port No is :\t" (:port-no (card-server/server-state)) "
 
-Wiki Name is " (-> (card-server/server-state) :wiki-name) "
+PageStore Report
+"
+          (-> (card-server/server-state) :page-store .report)
 
-Site URL is " (-> (card-server/server-state) :site-url)))
+          "
+PageExporter Report
+"
+          (-> (card-server/server-state) :page-exporter .report)
+          "
+-----------------------------------------------------------------------------------------------
+"
+          ))
+
+
 
     (card-server/regenerate-db!)
 

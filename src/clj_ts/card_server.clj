@@ -95,9 +95,7 @@
 
 (defn set-facts-db! [facts]
   {:pre [(satisfies? ldb/IFactsDb facts)]}
-  (do
-    (println "IN SET FACTS =============================================================")
-    (set-state! :facts-db facts)))
+  (set-state! :facts-db facts))
 
 (defn set-page-store! [page-store]
   {:pre [(satisfies? types/IPageStore page-store)]}
@@ -114,8 +112,8 @@
 (declare regenerate-db!)
 
 (defn write-page-to-file! [p-name body]
-  (let [ps (.page-store (server-state))]
-    (.write-page! ps p-name body)
+  (do
+    (pagestore/write-page-to-file! (server-state) p-name body)
     (regenerate-db!)
     ))
 
@@ -145,7 +143,6 @@
   (future
     (println "Starting to rebuild logic db")
     (let [f (ldb/regenerate-db (:page-store  (server-state))) ]
-      (println "FACTS ARE THESE " f)
       (set-facts-db! f )
       (println "Finished building logic db"))) )
 
@@ -173,14 +170,9 @@
 
 
 (defn ldb-query->mdlist-card [i title result qname f]
-  (if (= result :not-available
-         (common/package-card i :system :markdown
-                              "Fact Database Not Currently Available"
-                              "Fact Database Not Currently Available" ))
-    (let [d0 (println "###############################"   result)
-          items (apply str (map f result))
-          body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
-      (common/package-card i :system :markdown body body))))
+  (let [items (apply str (map f result))
+        body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
+    (common/package-card i :system :markdown body body)))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
@@ -216,11 +208,11 @@
       :about
       (let [sr (str "### System Information
 
-**Wiki Name**,, " (-> (server-state) .wiki-name  )  "
-**PageStore Directory** (relative to code) ,, " (:page-path ps) "
-**Is Git Repo?**  ,, " (:git-repo? ps) "
-**Site Url Root** ,, " (:site-url ps) "
-**Export Dir** ,, " (:export-path ps)
+**Wiki Name**,, " (:wiki-name (server-state)   )  "
+**PageStore Directory** (relative to code) ,, " (.page-path ps) "
+**Is Git Repo?**  ,, " (.git-repo? ps) "
+**Site Url Root** ,, " (:site-url (server-state)) "
+**Export Dir** ,, " (.export-path ps)
                     )]
         (common/package-card i :system :markdown sr sr))
 
@@ -388,15 +380,24 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn backlinks [page-name]
   (let [bl (.links-to (server-state) page-name)]
-    (println "IN BACKLINKS " bl)
-    (if (= bl :not-available) (common/package-card
-                                :backlinks :system :markdown
-                                "Backlinks Not Available"
-                                "Backlinks Not Available")
+    (cond
+      (= bl :not-available)
+      (common/package-card
+       :backlinks :system :markdown
+       "Backlinks Not Available"
+       "Backlinks Not Available")
 
-        (ldb-query->mdlist-card "backlinks" "Backlinks" bl
-                                :calculated
-                                (fn [[a b]] (str "* [[" a "]] \n"))))))
+      (= bl '())
+      (common/package-card
+       :backlinks :system :markdown
+       "No Backlinks"
+       "No Backlinks")
+
+      :otherwise
+      (ldb-query->mdlist-card
+       "backlinks" "Backlinks" bl
+       :calculated
+       (fn [[a b]] (str "* [[" a "]] \n"))))))
 
 
 

@@ -46,7 +46,7 @@
 
 
 
-
+(defn ep [s] (if (nil? s) "NONE" s))
 
 (deftype PageExporter [page-store export-extension export-link-pattern]
   types/IPageExporter
@@ -57,12 +57,8 @@
      :export-link-pattern export-link-pattern})
 
   (report [ex]
-    (println "AAA " ex)
-    (str "A PageExporter
-Export Extension :\t" (:export-extension ex) "
-Export Link Pattern :\t" (:export-link-pattern ex) "
-Page Store ::
-" (.page-store ex)))
+    (str "Export Extension :\t" (ep (:export-extension ex)) "
+Export Link Pattern :\t" (ep (:export-link-pattern ex))))
 
   (page-name->export-file-path [ex page-name]
     (-> ex .page-store .export-path
@@ -79,7 +75,8 @@ Page Store ::
 " tpl-path)
         (slurp (.toString tpl-path)))
       (catch Exception e
-        (do (println "ERROR FINDING TEMPLATE " e "
+        (do (println "ERROR FINDING TEMPLATE
+" e "
 USING DEFAULT")
             (hiccup/html
              [:html
@@ -93,10 +90,7 @@ USING DEFAULT")
 )
 
 (defn make-page-exporter [page-store export-extension export-link-pattern]
-  (let [ex  (->PageExporter page-store export-extension export-link-pattern)]
-    (println (.report ex))
-    ex))
-
+  (->PageExporter page-store export-extension export-link-pattern))
 
 (defn export-page [page-name server-state tpl]
   (let [ps (:page-store server-state)
@@ -131,10 +125,13 @@ USING DEFAULT")
 
 
 (defn export-all-pages [server-state]
-  (if (not= :not-available (.all-pages server-state))
+
+  (if (= :not-available (.all-pages server-state))
     :not-exported
-    (let [tpl (-> server-state :page-exporter .load-template)]
+    (let [tpl (-> server-state :page-exporter .load-template)
+          all (.all-pages server-state)]
       (doseq [p-name (.all-pages server-state)]
+        (println "Exporting " p-name)
         (export-page p-name server-state tpl)
         ))))
 
