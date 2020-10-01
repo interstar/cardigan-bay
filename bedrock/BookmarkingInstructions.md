@@ -1,5 +1,4 @@
-
-CardiganBay has an easy way to bookmark web-pages into it using [bookmarklets](https://support.mozilla.org/en-US/kb/bookmarklets-perform-common-web-page-tasks)
+[[CardiganBay]] has an easy way to bookmark web-pages into it using [bookmarklets](https://support.mozilla.org/en-US/kb/bookmarklets-perform-common-web-page-tasks)
 
 Here's what you do :
 
