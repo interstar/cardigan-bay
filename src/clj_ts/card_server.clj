@@ -41,7 +41,7 @@
 
 
 (defrecord CardServerRecord
-    [wiki-name site-root port-no start-page facts-db page-store page-exporter]
+    [wiki-name site-url port-no start-page facts-db page-store page-exporter]
   ldb/IFactsDb
   (raw-db [cs] (dnn cs raw-db))
   (all-pages [cs] (dnn cs all-pages) )
@@ -119,13 +119,12 @@
 
 
 (defn update-pagedir! [new-pd new-ed]
-  (let [
-        new-ps (pagestore/make-page-store
-                new-pd
-                new-ed)]
+  (let [new-ps
+        (pagestore/make-page-store
+         new-pd
+         new-ed)]
     (set-page-store! new-ps)
-    (regenerate-db!)
-    ))
+    (regenerate-db!)))
 
 (defn page-exists? [page-name]
   (-> (.page-store (server-state))
@@ -201,7 +200,7 @@
        i "Orphan Pages" (.orphan-pages db) :orphanpages item1)
 
       :recentchanges
-      (let [src (pagestore/load-recent-changes ps) ]
+      (let [src (.read-recentchanges ps) ]
         (common/package-card
          "recentchanges" :system :markdown src src))
 
@@ -359,14 +358,15 @@ Bookmarked " timestamp  ",, <" url ">
 
 ;; RecentChanges as RSS
 
-(defn rss-recent-changes []
-  (let [make-link (fn [s]
+(defn rss-recent-changes [link-fn]
+  (let [ps (:page-store (server-state))
+        make-link (fn [s]
                     (let [m (re-matches #"\* \[\[(\S+)\]\] (\(.+\))" s)
                           [pname date] [(second m) (nth m 2)]]
                       {:title (str pname " changed on " date)
-                       :link (pagestore/page-name->url (server-state) pname)}
+                       :link (link-fn pname)}
                       ))
-        rc (-> (pagestore/read-page (server-state) "systemrecentchanges")
+        rc (-> (.read-recentchanges ps)
                string/split-lines
                (#(map make-link %)))]
     (rss/channel-xml {:title "RecentChanges"

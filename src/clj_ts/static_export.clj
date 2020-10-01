@@ -57,8 +57,10 @@
      :export-link-pattern export-link-pattern})
 
   (report [ex]
-    (str "Export Extension :\t" (ep (:export-extension ex)) "
-Export Link Pattern :\t" (ep (:export-link-pattern ex))))
+    (str "Export Extension :\t" (ep export-extension ) "
+Export Link Pattern :\t" (ep export-link-pattern) "
+Example Exported Link :\t" (.page-name->exported-link ex "ExamplePage")
+         ))
 
   (page-name->export-file-path [ex page-name]
     (-> ex .page-store .export-path
@@ -67,6 +69,8 @@ Export Link Pattern :\t" (ep (:export-link-pattern ex))))
   (page-name->exported-link [ex page-id]
     (str export-link-pattern page-id export-extension ))
 
+  (api-path [ex]
+    (.resolve (-> ex .page-store .export-path) "api"))
 
   (load-template [ex]
     (try
@@ -91,6 +95,16 @@ USING DEFAULT")
 
 (defn make-page-exporter [page-store export-extension export-link-pattern]
   (->PageExporter page-store export-extension export-link-pattern))
+
+
+
+(defn export-recentchanges-rss [server-state]
+  (let [api-path (-> server-state :page-exporter .api-path)
+        rc-rss (.resolve api-path "rc-rss.xml")
+        link-fn (fn [p-name]
+                  (str (:site-url server-state) p-name)) ]
+    (spit (.toString rc-rss) (card-server/rss-recent-changes link-fn))
+    ))
 
 (defn export-page [page-name server-state tpl]
   (let [ps (:page-store server-state)
@@ -125,7 +139,6 @@ USING DEFAULT")
 
 
 (defn export-all-pages [server-state]
-
   (if (= :not-available (.all-pages server-state))
     :not-exported
     (let [tpl (-> server-state :page-exporter .load-template)
@@ -133,9 +146,12 @@ USING DEFAULT")
       (doseq [p-name (.all-pages server-state)]
         (println "Exporting " p-name)
         (export-page p-name server-state tpl)
-        ))))
+        )
+      (println "Export recentchanges rss")
+      (export-recentchanges-rss server-state))))
 
 (defn export-one-page [page-name server-state]
   (let [tpl (-> server-state :page-exporter .load-template)]
-    (export-page page-name server-state tpl))
+    (export-page page-name server-state tpl)
+    (export-recentchanges-rss server-state))
   )

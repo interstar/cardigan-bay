@@ -19,6 +19,8 @@
   (report [ps])
   (similar-page-names [ps p-name])
   (pages-as-new-directory-stream [ps])
+  (read-recentchanges [ps])
+  (write-recentchanges! [ps new-rc] )
 )
 
 (defprotocol IPageExporter
@@ -26,5 +28,6 @@
   (page-name->export-file-path [ex page-name])
   (page-name->exported-link [ex page-name])
   (load-template [ex])
+  (api-path [ex])
   (report [ex])
   )

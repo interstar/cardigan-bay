@@ -81,6 +81,13 @@
   (pages-as-new-directory-stream [this]
     (java.nio.file.Files/newDirectoryStream page-path "*.md"))
 
+  (read-recentchanges [ps]
+    (.read-system-file ps "recentchanges")  )
+
+  (write-recentchanges! [ps new-rc]
+    (.write-system-file! ps "recentchanges" new-rc)
+    )
+
   )
 
 
@@ -135,9 +142,8 @@
 (defn dedouble [s] (string/replace s #"\/\/" "/"))
 
 (defn page-name->url [server-state page-name]
-  (dedouble (str (-> server-state .site-url) "/view/" page-name))
+  (dedouble (str (-> server-state :site-url) "/view/" page-name))
   )
-
 
 
 
@@ -145,8 +151,8 @@
 ;; We store recent-changes in a system file called "recentchanges".
 
 (defn update-recent-changes! [ps pagename]
-  (let [pn "recentchanges"
-        rcc (.read-system-file ps pn)
+  (let [
+        rcc (.read-recentchanges ps)
 
         filter-step (fn [xs] (filter #(not (string/includes? % (str "[[" pagename "]]"))) xs ) )
         curlist (-> rcc string/split-lines filter-step )
@@ -155,12 +161,11 @@
                  curlist
                  )]
     (println "Updating recentchanges ... adding " pagename)
-    (.write-system-file! ps pn (string/join "\n" (take 80 newlist)) )
+    (.write-recentchanges! ps (string/join "\n" (take 80 newlist)) )
 ))
 
 
-(defn load-recent-changes [ps]
-  (.read-system-file ps "recentchanges"))
+
 
 
 ;; API for writing a file

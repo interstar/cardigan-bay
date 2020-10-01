@@ -315,7 +315,7 @@
    :default "HelloWorld"
    :parse-fn str]
 
-  ["-l" "--links LINK" "Internal Links"
+  ["-l" "--links LINK" "Export Links"
    :default "./"
    :parse-fn str]
 
@@ -338,7 +338,8 @@
         opts (get xs :options)
 
         ps (pagestore/make-page-store (:directory opts) (:export-dir opts))
-        pe (export/make-page-exporter ps "" (:links opts))]
+        dx (println (:site opts) (:links opts))
+        pe (export/make-page-exporter ps (:site-url opts) (:links opts))]
 
     (println "
 Welcome to Cardigan Bay
