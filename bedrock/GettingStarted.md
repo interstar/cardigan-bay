@@ -63,6 +63,7 @@ We will be adding more types over time, but the current types are
 * :evalmd
 * :system
 * :embed 
+* :bookmark
 * :transclude (experimental)
 
 See [[EvalExamples]] for how to embed Clojure code in a card.
@@ -70,6 +71,8 @@ See [[EvalExamples]] for how to embed Clojure code in a card.
 See [[EmbeddingExamples]] for examples of cards that embed media from other sites.
 
 :system cards are calls to specific system functions. At the moment these include queries such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]] and  [[OrphanPages]]
+
+:bookmark (a card created by posting an external link to CardiganBay, and representing an important external resource) See [[BookmarkingInstructions]]
 
 :transclusion is still very experimental and shouldn't be relied on yet. It's buggy, and doesn't do everything we want. See a [[TransclusionExample]]
 
@@ -79,7 +82,6 @@ See [[EmbeddingExamples]] for examples of cards that embed media from other site
 
 These are currently in the "ideation" phase. They seem like cool ideas, and will be important functionality but they aren't fully specced, let alone implemented. If you are impatient to see them, get involved :-)
 
-* :bookmark (a card created by posting an external link to CardiganBay, and representing an important external resource)
 * :hiccup (complex html represented in hiccup format)
 * :transclude (working, fully functional, including transclusion of individual cards. Or from other Cardigan Bay instances.)
 * :gallery of images
