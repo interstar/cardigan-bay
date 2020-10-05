@@ -1,9 +1,9 @@
 
 ## Understanding the Wiki
 
-This is a standard "wiki". If you don't know what that is, see [[WhatIsAWiki]]?
+This is a "wiki-like personal notebook". If you don't know what that is, see [[WhatIsAWiki]]?
 
-If you do sort of know, this page should explain what else you need. 
+If you do sort of know, this page should explain what you need to understand. 
 
 ----
 
@@ -82,6 +82,14 @@ Cards which do not specify their type explicitly are taken to be of the :markdow
 To declare that a card has a type other than Markdown, you should specify the type as a :keyword, on a line by itself, immediately *after* the card separator.
 
 See more on [[CardTypes]]
+
+----
+
+### Extra Card Functions
+
+At the bottom right of each card is a little "eye" icon. Click this to open and see the **CardBar** which contains extra information about the card, and some buttons to do things like re-order it within the page or move it to a different page.
+
+See [[CardBar]] for details.
 
 ----
 
