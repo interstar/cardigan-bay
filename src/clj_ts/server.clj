@@ -266,7 +266,11 @@
       (= uri "/api/rss/recentchanges")
       {:status 200
        :headers {"Content-Type" "application/rss+xml"}
-       :body (card-server/rss-recent-changes )}
+       :body (card-server/rss-recent-changes
+              (fn [p-name]
+                (str (-> (card-server/server-state)
+                         :page-exporter
+                         (.page-name->exported-link p-name)))))}
 
 
       (= uri "/api/bookmarklet")
