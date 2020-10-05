@@ -1,7 +1,8 @@
 (ns clj-ts.pagestore
   (:require
    [clojure.string :as string]
-   [clj-ts.types :refer [IPageStore]])
+   [clj-ts.types :refer [IPageStore]]
+   [clojure.java.io :as io])
   )
 
 ;; Diagnostic T
@@ -86,6 +87,11 @@
 
   (write-recentchanges! [ps new-rc]
     (.write-system-file! ps "recentchanges" new-rc)
+    )
+
+  (load-media-file [ps file-name]
+    (let [media-dir (.toString (.resolve page-path "media"))]
+      (io/file media-dir file-name))
     )
 
   )

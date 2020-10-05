@@ -21,6 +21,8 @@
   (pages-as-new-directory-stream [ps])
   (read-recentchanges [ps])
   (write-recentchanges! [ps new-rc] )
+  (load-media-file [ps file-name])
+
 )
 
 (defprotocol IPageExporter

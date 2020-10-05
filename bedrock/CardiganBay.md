@@ -1,4 +1,4 @@
-<img src="/cardigan-bay.png" width="100%"/>
+<img src="/media/cardigan-bay.png" width="100%"/>
 
 ### This wiki is running in CardiganBay.
 

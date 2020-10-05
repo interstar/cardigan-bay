@@ -158,7 +158,7 @@
 
 (defn icons-handler [request]
   (let [uri (:uri request)
-        icon-name (second (re-matches  #"/icons/(\S+)" uri))
+        icon-name (second (re-matches #"/icons/(\S+)" uri))
         file (io/file (System/getProperty "user.dir") (str "." uri))]
     (when (.isFile file)
                {:status 200
@@ -217,6 +217,18 @@
     {:status 303
      :headers {"Location" "/view/HelloWorld" }}))
 
+(defn media-file-handler [request]
+  (let [file-name (-> request :uri
+                      (#(re-matches #"/media/(\S+)" %))
+                      second)
+        file (card-server/load-media-file file-name)]
+    (println "Media file request " file-name)
+    (if (.isFile file)
+      {:status 200
+       :body file}
+      (not-found "Media file not found"))
+    ))
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
   (let [qs (:query-string request)
@@ -268,6 +280,10 @@
 
       (re-matches  #"/icons/(\S+)" uri)
       (icons-handler request)
+
+      (re-matches #"/media/(\S+)" uri)
+      (media-file-handler request)
+
 
       m
       (let [pagename (-> m second )]

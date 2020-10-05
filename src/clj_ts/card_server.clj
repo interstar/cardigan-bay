@@ -432,3 +432,11 @@ Bookmarked " timestamp  ",, <" url ">
           (common/move-card-down cards hash))
         ]
     (write-page-to-file! page-name (common/cards->raw new-cards))))
+
+
+;;;; Media files
+
+(defn load-media-file [file-name]
+  (-> (server-state) :page-store (.load-media-file file-name)))
+
+;;file (io/file (System/getProperty "user.dir") (str "." uri))
