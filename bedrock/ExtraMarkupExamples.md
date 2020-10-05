@@ -1,4 +1,4 @@
-Beyond normal markdown, and specialist card types, [[CardiganBay]] has a couple of other tricks.
+Beyond normal markdown, and specialist [[CardTypes]], [[CardiganBay]] has a couple of other tricks.
 
 See the source of this page learn how they work.
 

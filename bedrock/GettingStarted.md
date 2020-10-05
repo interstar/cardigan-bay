@@ -1,19 +1,57 @@
 
-
 ## Understanding the Wiki
 
-The default markup is [Markdown](https://daringfireball.net/projects/markdown/syntax)
+This is a standard "wiki". If you don't know what that is, see [[WhatIsAWiki]]?
+
+If you do sort of know, this page should explain what else you need. 
+
+----
+
+In [[CardiganBay]] you start on a page called "[[HelloWorld]]", and then navigate to and add further pages about whatever it is you are interested in.
+
+By default, CardiganBay comes with some standard pages, to let you see what it's like to navigate around inside the wiki, with the instructions and explanations (like this one), and with examples of the various magic tricks this wiki has up its sleeve.
+
+You are free to change these pages and customize the notebook to your own taste. But note, that you will discover some pages have specific functions. For example, the page called "[[AllPages]]" shows you a list of all the pages in the wiki. It does this because it contains a special "*system card*" (don't worry about what this means yet, it will be explained later). And if you remove that system card, it will no longer show you all the pages. Don't worry about all this. It should be pretty obvious once you get going. 
+
+----
+
+### Editing Pages 
+
+To edit any page, just click the **Edit** button at the top. 
+
+It will open up the full contents of the page in a single textarea.
+
+You can now edit the contents of the page.
+
+The default markup is [Markdown](https://daringfireball.net/projects/markdown/syntax). With this you can add titles, subtitles, bold and italic etc.
+
+To make a link to another page, simply put double square brackets around it like this :
+
+When I write [<!-- -->[HelloWorld]] it will become a link like this : [[HelloWorld]]
+
+When you have saved your edit, and gone back into the "reading mode" then the link will be active. Click on it to go to the linked page.
+
+If the page doesn't exist, you will be taken to a non-page whose content is "PAGE DOES NOT EXIST"
+
+You can now create this page simply by choosing to edit and save that new-page. 
+
+If you *don't* do any work on it, then no new page will be created. 
 
 
-However CardiganBay adds to it in the following ways :
-
-- Pages are broken into a sequence of cards. 
-- Each card has a card *type* which defines how it is rendered. 
-- By default, cards are "Markdown" type, but there are more specialized types with their own rendering etc.
-- There are a few extra markup tricks. See [[ExtraMarkupExamples]]
 
 
 ----
+
+So far, this is pretty much just like any other wiki, including the original C2 Wiki AKA "Ward's Wiki" (because it was invented by [WardCunningham]()) and Wikipedia.
+
+However CardiganBay adds to standard wiki structure in the following ways :
+
+- Pages are broken into a sequence of cards. 
+- Each card has a card *type* which defines how it is rendered. 
+- By default, cards are "Markdown" type, but there are more specialized types with their own rendering etc. 
+- There are a few extra markup tricks. See [[ExtraMarkupExamples]]
+
+Let's drill down into all this :
 
 ### Sequence of Cards
 
@@ -24,7 +62,6 @@ The four horizontal dashes markup (ie. -<!-->-<!-->-<!-->-) on a line by themsel
 It will break your page up into separate cards.
 
 For example, there is a card separator following this line ...
-
 
 ----
 
@@ -44,49 +81,24 @@ Cards which do not specify their type explicitly are taken to be of the :markdow
 
 To declare that a card has a type other than Markdown, you should specify the type as a :keyword, on a line by itself, immediately *after* the card separator.
 
-For example, the next card after this has a :raw type.
-
-----
-:raw
-This card has a :raw type. 
-
-We treat it as plain-text and **don't** interpret it as markdown.
-----
-
-### Current Types
-
-We will be adding more types over time, but the current types are 
-
-* default / :markdown
-* :raw
-* :evalraw  
-* :evalmd
-* :system
-* :embed 
-* :bookmark
-* :transclude (experimental)
-
-See [[EvalExamples]] for how to embed Clojure code in a card.
-
-See [[EmbeddingExamples]] for examples of cards that embed media from other sites.
-
-:system cards are calls to specific system functions. At the moment these include queries such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]] and  [[OrphanPages]]
-
-:bookmark (a card created by posting an external link to CardiganBay, and representing an important external resource) See [[BookmarkingInstructions]]
-
-:transclusion is still very experimental and shouldn't be relied on yet. It's buggy, and doesn't do everything we want. See a [[TransclusionExample]]
+See more on [[CardTypes]]
 
 ----
 
-### Future Types
+### Running Locally, Export Globally
 
-These are currently in the "ideation" phase. They seem like cool ideas, and will be important functionality but they aren't fully specced, let alone implemented. If you are impatient to see them, get involved :-)
+The original wikis were public servers allowing anyone to edit them to encourage a community sense of responsibility. In 2020, the web is a more dangerous place, full of hostile spam-bots, right-wing trolls and fake-news mongers. And the ideal of wiki as completely open space is largely gone.
 
-* :hiccup (complex html represented in hiccup format)
-* :transclude (working, fully functional, including transclusion of individual cards. Or from other Cardigan Bay instances.)
-* :gallery of images
-* :network_diagram / mind-map. I had something like this back in an earlier product, SdiDesk. And network cards would behave similarly.
-* :outline
-* :spreadsheet (grid data with embeddable clojure functionality)
-* :widget (full embedded interactive widgets running in clientside clojurescript.)
+Cardigan Bay is intended to be run locally on your own machine. And then its contents can be exported as a "flat" or "static" collection of HTML files that can be hosted on any public facing server. 
 
+See [[ExportingAsFlatSite]] for information about how to do this. 
+
+----
+
+### Backlinks
+
+Links in wikis are unidirectional. They start on a page like ChocolateCake and go to a page like BlackForestGateau. But, particularly as your notebooks get larger and more complex, many people find it useful to know what pages link *into* the page they are currently looking at. Maybe when you made a BlackForestGateau page you didn't think it was necessary to add a link back to the ChocolateCake page. 
+
+But someone else reading the wiki would get a lot of value from that. 
+
+We call a link "backwards" from a page to a page that links to it, a "backlink". And CardiganBay automatically calculates all the backlinks for any page and shows them in a separate card at the bottom. This card is not really part of the page, and if you edit the text you'll see no reference to it. But it's added automatically and becomes increasingly useful as your wiki gets bigger.
