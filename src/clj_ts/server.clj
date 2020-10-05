@@ -58,7 +58,7 @@
 
 (defn get-edn-cards [request]
   (let [{:keys [p-name raw]} (page-request request)
-        cards (card-server/raw->cards raw)]
+        cards (card-server/raw->cards raw :false)]
 
 
     (pp/pprint cards)

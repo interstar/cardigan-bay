@@ -69,6 +69,9 @@ Example Exported Link :\t" (.page-name->exported-link ex "ExamplePage")
   (page-name->exported-link [ex page-id]
     (str export-link-pattern page-id export-extension ))
 
+  (media-name->exported-link [ex media-name]
+    (str export-link-pattern "media/" media-name))
+
   (api-path [ex]
     (.resolve (-> ex .page-store .export-path) "api"))
 
@@ -91,7 +94,21 @@ USING DEFAULT")
                 [:h1 "{{page-title}}"]]
                [:div
                 "{{{page-main-content}}}"]]])))))
-)
+
+  (export-media-dir [ex]
+    (let [from-stream (.media-files-as-new-directory-stream page-store)
+          to (.media-export-path page-store)]
+      (try
+        (doseq [file from-stream]
+          (let [new-file (new java.io.FileOutputStream (.toFile (.resolve to (.getFileName file))))]
+            (println "copying " (str file) " to " (str new-file))
+            (java.nio.file.Files/copy file new-file)
+            ))
+        (catch Exception e (println (str "Something went wrong " e))))
+
+      ))
+
+  )
 
 (defn make-page-exporter [page-store export-extension export-link-pattern]
   (->PageExporter page-store export-extension export-link-pattern))
@@ -109,7 +126,7 @@ USING DEFAULT")
 (defn export-page [page-name server-state tpl]
   (let [ps (:page-store server-state)
         ex (:page-exporter server-state)
-        cards (card-server/load->cards page-name)
+        cards (card-server/load->cards-for-export page-name)
         last-mod (.last-modified ps page-name)
         file-name (-> (.page-name->export-file-path ex page-name) .toString)
 
@@ -148,7 +165,9 @@ USING DEFAULT")
         (export-page p-name server-state tpl)
         )
       (println "Export recentchanges rss")
-      (export-recentchanges-rss server-state))))
+      (export-recentchanges-rss server-state)
+      (println "Exporting media")
+      (.export-media-dir (:page-exporter server-state)))))
 
 (defn export-one-page [page-name server-state]
   (let [tpl (-> server-state :page-exporter .load-template)]

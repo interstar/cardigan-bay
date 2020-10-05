@@ -82,6 +82,13 @@
   (pages-as-new-directory-stream [this]
     (java.nio.file.Files/newDirectoryStream page-path "*.md"))
 
+  (media-files-as-new-directory-stream [this]
+    (let [media-path (.resolve page-path "media")]
+      (java.nio.file.Files/newDirectoryStream media-path "*.*")))
+
+  (media-export-path [this]
+    (.resolve export-path "media"))
+
   (read-recentchanges [ps]
     (.read-system-file ps "recentchanges")  )
 

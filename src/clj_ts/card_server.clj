@@ -236,7 +236,8 @@ Bookmarked " timestamp  ",, <" url ">
 
 ")))
 
-(defn process-card [i card]
+(defn process-card
+  [i card for-export?]
   (let [[source-type, data] (common/raw-card->type-and-data card)]
     (condp = source-type
       :markdown (common/package-card i source-type :markdown data data)
@@ -251,7 +252,8 @@ Bookmarked " timestamp  ",, <" url ">
       (system-card i data)
 
       :embed
-      (common/package-card i source-type :html data (embed/process data))
+      (common/package-card i source-type :html data
+                           (embed/process data for-export? (server-state)))
 
       :transclude
       (transclude i data)
@@ -263,9 +265,9 @@ Bookmarked " timestamp  ",, <" url ">
       (common/package-card i source-type source-type data data)
       )))
 
-(defn raw->cards [raw]
+(defn raw->cards [raw for-export?]
   (let [cards (string/split  raw #"----")]
-    (map process-card (iterate inc 0) cards)))
+    (map process-card (iterate inc 0) cards (repeat for-export?))))
 
 
 (declare backlinks)
@@ -273,8 +275,13 @@ Bookmarked " timestamp  ",, <" url ">
 (defn load->cards [page-name]
   (-> (server-state) .page-store
       (.read-page page-name)
-       raw->cards)
+      (raw->cards false))
   )
+
+(defn load->cards-for-export [page-name]
+  (-> (server-state) .page-store
+      (.read-page page-name)
+      (raw->cards true)))
 
 (defn generate-system-cards [page-name]
  [(backlinks page-name)] )
@@ -326,7 +333,7 @@ Bookmarked " timestamp  ",, <" url ">
        :wiki_name wiki-name
        :site_url site-url
        :port port
-       :cards (raw->cards "PAGE DOES NOT EXIST")
+       :cards (raw->cards "PAGE DOES NOT EXIST" :false)
        :system_cards
        (let [sim-names (map
                         #(str "\n- [[" % "]]")
@@ -401,7 +408,7 @@ Bookmarked " timestamp  ",, <" url ">
 
 
 
-;; transforms on pages
+;; trasforms on pages
 
 (defn append-card-to-page! [page-name type body]
   (let [page-body (try

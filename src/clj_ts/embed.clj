@@ -52,6 +52,7 @@
   (generic-oembed "https://www.youtube.com/oembed" (:url data) )
   )
 
+
 (defn vimeo [data]
   (let [url (:url data)
         caption (:caption data)
@@ -93,9 +94,23 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
         (-> body json/read-str (get "html"))))
     ))
 
-(defn process [s]
+(defn media-img [data for-export? server-state]
+  (let [src (:src data)
+        width (if (:width data) (:width data) "100%") ]
+    (if for-export?
+      (str "<div class='embed_div'><img src='"
+           (-> server-state :page-exporter (.media-name->exported-link src))
+           "' class='embedded_image_for_export' width='" width "' /></div>")
+      (str "<div class='embed_div'><img src='/media/" src "' class='embedded_image' width='" width  "' /></div>")
+      )))
+
+(defn process [s for-export? server-state]
   (let [data (read-string s)]
     (condp = (:type data)
+
+      :media-img
+      (media-img data for-export? server-state)
+
       :youtube
       (youtube data)
 

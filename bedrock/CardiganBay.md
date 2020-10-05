@@ -1,6 +1,14 @@
-<img src="/media/cardigan-bay.png" width="100%"/>
-
 ### This wiki is running in CardiganBay.
+
+----
+:embed
+
+{:type :media-img
+ :src "cardigan-bay.png"}
+
+----
+
+
 
 As you can see, each page is a sequence of cards.
 

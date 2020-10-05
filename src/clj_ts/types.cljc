@@ -19,9 +19,13 @@
   (report [ps])
   (similar-page-names [ps p-name])
   (pages-as-new-directory-stream [ps])
+  (media-files-as-new-directory-stream [ps])
+  (media-export-path [ps])
+
   (read-recentchanges [ps])
   (write-recentchanges! [ps new-rc] )
   (load-media-file [ps file-name])
+
 
 )
 
@@ -29,7 +33,9 @@
   (as-map [ex])
   (page-name->export-file-path [ex page-name])
   (page-name->exported-link [ex page-name])
+  (media-name->exported-link [ex media-name])
   (load-template [ex])
   (api-path [ex])
+  (export-media-dir [ex])
   (report [ex])
   )
