@@ -167,10 +167,14 @@ USING DEFAULT")
       (println "Export recentchanges rss")
       (export-recentchanges-rss server-state)
       (println "Exporting media")
-      (.export-media-dir (:page-exporter server-state)))))
+      (.export-media-dir (:page-exporter server-state))
+      )))
 
 (defn export-one-page [page-name server-state]
   (let [tpl (-> server-state :page-exporter .load-template)]
     (export-page page-name server-state tpl)
-    (export-recentchanges-rss server-state))
-  )
+    (export-recentchanges-rss server-state)
+    (println "Exporting media")
+    (.export-media-dir (:page-exporter server-state))
+
+    ))
