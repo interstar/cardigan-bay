@@ -2,15 +2,20 @@
   (:require
    [clojure.string :as string]
    [clj-ts.types :refer [IPageStore]]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [clojure.core.memoize :refer [memo memo-clear!]]
+   )
   )
 
 ;; Diagnostic T
 (defn P [x label] (do (println (str label " :: " x)) x))
 
+
+
 ;; Data structures / types
 
-
+;; page-path, system-path, export-path are Java nio Paths
+;; git-repo? is boolean
 
 (deftype PageStore [page-path system-path export-path git-repo? ]
   IPageStore
@@ -101,6 +106,13 @@
       (io/file media-dir file-name))
     )
 
+  (text-search [ps pattern]
+    (let [search-page
+          (fn [page-name]
+            (-> (.read-page ps page-name))
+                        )
+          results (filter )]))
+
   )
 
 
@@ -183,12 +195,15 @@
 
 ;; API for writing a file
 
+(defn read-page [server-state p-name]
+  (-> (.page-store server-state)
+      (.read-page p-name)))
+
+(memo read-page)
+
 (defn write-page-to-file! [server-state p-name body ]
   (let [ps (.page-store server-state)]
     (.write-page! ps p-name body)
     (update-recent-changes! ps p-name)
+    (memo-clear! read-page p-name )
     ))
-
-(defn read-page [server-state p-name]
-  (-> (.page-store server-state)
-      (.read-page p-name)))

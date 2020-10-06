@@ -56,8 +56,9 @@
     clj-rss {:mvn/version "0.2.5"}
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
 
-
     cljstache {:mvn/version "2.0.6"}
+
+    org.clojure/core.memoize {:mvn/version "1.0.236"}
 
     org.clojure/data.json #:mvn{:version "0.2.6"},
     org.clojure/clojure #:mvn{:version "1.10.1"},
