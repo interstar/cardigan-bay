@@ -106,12 +106,7 @@
       (io/file media-dir file-name))
     )
 
-  (text-search [ps pattern]
-    (let [search-page
-          (fn [page-name]
-            (-> (.read-page ps page-name))
-                        )
-          results (filter )]))
+
 
   )
 
@@ -196,8 +191,11 @@
 ;; API for writing a file
 
 (defn read-page [server-state p-name]
-  (-> (.page-store server-state)
-      (.read-page p-name)))
+  (println "Reading " p-name " for real")
+  (let [res (-> (:page-store server-state)
+                (.read-page p-name)) ]
+    res)
+  )
 
 (memo read-page)
 
@@ -205,5 +203,15 @@
   (let [ps (.page-store server-state)]
     (.write-page! ps p-name body)
     (update-recent-changes! ps p-name)
-    (memo-clear! read-page p-name )
+    (memo-clear! read-page [server-state p-name])
+    ))
+
+
+(defn text-search [server-state page-names pattern]
+  (let [contains-pattern?
+        (fn [page-name]
+          (let [text (read-page server-state page-name) ]
+            (not (nil? (re-find pattern text )))))
+        res (filter contains-pattern? page-names)]
+    res
     ))

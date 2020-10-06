@@ -141,7 +141,7 @@
 (defn regenerate-db! []
   (future
     (println "Starting to rebuild logic db")
-    (let [f (ldb/regenerate-db (:page-store  (server-state))) ]
+    (let [f (ldb/regenerate-db (server-state)) ]
       (set-facts-db! f )
       (println "Finished building logic db"))) )
 
@@ -181,6 +181,7 @@
         cmd (:command info)
         db (-> (server-state) :facts-db)
         ps (-> (server-state) :page-store)]
+
     (condp = cmd
       :allpages
       (ldb-query->mdlist-card i "All Pages" (.all-pages db) :allpages item1)
@@ -203,6 +204,14 @@
       (let [src (.read-recentchanges ps) ]
         (common/package-card
          "recentchanges" :system :markdown src src))
+
+      :search
+      (let [res (pagestore/text-search (server-state) (.all-pages db)
+                                       (re-pattern (:query info)))
+            out (apply str (map #(str "* [[" % "]]\n") res)) ]
+
+
+        (common/package-card (str "search " i) :system :markdown out out))
 
       :about
       (let [sr (str "### System Information

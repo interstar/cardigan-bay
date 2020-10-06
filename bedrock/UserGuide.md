@@ -4,4 +4,5 @@
   * [[EvalExamples]]
   * [[EmbeddingExamples]]
   * [[ExtraMarkupExamples]]
+  * [[ASearchExample]]
 * [[HackerOnBoarding]] 

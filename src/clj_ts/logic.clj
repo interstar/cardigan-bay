@@ -7,6 +7,9 @@
              :as a
              :refer [>! <! >!! <!! go chan buffer close! thread
                      alts! alts!! timeout]]
+   [clj-ts.pagestore :as pagestore]
+
+
 
 ))
 
@@ -23,10 +26,11 @@
   (-> path .getFileName .toString (string/split #"\.") first))
 
 
-(defn extract-links [path]
-  (let [text (-> path .toFile slurp)
+(defn extract-links [server-state page-name]
+  (println "in extract-links " page-name)
+  (let [text (pagestore/read-page server-state page-name)
         link-seq (re-seq #"\[\[(.+?)\]\]" text)]
-    (map #(vector (path->pagename path)
+    (map #(vector page-name
                   (-> % last )  )
          link-seq)))
 
@@ -90,14 +94,21 @@
     )
 
 
-(defn regenerate-db [page-store]
-  (let [pages (.pages-as-new-directory-stream page-store)
-        pages2 (.pages-as-new-directory-stream page-store)
+(defn regenerate-db [server-state]
+  (let [pages (.pages-as-new-directory-stream (:page-store server-state))
+        pages2 (.pages-as-new-directory-stream (:page-store server-state))
         all-page-names
         (map path->pagename pages)
+        all-page-names2
+        (map path->pagename pages2)
 
-        all-links (-> pages2
-                      (#(map extract-links %))
+        extract-all-links-per-page
+        (fn [p-names]
+          (map (partial extract-links server-state) p-names))
+
+
+        all-links (-> all-page-names2
+                      extract-all-links-per-page
                       (#(apply concat %)))
 
         add-page
