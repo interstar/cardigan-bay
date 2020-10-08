@@ -190,23 +190,28 @@
 
 ;; API for writing a file
 
-(defn read-page [server-state p-name]
-  (println "Reading " p-name " for real")
-  (let [res (-> (:page-store server-state)
-                (.read-page p-name)) ]
-    res)
-  )
+(defn m-read-page [page-store p-name]
+  (do
+    (println "And reading " p-name " for real")
+    (.read-page page-store p-name)))
 
-(memo read-page)
+(def memoized-read-page (memo m-read-page))
+
+(defn read-page [server-state p-name]
+  (let [ps (:page-store server-state)]
+    (println "Reading " p-name )
+    (memoized-read-page ps p-name)))
+
+
 
 (defn write-page-to-file! [server-state p-name body ]
   (let [ps (.page-store server-state)]
     (.write-page! ps p-name body)
     (update-recent-changes! ps p-name)
-    (memo-clear! read-page [server-state p-name])
-    ))
+    (memo-clear! memoized-read-page [ps p-name])))
 
 
+;; Search
 (defn text-search [server-state page-names pattern]
   (let [contains-pattern?
         (fn [page-name]
