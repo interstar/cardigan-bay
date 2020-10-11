@@ -166,6 +166,8 @@
   )
 
 
+(defn path->pagename [path]
+  (-> path .getFileName .toString (string/split #"\.") first))
 
 ;; RecentChanges
 ;; We store recent-changes in a system file called "recentchanges".

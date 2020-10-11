@@ -159,10 +159,24 @@ USING DEFAULT")
   (if (= :not-available (.all-pages server-state))
     :not-exported
     (let [tpl (-> server-state :page-exporter .load-template)
-          all (.all-pages server-state)]
-      (doseq [p-name (.all-pages server-state)]
+          all   (.all-pages server-state)
+          a2
+          (filter
+           (fn [name]
+             (cond
+                  (= "AllPages" name) false
+                  (= "AllLinks" name) false
+                  (= "BrokenLinks" name) false
+                  (= "OrphanPages" name) false
+                  :otherwise true  ))
+           (.all-pages server-state)
+           )]
+      (doseq [p-name a2]
         (println "Exporting " p-name)
-        (export-page p-name server-state tpl)
+        (try
+          (export-page p-name server-state tpl )
+(catch Exception e (println e))
+          )
         )
       (println "Export recentchanges rss")
       (export-recentchanges-rss server-state)

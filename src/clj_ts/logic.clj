@@ -22,8 +22,7 @@
 ;; Diagnostic T
 (defn P [x label] (do (println (str label " :: " x)) x))
 
-(defn path->pagename [path]
-  (-> path .getFileName .toString (string/split #"\.") first))
+
 
 
 (defn extract-links [server-state page-name]
@@ -98,9 +97,9 @@
   (let [pages (.pages-as-new-directory-stream (:page-store server-state))
         pages2 (.pages-as-new-directory-stream (:page-store server-state))
         all-page-names
-        (map path->pagename pages)
+        (map pagestore/path->pagename pages)
         all-page-names2
-        (map path->pagename pages2)
+        (map pagestore/path->pagename pages2)
 
         extract-all-links-per-page
         (fn [p-names]
