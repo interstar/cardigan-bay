@@ -208,7 +208,9 @@
       :search
       (let [res (pagestore/text-search (server-state) (.all-pages db)
                                        (re-pattern (:query info)))
-            out (apply str (map #(str "* [[" % "]]\n") res)) ]
+            out
+            (str "*Searching pages containing \" " (:query info) "\" "
+                 (apply str (map #(str "* [[" % "]]\n") res))) ]
 
 
         (common/package-card (str "search " i) :system :markdown out out))
