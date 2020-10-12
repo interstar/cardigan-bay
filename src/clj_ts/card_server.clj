@@ -247,6 +247,55 @@ Bookmarked " timestamp  ",, <" url ">
 
 ")))
 
+(defn afind [n ns]
+  (cond (empty? ns) nil
+        (= n (-> ns first first))
+        (-> ns first rest)
+        :otherwise (afind n (rest ns))))
+
+(defn network-card [i data]
+  (try
+    (let [nodes (-> data read-string :nodes)
+          arcs (-> data read-string :arcs)
+          node (fn [[n x y]]
+                 (str "<circle cx='" x "' cy='" y "' stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
+                      "<text class='wikilink' data='" n "'  x='" x "' y='" (+ y 20)
+                      "' text-anchor=\"middle\" fill=\"black\">" n "</text>"
+                      ))
+          arc (fn [[n1 n2]]
+                (let
+                    [a1 (afind n1 nodes)
+                     a2 (afind n2 nodes)]
+                  (if
+                      (and a1 a2)
+                    (let [[x1 y1] a1
+                          [x2 y2] a2]
+                      (str  "<line x1='" x1 "' y1='" y1 "' x2='" x2 "' y2='" y2 "' stroke=\"#000\"
+  stroke-width=\"2\" marker-end=\"url(#arrowhead)\"/>")
+                      )
+                    "")))
+          svg (str "<svg width=\"500\" height=\"400\">
+<defs>
+    <marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\"
+    refX=\"-5\" refY=\"3.5\" orient=\"auto\">
+      <polygon points=\"-5 0, 0 3.5, -5 7\" />
+    </marker>
+  </defs>
+"
+                   (apply str
+                          (map node nodes )
+                          )
+                   (apply str
+                          (map arc arcs))
+                   "</svg>")
+          ]
+
+      (common/package-card i :network :markdown data svg)
+      )
+    (catch Exception e (common/package-card i :network :markdown data (str e)))
+    )
+  )
+
 (defn process-card
   [i card for-export?]
   (let [[source-type, data] (common/raw-card->type-and-data card)]
@@ -271,6 +320,10 @@ Bookmarked " timestamp  ",, <" url ">
 
       :bookmark
       (common/package-card i :bookmark :markdown data (bookmark-card data))
+
+
+      :network
+      (network-card i data)
 
       ;; not recognised
       (common/package-card i source-type source-type data data)

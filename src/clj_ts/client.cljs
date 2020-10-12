@@ -218,10 +218,6 @@
 
 
            ]
-
-
-
-
           ] ))))
 
 
@@ -361,7 +357,6 @@
                classname (.getAttribute tag "class")
                data (.getAttribute tag "data")
                x (-> @db :dirty)]
-
            (if (= classname "wikilink")
              (go-new! data))))
        :dangerouslySetInnerHTML
