@@ -59,10 +59,13 @@
          )) )
 
     (all-links [this]
-      (pldb/with-db facts
+      (sort
+       (pldb/with-db facts
         (logic/run* [p q]
           (link p q)
-          )))
+          ))
+            )
+      )
 
     (links-to [this target]
       (let [db (.raw-db this)
@@ -75,20 +78,24 @@
         (sort res)))
 
     (broken-links [this]
-      (pldb/with-db facts
+      (sort
+       (pldb/with-db facts
         (logic/run* [p q]
           (link p q)
           (logic/nafc page q)
           )))
+      )
 
     (orphan-pages [this]
-      (pldb/with-db facts
+      (sort
+       (pldb/with-db facts
         (logic/run* [q]
           (logic/fresh [p]
             (page q)
             (logic/conda
              [(link p q) logic/fail]
-             [logic/succeed])))))
+             [logic/succeed])))) )
+      )
 
     )
 
