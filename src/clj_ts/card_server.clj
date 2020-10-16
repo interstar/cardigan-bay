@@ -209,7 +209,7 @@
       (let [res (pagestore/text-search (server-state) (.all-pages db)
                                        (re-pattern (:query info)))
             out
-            (str "*Searching pages containing \" " (:query info) "\" "
+            (str "*Searching pages containing \" " (:query info) "\"*\n "
                  (apply str (map #(str "* [[" % "]]\n") res))) ]
 
 
