@@ -3,6 +3,9 @@ body {
     font-size: 1.6rem;
 
 
+    overflow-wrap: break-word;                                                    +    word-wrap: break-word;
+
+
     line-height: 1.618;
     max-width: 48em;
     margin: auto;
