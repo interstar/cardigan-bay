@@ -253,15 +253,23 @@ Bookmarked " timestamp  ",, <" url ">
         (-> ns first rest)
         :otherwise (afind n (rest ns))))
 
-(defn network-card [i data]
+(defn network-card [i data for-export?]
   (try
     (let [nodes (-> data read-string :nodes)
           arcs (-> data read-string :arcs)
           node (fn [[n x y]]
-                 (str "<circle cx='" x "' cy='" y "' stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
-                      "<text class='wikilink' data='" n "'  x='" x "' y='" (+ y 20)
-                      "' text-anchor=\"middle\" fill=\"black\">" n "</text>"
-                      ))
+                 (let [inner
+                       (str "<text class='wikilink' data='" n "'  x='" x "' y='" (+ y 20)
+                            "' text-anchor=\"middle\" fill=\"black\">" n "</text>"
+                            ) ]
+                   (str "<circle cx='" x "' cy='" y "'
+stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
+                        (if for-export?
+                          (str "<a href='./" n "'>"
+                               inner
+                               "</a>")
+                          inner
+                          ))))
           arc (fn [[n1 n2]]
                 (let
                     [a1 (afind n1 nodes)
@@ -323,7 +331,7 @@ Bookmarked " timestamp  ",, <" url ">
 
 
       :network
-      (network-card i data)
+      (network-card i data for-export?)
 
       ;; not recognised
       (common/package-card i source-type source-type data data)
