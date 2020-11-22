@@ -321,7 +321,9 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
 
       :embed
       (common/package-card i source-type :html data
-                           (embed/process data for-export? (server-state)))
+                           (embed/process data for-export?
+                                          (fn [s] (common/md->html s))
+                                          (server-state)))
 
       :transclude
       (transclude i data)

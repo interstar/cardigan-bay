@@ -26,7 +26,7 @@
 
 
 (defn extract-links [server-state page-name]
-  (println "in extract-links " page-name)
+  ;(println "in extract-links " page-name)
   (let [text (pagestore/read-page server-state page-name)
         link-seq (re-seq #"\[\[(.+?)\]\]" text)]
     (map #(vector page-name

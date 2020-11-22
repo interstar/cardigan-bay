@@ -194,14 +194,14 @@
 
 (defn m-read-page [page-store p-name]
   (do
-    (println "And reading " p-name " for real")
+    ;;(println "And reading " p-name " for real")
     (.read-page page-store p-name)))
 
 (def memoized-read-page (memo m-read-page))
 
 (defn read-page [server-state p-name]
   (let [ps (:page-store server-state)]
-    (println "Reading " p-name )
+    ;;(println "Reading " p-name )
     (memoized-read-page ps p-name)))
 
 

@@ -34,6 +34,8 @@
     (str "\n" source_type "\n" (string/trim source_data) )) )
 
 
+
+
 (defn match-hash [card hash]
   (= (.toString (:hash card))
      (.toString hash)))
@@ -146,7 +148,12 @@
     ))
 
 
-
+(defn md->html [s]
+  (-> s
+      (double-comma-table)
+      (md/md-to-html-string)
+      (auto-links)
+      (double-bracket-links)))
 
 ;; Cards with commands
 
