@@ -257,15 +257,17 @@ Bookmarked " timestamp  ",, <" url ">
   (try
     (let [nodes (-> data read-string :nodes)
           arcs (-> data read-string :arcs)
+          links (-> data read-string :links)
           node (fn [[n x y]]
-                 (let [inner
-                       (str "<text class='wikilink' data='" n "'  x='" x "' y='" (+ y 20)
-                            "' text-anchor=\"middle\" fill=\"black\">" n "</text>"
+                 (let [[node-target node-label] (get links n [n n])
+                       inner
+                       (str "<text class='wikilink' data='" node-target "'  x='" x "' y='" (+ y 20)
+                            "' text-anchor=\"middle\" fill=\"black\">" node-label "</text>"
                             ) ]
                    (str "<circle cx='" x "' cy='" y "'
 stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
                         (if for-export?
-                          (str "<a href='./" n "'>"
+                          (str "<a href='./" node-target "'>"
                                inner
                                "</a>")
                           inner
@@ -291,10 +293,11 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
   </defs>
 "
                    (apply str
+                          (map arc arcs))
+                   (apply str
                           (map node nodes )
                           )
-                   (apply str
-                          (map arc arcs))
+
                    "</svg>")
           ]
 
