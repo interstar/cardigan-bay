@@ -497,6 +497,21 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
 " body)]
     (write-page-to-file! page-name new-body )))
 
+(defn prepend-card-to-page! [page-name type body]
+  (let [page-body (try
+                    (pagestore/read-page (server-state) page-name)
+                    (catch Exception e (str "New page : " page-name "\n\n"))
+                    )
+        new-body (str
+                      "----
+" type "
+" body "
+
+----
+"
+                      page-body)
+        ]
+    (write-page-to-file! page-name new-body )))
 
 (defn move-card [page-name hash destination-name]
   (let [from-cards (load->cards page-name)

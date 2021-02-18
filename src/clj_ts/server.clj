@@ -193,7 +193,7 @@
                       (java.time.LocalDateTime/now) "\"  }")
         ]
     (do
-      (card-server/append-card-to-page! "InQueue" :bookmark new-card )
+      (card-server/prepend-card-to-page! "InQueue" :bookmark new-card )
       {:status 303
        :headers {"Location" "/view/InQueue"} }))
 )
