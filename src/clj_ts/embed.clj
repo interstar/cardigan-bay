@@ -54,15 +54,18 @@
 
 
 (defn vimeo [data caption-renderer]
+  (println "VIMEO PROBLEM ---- " data)
   (let [url (:url data)
         caption (:caption data)
-        id (-> url (string/split #"/") last)
+        id (->  (string/split url #"/") last)
         title (:title data)]
     (str
      (if title (str "<div><h3>" title "</h3></div>"))
      "<div class=\"embed-div\"><div class=\"vimeo-embedded\">
 <iframe src='https://player.vimeo.com/video/" id "' width='640' height='360' frameborder='0' allow='autoplay; fullscreen' allowfullscreen></iframe>
-<p><a href='https://vimeo.com/" id "'>" (caption-renderer caption) "</a></p>
+<p><a href='https://vimeo.com/" id "'>"
+     (if caption (str "<div class='embed-caption'>" (caption-renderer caption) "</div>") "")
+     "</a></p>
 </div></div>
 ")
     ))
