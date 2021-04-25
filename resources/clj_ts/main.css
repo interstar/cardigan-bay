@@ -216,6 +216,17 @@ button:hover {
     height: 20em;
 }
 
+
+.vimeo-embedded {
+    width:100%;
+    position: relative;
+    /*
+    padding-bottom: 56.25%;
+    padding-top: 25px;
+*/
+    height: 20em;
+}
+
 .bandcamp-embedded {
 
 }
