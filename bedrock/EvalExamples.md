@@ -1,9 +1,39 @@
 
 ### Evaluation Examples
 
+[[CardiganBay]] is written in [Clojure](https://clojure.org/), a language which I'm a big fan of, and want to use for scripting within the wiki.
+
+There are two ways to embed Clojure code in your wiki.
+
+* evaluation on the client
+* evaluation on the server
+
+In both cases, the code must be correct (without bugs or causing exceptions). And not try to use external resources or include libraries etc.
+
+----
+### Evaluation on the Client
+
+Running code on the client (in the browser) uses the Small Clojure Interpreter (<https://github.com/borkdude/sci>)
+
+Use the card-type :evalclient for code which will run in the browser. The entire body of the card should be a well-formed piece of SCI code which will be evaluated when the page is rendered. The result will be converted to a string and rendered into the page. 
+
+The following card has an example of client-side rendered code.
+----
+:evalclient
+
+(filter even? (range 30))
+
+----
+
+**Note : ** Right now, client-side evaluation works only on a live Cardigan Bay instance. Exported static files will render :evalclient cards as raw source-code. 
+ 
+A medium-term goal is to allow exports to active single-page apps where this script would actually run in the page. But we are some way from that.
+
+----
+### Evaluation on the Server
+
 The card-types :evalraw and :evalmd allow us to embed Clojure code in a page which is run on the server when the page is assembled. 
 
-To run. the code must be correct (without bugs or causing exceptions). And not try to use external resources or include libraries etc. 
 
 :evalraw evaluates the code and returns the result as a raw string, to be rendered as returned. :evalmd assumes that the code returned will itself be in markdown format and therefore should be run through the markdown renderer.
 
@@ -39,3 +69,5 @@ The next cards have examples of :evalraw and :evalmd
 **Please note that we don't do any security checking of Clojure to be run on the server, so this is a security risk. Don't run Cardigan Bay on a server where you think it might be accessible to hostile, Clojure-aware agents.**
 
 Right now, Cardigan Bay is only recommended for private machines or protected private networks.
+
+Unlike client-side evaluation, server-side code will be evaluated during exports.
