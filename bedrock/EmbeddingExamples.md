@@ -11,7 +11,9 @@ Some examples of card types that embed media from other sites :
 :embed
 
 {:type :youtube
- :url "https://www.youtube.com/watch?v=3WHPcsJ2BRY"}
+ :url "https://www.youtube.com/watch?v=3WHPcsJ2BRY"
+ :caption "An embedded YouTube video"
+ :title "Endless Orbital - Mentufacturer"}
 
 ----
 :embed

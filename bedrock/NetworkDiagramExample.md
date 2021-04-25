@@ -18,8 +18,9 @@ See next card source for this example.
 
 {:nodes [
 ["HelloWorld" 180 60]
-["CardiganBay" 80 250]
-["GettingStarted" 300 300]
+["CardiganBay" 100 250]
+["GettingStarted" 340 300]
+["EvalExamples" 200 340]
 ]
  :arcs [
 ["HelloWorld" "GettingStarted"]
