@@ -319,6 +319,9 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
       :evalmd
       (common/package-card i :evalmd :markdown data (server-eval data))
 
+      :evalclient
+      (common/package-card i source-type :evalclient data data)
+
       :system
       (system-card i data)
 

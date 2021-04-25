@@ -8,7 +8,7 @@
             [cljs.reader :refer [read-string]]
 
 
-
+            [sci.core :as sci]
             [markdown.core :as md]
             [clj-ts.common :refer [raw-card->type-and-data
                                    double-comma-table
@@ -344,6 +344,9 @@
           (str data)
           ":stamp"
           (str data)
+          ":evalclient"
+          ;"code to run on client"
+          (str (sci/eval-string data))
           (str "UNKNOWN TYPE(" type ") " data))]
     ;;(js/console.log (pr-str card))
 

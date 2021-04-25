@@ -18,7 +18,24 @@
         body))
     ))
 
-(defn generic-oembed [oembed url caption-renderer]
+
+(defn generic-embed [data inner caption-renderer]
+  (let [title (:title data)
+        caption (:caption data)]
+    (str
+
+     (if  title (str "<div><h3>" title "</h3></div>") "")
+     "<div class=\"embed_div\">"
+
+     inner
+
+     "
+</div>
+"
+     (if caption (str "<div class='embed-caption'>" (caption-renderer caption) "</div>") "")
+)))
+
+(defn generic-oembed [oembed url]
   (let [call (http-call oembed {:format "json" :url url }) ]
     (try
       (str (->
@@ -27,62 +44,66 @@
       (catch Exception e
         (str (.getMessage e) " " oembed " " url "  " (str call))))))
 
+
 (defn youtube [data caption-renderer]
   (let [url (:url data)
-        title (:title data)
-        caption (:caption data)
         id (->
             (re-matches #"https://www.youtube.com/watch\?v=(\S+)" url)
-            second) ]
-    (str
-     (if  title (str "<div><h3>" title "</h3></div>") "")
-     "<div class=\"embed_div\">"
-     "   <div class='youtube-embedded'>
+            second)]
+    (generic-embed
+         data
+         (str
+          "   <div class='youtube-embedded'>
 <iframe src='http://www.youtube.com/embed/" id  "'
         style=\"position: absolute; top:0; left:0; width:100%; height:100%;\"
         frameborder='0' allowfullscreen>
 </iframe>
 </div>
-""</div>"
-     (if caption (str "<div class='embed-caption'>" (caption-renderer caption) "</div>") ""))
-     ))
+")
+         caption-renderer)))
 
 
 (defn youtube2 [data caption-renderer]
-  (generic-oembed "https://www.youtube.com/oembed" (:url data) caption-renderer )
+  (generic-embed
+   data
+   (generic-oembed "https://www.youtube.com/oembed" (:url data) )
+   caption-renderer)
   )
 
 
 (defn vimeo [data caption-renderer]
-  (println "VIMEO PROBLEM ---- " data)
+
   (let [url (:url data)
-        caption (:caption data)
-        id (->  (string/split url #"/") last)
-        title (:title data)]
-    (str
-     (if title (str "<div><h3>" title "</h3></div>"))
-     "<div class=\"embed-div\"><div class=\"vimeo-embedded\">
+        id (->  (string/split url #"/") last)]
+    (generic-embed
+     data
+     (str
+      "<div class=\"vimeo-embedded\">
 <iframe src='https://player.vimeo.com/video/" id "' width='640' height='360' frameborder='0' allow='autoplay; fullscreen' allowfullscreen></iframe>
 <p><a href='https://vimeo.com/" id "'>"
-     (if caption (str "<div class='embed-caption'>" (caption-renderer caption) "</div>") "")
-     "</a></p>
-</div></div>
+
+                   url "</a></p>
+</div>
 ")
-    ))
+     caption-renderer)))
 
 
 (defn soundcloud [data caption-renderer]
-  (generic-oembed "https://soundcloud.com/oembed" (:url data) caption-renderer))
+  (generic-embed
+   data
+   (generic-oembed "https://soundcloud.com/oembed" (:url data))
+   caption-renderer))
 
-(defn bandcamp [{:keys [id url description title caption]} caption-renderer]
-  (str
-   (if  title (str "<div><h3>" title "</h3></div>") "")
-   "<div class=\"embed_div\"><div class='bandcamp-embedded'>
+(defn bandcamp [{:keys [id url description title caption] :as data} caption-renderer]
+  (generic-embed
+   data
+   (str
+    "<div class=\"embed_div\"><div class='bandcamp-embedded'>
 <iframe style='border: 0; width: 550px; height: 555px;'
 src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/'
 seamless><a href='" url "'>" description "</a></iframe></div></div>"
-   (if caption (str "<div class='embed-caption'>" (caption-renderer caption) "</div>") "")
-   )
+    )
+   caption-renderer)
   )
 
 (defn twitter [data caption-renderer]
@@ -90,22 +111,27 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
         api (str  "https://publish.twitter.com/oembed?url=" url)
         {:keys [status headers body error]}
         @(http/get api)]
-    (if error
-      (str "Failed, exception: " error)
-      (do
-        (println "HTTP GET success: " status)
-        (-> body json/read-str (get "html"))))
-    ))
+    (generic-embed
+     data
+     (if error
+       (str "Failed, exception: " error)
+       (do
+         (println "HTTP GET success: " status)
+         (-> body json/read-str (get "html"))))
+     caption-renderer)))
 
 (defn media-img [data for-export? caption-renderer server-state]
   (let [src (:src data)
         width (if (:width data) (:width data) "100%") ]
-    (if for-export?
-      (str "<div class='embed_div'><img src='"
-           (-> server-state :page-exporter (.media-name->exported-link src))
-           "' class='embedded_image_for_export' width='" width "' /></div>")
-      (str "<div class='embed_div'><img src='/media/" src "' class='embedded_image' width='" width  "' /></div>")
-      )))
+    (generic-embed
+     data
+     (if for-export?
+       (str "<img src='"
+            (-> server-state :page-exporter (.media-name->exported-link src))
+            "' class='embedded_image_for_export' width='" width "' />")
+       (str "<img src='/media/" src "' class='embedded_image' width='" width  "' />")
+       )
+     caption-renderer)))
 
 (defn process [s for-export? caption-renderer server-state]
   (let [data (read-string s)]
@@ -130,7 +156,7 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
       (twitter data caption-renderer)
 
       :oembed
-      (generic-oembed (:api data) (:url data) caption-renderer)
+      (generic-oembed (:api data) (:url data) )
 
       (str "Not recognised type:  " (:type data) )
       )
