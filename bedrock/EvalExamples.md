@@ -17,7 +17,7 @@ Running code on the client (in the browser) uses the Small Clojure Interpreter (
 
 Use the card-type :evalclient for code which will run in the browser. The entire body of the card should be a well-formed piece of SCI code which will be evaluated when the page is rendered. The result will be converted to a string and rendered into the page. 
 
-The following card has an example of client-side rendered code.
+The following card has an example of client-side evaluated code.
 ----
 :evalclient
 
