@@ -15,7 +15,11 @@
    [clojure.java.io :as io]
    [clojure.edn :as edn]
    [clj-rss.core :as rss]
-   ])
+   ]
+  (:import (java.net InetAddress)
+           (java.net DatagramSocket))
+
+  )
 
 
 
@@ -42,6 +46,7 @@
 
 (defrecord CardServerRecord
     [wiki-name site-url port-no start-page facts-db page-store page-exporter]
+
   ldb/IFactsDb
   (raw-db [cs] (dnn cs raw-db))
   (all-pages [cs] (dnn cs all-pages) )
@@ -399,13 +404,23 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
         ps (:page-store (server-state))
         wiki-name (:wiki-name (server-state))
         site-url (:site-url (server-state))
-        port (:port-no (server-state))]
+        port (:port-no (server-state))
+        ip (try
+             (let [dgs (new DatagramSocket)]
+               (.connect dgs (InetAddress/getByName "8.8.8.8") 10002)
+               (-> dgs .getLocalAddress .getHostAddress))
+
+             (catch Exception e (str e))
+            )
+
+        ]
 
     (if (.page-exists? ps page_name)
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
        :port port
+       :ip ip
        :cards (load->cards page_name)
        :system_cards (generate-system-cards page_name)
        }
@@ -413,6 +428,7 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
        :wiki_name wiki-name
        :site_url site-url
        :port port
+       :ip ip
        :cards (raw->cards "PAGE DOES NOT EXIST" :false)
        :system_cards
        (let [sim-names (map

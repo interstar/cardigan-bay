@@ -50,6 +50,7 @@
     wiki_name
     site_url
     port
+    ip
     cards {
       id
       hash
@@ -81,6 +82,7 @@
                    site-url (-> data (get "server_prepared_page") (get "site_url"))
                    wiki-name (-> data (get "server_prepared_page") (get "wiki_name"))
                    port (-> data (get "server_prepared_page") (get "port"))
+                   ip (-> data (get "server_prepared_page") (get "ip"))
                    ]
 
                (js/console.log "Cards " cards)
@@ -91,6 +93,7 @@
                       :site-url site-url
                       :wiki-name wiki-name
                       :port port
+                      :ip ip
                       :raw  raw
                       :cards cards
                       :system-cards system-cards
@@ -426,7 +429,8 @@
      [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
      [:span [:a {:href "/api/system/db"} "DB"] " || "]
      [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
-     "(c) Phil Jones 2020  | "
+     "(c) Phil Jones 2020  || "
+     [:span "IP: "(str (-> @db :ip) ) " || "]
      [:a {:href
           (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]])
 

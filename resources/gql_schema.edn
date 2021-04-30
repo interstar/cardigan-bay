@@ -35,7 +35,9 @@
     :wiki_name {:type String}
     :site_url {:type String}
     :port {:type Int}
+    :ip {:type String}
     :system_cards {:type (list :Card)}
+
     }}}
 
 
