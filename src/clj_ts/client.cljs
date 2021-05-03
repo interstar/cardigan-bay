@@ -2,7 +2,7 @@
   (:require
    [reagent.core :as r]
    [reagent.dom :as dom]
-   [clojure.string :refer [lower-case]]
+   [clojure.string :refer [lower-case trim]]
    [clojure.string :as string]
    [cljs.core.async :refer [<! timeout]]
    [cljs.core :refer [js->clj]]
@@ -480,11 +480,16 @@
             [:div {:class :code}
              [:h4 "Source"]
              [:pre
-              code]]
+              (trim code)]]
+            [:div {:class :calculated-out}
+             [:h4 "Calculated"]
+             [:pre
+               (str result)]]
             [:div {:class :results}
              [:h4 "Result"]
              [:div
-              result] ]
+              (if (= (first result) :div) result
+                  (str result))] ]
             ]]
     r)
   )
@@ -550,17 +555,28 @@
     (try
       (let [cards (-> @db :cards)]
         (for [card cards]
-          (one-card card))
+          (try
+            (one-card card)
+            (catch :default e
+              [:div {:class :card-outer}
+               [:div {:class "card"}
+                [:h4 "Error"]
+                (str e)]]))
+          )
         )
       (catch :default e
-        (js/alert e)))
+        (do
+          (js/console.log "ERROR")
+          (js/console.log (str e))
+          (js/alert e))))
 
     ]
    [:div
     (try
       (let [cards (-> @db :system-cards)]
         (for [card cards]
-          (one-card card))
+          (one-card card)
+          )
         )
       (catch :default e
         (js/alert e)))]
