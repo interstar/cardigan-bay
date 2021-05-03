@@ -159,6 +159,12 @@ button:hover {
     Background:dark-blue;
 }
 
+.pastebar {
+    border:10px;
+    background-color:#777788;
+    padding:10px;
+}
+
 #navinputbox {
     height:3rem;
 }

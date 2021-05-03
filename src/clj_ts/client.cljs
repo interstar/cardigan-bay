@@ -1,19 +1,22 @@
 (ns clj-ts.client
   (:require
-            [reagent.core :as r]
-            [clojure.string :refer [lower-case]]
-            [clojure.string :as string]
-            [cljs.core.async :refer [<! timeout]]
-            [cljs.core :refer [js->clj]]
-            [cljs.reader :refer [read-string]]
+   [reagent.core :as r]
+   [reagent.dom :as dom]
+   [clojure.string :refer [lower-case]]
+   [clojure.string :as string]
+   [cljs.core.async :refer [<! timeout]]
+   [cljs.core :refer [js->clj]]
+   [cljs.reader :refer [read-string]]
 
 
-            [sci.core :as sci]
-            [markdown.core :as md]
-            [clj-ts.common :refer [raw-card->type-and-data
-                                   double-comma-table
-                                   double-bracket-links auto-links ]]
-            ;;[clj-ts.common :refer [card->html ]]
+   [sci.core :as sci]
+   [markdown.core :as md]
+
+
+   [clj-ts.common :refer [raw-card->type-and-data
+                          double-comma-table
+                          double-bracket-links auto-links ]]
+   ;;[clj-ts.common :refer [card->html ]]
             )
   (:import goog.net.XhrIo)
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -157,6 +160,20 @@
            :editing true
            :raw (str (-> @db :raw) "\n----\n:stamp\n" {:type stamp} ))))
 
+
+(defn insert-text-at-cursor! [s]
+  (let [ta (-> js/document
+               (.getElementById "edit-field"))
+        text (-> ta .-value)
+        selectionStart (-> ta .-selectionStart)
+        new (str
+             (subs text 0 selectionStart)
+             s
+             (subs text selectionStart))
+        ]
+    (swap! db assoc :raw new)
+    (-> ta (.-value) (set! new) )))
+
 ;; RUN
 
 (let [start-page
@@ -164,6 +181,7 @@
       "/startpage"
       (fn [e]
         (-> e .-target .getResponseText .toString go-new!)))])
+
 
 
 ;; Rendering Views
@@ -223,6 +241,113 @@
            ]
           ] ))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn pastebar []
+  [:span {:class "pastebar"}
+   "+"
+
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:system
+
+{:command :search
+ :query \"\"
+}
+
+----"))}
+    "Search"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:evalclient
+
+;; CODE GOES HERE
+
+----"))}
+    "Code"]
+
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:embed
+
+{:type :youtube
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+----"))}
+    "YouTube"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:embed
+
+{:type :soundcloud
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+----"))}
+    "SoundCloud"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:embed
+
+{:type :bandcamp
+ :id IDHERE
+ :url \"URL GOES HERE\"
+ :description \"DESCRIPTION GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+----"))}
+    "BandCamp"]
+
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:embed
+
+{:type :twitter
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+----"))}
+    "Twitter"]
+   ])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn tool-bar []
   (let [current (r/atom (-> @db :future last))]
@@ -230,21 +355,31 @@
       (let [editing (-> @db :editing)]
         [:div
          (if editing
-           [:span
-            [:button {:class "big-btn"
-                      :on-click
-                      (fn []
-                        (do
-                          (swap! db assoc :editing (not editing))
-                          (reload!)))}
-             [:img {:src "/icons/x.png"}] " Cancel"]
-            [:button {:class "big-btn"
-                      :on-click
-                      (fn []
-                        (do
-                          (swap! db assoc :editing (not editing))
-                          (save-page!)) )}
-             [:img {:src "/icons/save.png"}] " Save"]]
+           [:div
+            [:div
+             [:span
+              [:button {:class "big-btn"
+                        :on-click
+                        (fn []
+                          (do
+                            (swap! db assoc :editing (not editing))
+                            (reload!)))}
+               [:img {:src "/icons/x.png"}] " Cancel"]
+              [:button {:class "big-btn"
+                        :on-click
+                        (fn []
+                          (do
+                            (swap! db assoc :editing (not editing))
+                            (save-page!)) )}
+               [:img {:src "/icons/save.png"}] " Save"]
+
+
+
+
+              ]]
+            (pastebar)
+
+            ]
 
            [:span
             [:button {:class "big-btn"
@@ -255,8 +390,11 @@
             [:button {:class "big-btn"}
              [:a {:href (str "/api/exportpage?page=" (-> @db :current-page))}
               [:img {:src "/icons/package.png"}]
-              " Export"]]])
+              " Export"]]
 
+
+
+            ])
 
 
          (comment
@@ -280,6 +418,8 @@
       (md/md->html)
       (auto-links)
       (double-bracket-links)))
+
+
 
 
 (defn card-bar [card]
@@ -334,23 +474,56 @@
         ]
        ])))
 
+(defn local-evaluator [code]
+  (let [result (sci/eval-string code)
+        r  [:div
+            [:div {:class :code}
+             [:h4 "Source"]
+             [:pre
+              code]]
+            [:div {:class :results}
+             [:h4 "Result"]
+             [:div
+              result] ]
+            ]]
+    r)
+  )
+
+
+
+
 (defn one-card [card]
   (let [rtype (get card "render_type")
         data (get card "server_prepared_data")
+
         inner-html
+        (fn [s] [:div {:dangerouslySetInnerHTML {:__html s}}])
+
+
+        inner
         (condp = rtype
+
           ":raw"
-          (str "<pre>" data "</pre>")
+          (inner-html (str "<pre>" data "</pre>"))
+
           ":markdown"
-          (card->html card)
+          (inner-html (card->html card))
+
           ":html"
-          (str data)
+          (inner-html (str data))
+
           ":stamp"
-          (str data)
+          (inner-html (str data))
+
+          ":hiccup"
+          "THIS SHOULD BE HICCUP RENDERED"
+
           ":evalclient"
-          ;"code to run on client"
-          (str (sci/eval-string data))
-          (str "UNKNOWN TYPE(" type ") " data))]
+          (local-evaluator data)
+
+          (str "UNKNOWN TYPE(" type ") " data))
+
+        ]
     ;;(js/console.log (pr-str card))
 
     [:div {:class :card-outer}
@@ -365,8 +538,7 @@
                x (-> @db :dirty)]
            (if (= classname "wikilink")
              (go-new! data))))
-       :dangerouslySetInnerHTML
-       {:__html inner-html}} ]
+       } inner ]
      [card-bar card]
      ]))
 
@@ -394,6 +566,9 @@
         (js/alert e)))]
    ])
 
+
+
+
 (defn main-container []
 
   [:div
@@ -401,7 +576,23 @@
      [:div
       (if (-> @db :editing)
         [:div {:class "edit-box"}
-         [:textarea {:id "edit-field" :cols 80 :rows 40}
+         [:textarea
+          {:id "edit-field" :cols 80 :rows 40
+           :on-key-press
+           (fn [e]
+             (js/console.log "KEYPRESS ON TEXTAREA")
+             (let [kc (.-charCode e)]
+               (js/console.log "pressed " kc)
+               (if (-> @db :editing)
+                 (cond
+                   (and (.-ctrlKey e) (= 81))
+                   (insert-text-at-cursor! "THIS IS INSERTED")
+                   :else '())
+                 (if (and (.-ctrlKey e) (= 69 kc))
+                   (swap! db assoc
+                          :editing true)
+                   (-> js/document (.getElementById "edit-field") (.focus) )))))
+           }
           (-> @db :raw)]]
         [:div
          (card-list)]
@@ -443,12 +634,16 @@
 (r/render-component [content]
                    (.querySelector js/document "#app"))
 
+
+
+
+
 (js/document.addEventListener
  "keypress"
  (fn [e]
+   (js/console.log "KEYPRESS EVENT")
    (let [kc (.-charCode e)]
-     (if (and (.ctrlKey e) (= 69 kc))
-       (swap! db assoc
-              :editing true))
-     (-> js/document (.getElementById "edit-field") (.focus) )
+
+     (js/console.log "pressed " (.-charCode e))
+
      )))
