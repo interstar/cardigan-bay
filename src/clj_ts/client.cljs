@@ -7,6 +7,7 @@
    [cljs.core.async :refer [<! timeout]]
    [cljs.core :refer [js->clj]]
    [cljs.reader :refer [read-string]]
+   [cljs.pprint :refer [pprint]]
 
 
    [sci.core :as sci]
@@ -474,28 +475,90 @@
         ]
        ])))
 
-(defn local-evaluator [code]
-  (let [result (sci/eval-string code)
-        r  [:div
-            [:div {:class :code}
-             [:h4 "Source"]
-             [:pre
-              (trim code)]]
-            [:div {:class :calculated-out}
-             [:h4 "Calculated"]
-             [:pre
-               (str result)]]
-            [:div {:class :results}
-             [:h4 "Result"]
-             [:div
-              (if (= (first result) :div) result
-                  (str result))] ]
-            ]]
-    r)
-  )
 
 
 
+(defn workspace [card]
+  (let [state (r/atom {:code-toggle true
+                       :calc-toggle true
+                       :result-toggle true
+                       :code (get card "server_prepared_data")
+                       :calc []
+                       :result ""})
+
+
+        id (str "ws" (get card "hash"))
+        code-id (str id "-code")
+        calc-id (str id "-calc")
+        result-id (str id "-result")
+
+        toggle-code!
+        (fn [e]
+          (js/console.log (str "Toggle code " (-> @state :code-toggle)))
+
+          (swap! state #(conj % {:code-toggle (-> @state :code-toggle not)})))
+
+        toggle-calc!
+        (fn [e]
+          (js/console.log (str "Toggle calc " (-> @state :calc-toggle)) )
+          (swap! state #(conj % {:calc-toggle (-> @state :calc-toggle not)})))
+
+        toggle-result!
+        (fn [e]
+          (js/console.log "Toggle result "  (-> @state :result-toggle))
+          (swap! state #(conj % {:result-toggle (-> @state :result-toggle not)})))
+
+        display
+        (fn [d]
+          (if d "block" "none"))
+
+        execute-code
+        (fn [e]
+          (let [result (sci/eval-string (-> @state :code))]
+            (swap! state #(conj % {:calc result :result result})))
+          )
+        ]
+
+    (fn [card]
+      (let []
+        [:div {:class :workspace}
+         [:div {:class :workspace-buttons}
+          [:button {:class :workspace-button :on-click execute-code} "Run"]
+          [:button {:class :workspace-button :on-click toggle-code!} "Code"]
+          [:button {:class :workspace-button :on-click toggle-calc!} "Calculated"]
+          [:button {:class :workspace-button :on-click toggle-result!} "Output"]]
+         [:div {:class :code :style {:padding "3px"
+                                     :display (display (-> @state :code-toggle))} }
+          [:h4 "Source"]
+          [:textarea {:cols 60 :rows 10
+                      :on-change
+                      (fn [e] (swap! state #(conj % {:code (-> e .-target .-value )})))}
+           (trim (-> @state :code))]]
+         [:div {:class :calculated-out :style {:padding "3px"
+                                               :display (display (-> @state :calc-toggle))}}
+          [:h4 "Calculated"]
+          [:pre
+           (with-out-str (pprint (str (-> @state :calc))))
+           ]]
+         [:div {:class :results :style {:padding "3px"
+                                        :display (display (-> @state :result-toggle))}}
+          [:h4 "Result"]
+          [:div
+           (let [result (-> @state :result)]
+             (cond
+
+               (number? result)
+               result
+
+               (string? result)
+               result
+
+               (= (first result) :div)
+               result
+
+               :else
+               (str result)))] ]
+         ]))))
 
 (defn one-card [card]
   (let [rtype (get card "render_type")
@@ -524,7 +587,7 @@
           "THIS SHOULD BE HICCUP RENDERED"
 
           ":evalclient"
-          (local-evaluator data)
+          [workspace card]
 
           (str "UNKNOWN TYPE(" type ") " data))
 
