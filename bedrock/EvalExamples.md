@@ -13,15 +13,21 @@ In both cases, the code must be correct (without bugs or causing exceptions). An
 ----
 ### Evaluation on the Client
 
-Running code on the client (in the browser) uses the Small Clojure Interpreter (<https://github.com/borkdude/sci>)
+We now have an interactive workspace running in the browser client that uses the Small Clojure Interpreter (<https://github.com/borkdude/sci>)
 
-Use the card-type :evalclient for code which will run in the browser. The entire body of the card should be a well-formed piece of SCI code which will be evaluated when the page is rendered. The result will be converted to a string and rendered into the page. 
+Use the card-type :workspace and some valid ClojureScript code in the card.
 
-The following card has an example of client-side evaluated code.
+This will be rendered as an interactive workspace where the users can run (and potentially edit) your code snippet.
+
+**Note that although you can directly edit and run the code in the interactive workspace, it will not currently be saved.** ([[OutstandingTask]]). If you want to permanently save the code you are working on, you must edit the full page and keep the code in the :workspace card.
+ 
+The following card has an example of a client-side workspace.
 ----
-:evalclient
+:workspace
 
-(filter even? (range 30))
+(map 
+  #(str % ", ") 
+  (filter even? (range 70)))
 
 ----
 
@@ -41,11 +47,11 @@ The next cards have examples of :evalraw and :evalmd
 
 ----
 :evalraw
-
+[:div
 (map 
-  #(str % "\n") 
+  #([:p %]) 
   (filter even? (range 10)))
-
+]
 ----
 :evalmd
 
