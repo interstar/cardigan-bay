@@ -1,18 +1,11 @@
-System Sketch : <http://192.168.15.13:4545/ss.html>
 
 There's now a new way to embed clojurescript that runs on the client using <https://github.com/borkdude/sci>
 
 simply use card type :evalclient and have a valid clojurescript code in the card body
 ----
 :evalclient
-
 (let [p (fn [x] [:li x])]
-
-
-[:div [:ol  
-  (map p (filter even? (range 30)))
-]])
-
+[:div (into [] (cons :ol  (map p (filter even? (range 30)))))]])
 ----
 :system
 
