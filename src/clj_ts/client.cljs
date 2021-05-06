@@ -592,7 +592,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
           ":hiccup"
           "THIS SHOULD BE HICCUP RENDERED"
 
-          ":evalclient"
+          ":workspace"
           [workspace card]
 
           (str "UNKNOWN TYPE(" type ") " data))
