@@ -47,11 +47,10 @@ The next cards have examples of :evalraw and :evalmd
 
 ----
 :evalraw
-[:div
+
 (map 
-  #([:p %]) 
+  #(str % ",") 
   (filter even? (range 10)))
-]
 ----
 :evalmd
 
