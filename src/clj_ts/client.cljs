@@ -480,7 +480,7 @@
 
 (defn workspace [card]
   (let [state (r/atom {:code-toggle true
-                       :calc-toggle true
+                       :calc-toggle false
                        :result-toggle true
                        :code (get card "server_prepared_data")
                        :calc []
@@ -522,6 +522,12 @@
     (fn [card]
       (let []
         [:div {:class :workspace}
+         [:h3 "Workspace"]
+         [:p {:class :workspace-note} [:i "Note : this is a ClojureScript workspace based on "
+                 [:a {:href "https://github.com/borkdude/sci"} "SCI"]
+                 ". Be aware that it does not save any changes you make in the textbox.
+
+You'll need to  edit the page fully to make permanent changes to the code. "]]
          [:div {:class :workspace-buttons}
           [:button {:class :workspace-button :on-click execute-code} "Run"]
           [:button {:class :workspace-button :on-click toggle-code!} "Code"]
