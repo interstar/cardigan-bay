@@ -227,7 +227,10 @@
 **PageStore Directory** (relative to code) ,, " (.page-path ps) "
 **Is Git Repo?**  ,, " (.git-repo? ps) "
 **Site Url Root** ,, " (:site-url (server-state)) "
-**Export Dir** ,, " (.export-path ps)
+**Export Dir** ,, " (.export-path ps) "
+**Number of Pages** ,, " (count (.all-pages db))
+
+
                     )]
         (common/package-card i :system :markdown sr sr))
 
