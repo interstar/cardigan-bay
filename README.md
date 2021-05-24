@@ -175,9 +175,9 @@ Cards that are not Markdown or raw-text are usually represented with their type,
 A non Markdown card usually looks like this
 ```
 ----
-:type
+:cardtype
 
-{:some "card specific data"
+{:some "cardtype specific data"
  :in [:EDN "format"] 
  }
  
