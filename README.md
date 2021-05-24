@@ -174,11 +174,11 @@ Cards that are not Markdown or raw-text are usually represented with their type,
 
 A non Markdown card looks like this
 ```
---<!-- -->--
+----
 :type
 
 Some stuff (for most types, an EDN map of data)
---<!-- -->--
+----
 ```
 ----
 
