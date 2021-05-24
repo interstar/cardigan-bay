@@ -172,12 +172,15 @@ But *also* look at `resources/gql_schema.edn` for enums related to graphql commu
 
 Cards that are not Markdown or raw-text are usually represented with their type, and a small map in EDN format, with the required parameters.
 
-A non Markdown card looks like this
+A non Markdown card usually looks like this
 ```
 ----
 :type
 
-Some stuff (for most types, an EDN map of data)
+{:some "card specific data"
+ :in [:EDN "format"] 
+ }
+ 
 ----
 ```
 ----
