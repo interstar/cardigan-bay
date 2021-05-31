@@ -123,10 +123,9 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
      caption-renderer)))
 
 (defn strip-tags [html]
-  (let [processed (clojure.string/replace html #"\<([^>])+\>" "")
-        ]
-
-    processed))
+  (if (nil? html) "NO DESCRIPTION"
+      (let [processed (clojure.string/replace html #"\<([^>])+\>" "")]
+        processed)))
 
 (defn rss [data caption-renderer]
   (let [url (:url data)
