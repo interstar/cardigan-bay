@@ -85,9 +85,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 
 .card {
     background-color:white;
-    padding: 10px;
+    padding: 5px;
     margin: 2px;
-    border-radius: 15px;
+    border-radius: 10px;
 }
 
 #content {
@@ -117,6 +117,17 @@ blockquote {
    background-color:#cccccc;
 
    padding:2%;
+}
+
+.context-box {
+    border-style:solid;
+    border-width:3px;
+    border-color:#111111;
+    background-color:#eeeeee;
+
+    padding: 5px;
+    margin: 5px;
+    border-radius: 10px;
 }
 text {
     /*      font-family:Verdana; */
