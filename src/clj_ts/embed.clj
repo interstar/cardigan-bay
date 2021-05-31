@@ -2,6 +2,8 @@
   (:require [org.httpkit.client :as http]
             [org.httpkit.sni-client :as sni]
             [clojure.string :as string]
+            [remus :refer [parse-url parse-file parse-stream]]
+
             [clojure.data.json :as json]))
 
 
@@ -120,6 +122,37 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
          (-> body json/read-str (get "html"))))
      caption-renderer)))
 
+(defn strip-tags [html]
+  (let [processed (clojure.string/replace html #"\<([^>])+\>" "")
+        ]
+
+    processed))
+
+(defn rss [data caption-renderer]
+  (let [url (:url data)
+        result (parse-url url)
+        feed (:feed result)
+        desc (:description feed)
+        entries
+        (map
+         (fn [e]
+           (let [stripped (str (strip-tags (-> e :description :value)))
+                 txt
+                 (str (if (:title e) (:title e)
+                          (apply str (take 40 stripped)))) ]
+
+             (str
+              "[" txt "](" (:link e) ") ... ,, "
+              (:published-date e) "\n"  )))
+         (:entries feed)
+         )
+    ]
+    (generic-embed
+     data
+     (caption-renderer (apply str (doall entries)))
+     caption-renderer))
+  )
+
 (defn media-img [data for-export? caption-renderer server-state]
   (let [src (:src data)
         width (if (:width data) (:width data) "100%") ]
@@ -154,6 +187,9 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
 
       :twitter
       (twitter data caption-renderer)
+
+      :rss
+      (rss data caption-renderer)
 
       :oembed
       (generic-oembed (:api data) (:url data) )

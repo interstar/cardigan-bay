@@ -51,6 +51,7 @@
     org.clojure/core.logic {:mvn/version "0.8.11" }
     io.replikativ/hasch {:mvn/version "0.3.7"}
 
+    remus {:mvn/version "0.1.0"}
 
 
     clj-rss {:mvn/version "0.2.5"}
