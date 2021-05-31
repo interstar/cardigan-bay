@@ -128,8 +128,7 @@
       (fn [e]
         (go
           (<! (timeout 1000))
-----
-:bookmark          (reload!)
+          (reload!)
           (r/force-update-all)))
       "POST"
       (pr-str {:page page-name
@@ -218,11 +217,21 @@
 
            ]
           [:div {:id "nav2"}
-
            [:button
             {:class "big-btn"
              :on-click (fn [] (back!))}
             [:img {:src "/icons/skip-back.png"}] " Back"]
+
+           [:button
+           {:class "big-btn"
+             :on-click (fn [] (forward! (-> @db :future last)))} ""
+           [:img {:src "/icons/skip-forward.png"}] " Forward"]
+
+           [:button {:class "big-btn"}
+            [:a {:href "/api/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
+           ]
+
+          [:div {:id "nav3"}
 
            [nav-input current]
            [:button
@@ -230,13 +239,6 @@
              :on-click (fn [] (go-new! @current))}
             [:img {:src "/icons/arrow-right.png"}] " Go!"]
 
-           [:button
-            {:class "big-btn"
-             :on-click (fn [] (forward! (-> @db :future last)))} ""
-            [:img {:src "/icons/skip-forward.png"}] " Forward"]
-
-           [:button {:class "big-btn"}
-            [:a {:href "/api/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
 
 
            ]
@@ -566,55 +568,82 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
                (str result)))] ]
          ]))))
 
-(defn one-card [card]
-  (let [rtype (get card "render_type")
-        data (get card "server_prepared_data")
 
+(defn card-top-bar [card]
+
+  )
+
+(defn one-card [card]
+  (let [
         inner-html
         (fn [s] [:div {:dangerouslySetInnerHTML {:__html s}}])
 
+        state2 (r/atom {:toggle "block"})
 
-        inner
-        (condp = rtype
-
-          ":raw"
-          (inner-html (str "<pre>" data "</pre>"))
-
-          ":markdown"
-          (inner-html (card->html card))
-
-          ":html"
-          (inner-html (str data))
-
-          ":stamp"
-          (inner-html (str data))
-
-          ":hiccup"
-          "THIS SHOULD BE HICCUP RENDERED"
-
-          ":workspace"
-          [workspace card]
-
-          (str "UNKNOWN TYPE(" type ") " data))
+        toggle!
+        (fn [e]
+          (do
+            (if (= (-> @state2 :toggle) "none")
+              (swap! state2 #(conj % {:toggle "block"}) )
+              (swap! state2 #(conj % {:toggle "none"})))))
 
         ]
     ;;(js/console.log (pr-str card))
 
-    [:div {:class :card-outer}
+    (fn [card]
+      (let [rtype (get card "render_type")
+            data (get card "server_prepared_data")
+            inner
+            (condp = rtype
 
-     [:div
-      {:class "card"
-       :on-click
-       (fn [e]
-         (let [tag (-> e .-target)
-               classname (.getAttribute tag "class")
-               data (.getAttribute tag "data")
-               x (-> @db :dirty)]
-           (if (= classname "wikilink")
-             (go-new! data))))
-       } inner ]
-     [card-bar card]
-     ]))
+              ":raw"
+              (inner-html (str "<pre>" data "</pre>"))
+
+              ":markdown"
+              (inner-html (card->html card))
+
+              ":html"
+              (inner-html (str data))
+
+              ":stamp"
+              (inner-html (str data))
+
+              ":hiccup"
+              "THIS SHOULD BE HICCUP RENDERED"
+
+              ":workspace"
+              [workspace card]
+
+              (str "UNKNOWN TYPE(" type ") " data))
+
+            ]
+        [:div {:class :card-outer}
+
+         [:div {:class :card-meta}
+          [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
+           (if (= (-> @state2 :toggle) "none")
+             [:img {:src "/icons/maximize-2.svg"}]
+             [:img {:src "/icons/minimize-2.svg"}]
+             )]]
+
+         [:div
+          {:style {:spacing-top "5px"
+                   :display (-> @state2 :toggle)}}
+          [:div
+           {:class "card"
+            :on-click
+            (fn [e]
+              (let [tag (-> e .-target)
+                    classname (.getAttribute tag "class")
+                    data (.getAttribute tag "data")
+                    x (-> @db :dirty)]
+                (if (= classname "wikilink")
+                  (go-new! data))))
+            }
+
+           inner ]]
+         [card-bar card]
+         ]))))
 
 
 
@@ -625,7 +654,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
       (let [cards (-> @db :cards)]
         (for [card cards]
           (try
-            (one-card card)
+            [one-card card]
             (catch :default e
               [:div {:class :card-outer}
                [:div {:class "card"}
@@ -644,7 +673,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
     (try
       (let [cards (-> @db :system-cards)]
         (for [card cards]
-          (one-card card)
+          [one-card card]
           )
         )
       (catch :default e
@@ -680,7 +709,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
            }
           (-> @db :raw)]]
         [:div
-         (card-list)]
+         [card-list]]
         )]
      [:div
       [:h2 "Bookmark"]])])
@@ -693,12 +722,16 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
    [:div {:class "headerbar"}
     [:div
      [:div [nav-bar]]
-     [:h2 (-> @db :current-page)
-      [:span {:class "tslink"}
-       [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
-     ]
-    [:div [tool-bar]]]
-   [main-container]
+
+     ]]
+   [:div {:class "context-box"}
+
+      [:h2 (-> @db :current-page)
+       [:span {:class "tslink"}
+        [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
+
+      [:div [tool-bar]]
+      [main-container]]
    [:div {:class "footer"}
     [:span
      [:span "This " (-> @db :wiki-name) " wiki!"]
