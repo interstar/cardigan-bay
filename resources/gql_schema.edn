@@ -62,4 +62,6 @@
    :args {:page_name {:type (non-null String)}
           :hash {:type (non-null String)}}
    :resolve :resolve-card
-   }}}
+   }}
+
+ }

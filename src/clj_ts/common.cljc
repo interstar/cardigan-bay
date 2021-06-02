@@ -43,6 +43,9 @@
 (defn neh [card hash]
   (not (match-hash card hash)))
 
+
+
+
 ;; Cards in card list
 
 (defn find-card-by-hash
@@ -105,7 +108,7 @@
   )
 
 (defn cards->raw [cards]
-  (string/join "\n----" (map card->raw cards)))
+  (string/join "----" (map card->raw cards)))
 
 
 ;; Rendering / special Markup
@@ -175,3 +178,71 @@
            :stripped (string/join "\n" (:non-commands pseq) )}
           )
     ))
+
+
+;;; BOILERPLATE
+
+(defn embed-boilerplate [type]
+
+  (condp = type
+    :youtube
+    "
+----
+:embed
+
+{:type :youtube
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+    :soundcloud
+    "
+----
+:embed
+
+{:type :soundcloud
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+
+"
+    :bandcamp
+    "
+----
+:embed
+
+{:type :bandcamp
+ :id IDHERE
+ :url \"URL GOES HERE\"
+ :description \"DESCRIPTION GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+"
+
+    :twitter
+    "
+----
+:embed
+
+{:type :twitter
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+    (str   "
+----
+
+NO BOILERPLATE FOR EMBED TYPE " type
+           "
+----
+")))

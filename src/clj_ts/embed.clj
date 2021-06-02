@@ -3,7 +3,7 @@
             [org.httpkit.sni-client :as sni]
             [clojure.string :as string]
             [remus :refer [parse-url parse-file parse-stream]]
-
+            [clj-ts.common :as common]
             [clojure.data.json :as json]))
 
 
@@ -197,3 +197,25 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
       )
  )
 )
+
+(defn boilerplate  [url timestamp]
+  (let [f (fn [url type m]
+            (apply str (drop 14 (string/replace (common/embed-boilerplate type) m url) )))]
+    (cond
+      (string/includes? url "youtube")
+      (f url :youtube "URL GOES HERE")
+
+      (string/includes? url "soundcloud")
+      (f url :twitter "URL GOES HERE")
+
+      (string/includes? url "bandcamp")
+      (f url :bandcamp "URL GOES HERE")
+
+      (string/includes? url "twitter")
+      (f url :twitter "URL GOES HERE")
+
+      :else
+      (str "
+Bookmarked " timestamp  ",, <" url ">
+
+"))))

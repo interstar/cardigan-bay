@@ -15,7 +15,7 @@
 
 
    [clj-ts.common :refer [raw-card->type-and-data
-                          double-comma-table
+                          double-comma-table embed-boilerplate
                           double-bracket-links auto-links ]]
    ;;[clj-ts.common :refer [card->html ]]
             )
@@ -282,71 +282,26 @@
    [:button {:class "big-btn"
              :on-click
              (fn [e]
-               (insert-text-at-cursor! "
-----
-:embed
-
-{:type :youtube
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-
-}
-
-----"))}
+               (insert-text-at-cursor! (embed-boilerplate :youtube)))}
     "YouTube"]
 
    [:button {:class "big-btn"
              :on-click
              (fn [e]
-               (insert-text-at-cursor! "
-----
-:embed
-
-{:type :soundcloud
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-
-}
-
-----"))}
+               (insert-text-at-cursor! (embed-boilerplate :soundcloud)))}
     "SoundCloud"]
 
    [:button {:class "big-btn"
              :on-click
              (fn [e]
-               (insert-text-at-cursor! "
-----
-:embed
-
-{:type :bandcamp
- :id IDHERE
- :url \"URL GOES HERE\"
- :description \"DESCRIPTION GOES HERE\"
- :title \"\"
- :caption \"\"
-
-}
-
-----"))}
+               (insert-text-at-cursor! (embed-boilerplate :bandcamp)))}
     "BandCamp"]
 
 
    [:button {:class "big-btn"
              :on-click
              (fn [e]
-               (insert-text-at-cursor! "
-----
-:embed
-
-{:type :twitter
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-}
-
-----"))}
+               (insert-text-at-cursor! (embed-boilerplate :twitter)))}
     "Twitter"]
    ])
 

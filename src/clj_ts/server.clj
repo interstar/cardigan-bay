@@ -10,6 +10,7 @@
             [clj-ts.common :as common]
             [clj-ts.static-export :as export]
             [clj-ts.pagestore :as pagestore]
+            [clj-ts.embed :as embed]
 
             [markdown.core :as md]
             [org.httpkit.server :refer [run-server]]
@@ -189,11 +190,11 @@
 
 (defn bookmarklet-handler [request]
   (let [url (-> request :params :url)
-        new-card (str "{:url \"" url "\" :timestamp \""
-                      (java.time.LocalDateTime/now) "\"  }")
+        data (embed/boilerplate url (java.time.LocalDateTime/now)  )
         ]
     (do
-      (card-server/prepend-card-to-page! "InQueue" :bookmark new-card )
+      (println data)
+      (card-server/prepend-card-to-page! "InQueue" :embed data )
       {:status 303
        :headers {"Location" "/view/InQueue"} }))
 )

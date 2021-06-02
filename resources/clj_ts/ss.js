@@ -7,8 +7,12 @@ class Node {
     this.name = "" + this.id;
   }
 
-  draw() {
-    fill(124);
+  draw(isSelected) {
+    if (isSelected) {
+        fill(124,180,180);
+    } else {
+        fill(124);
+    }
     stroke(30);
 
     ellipse(this.x, this.y, 50, 35);
@@ -27,6 +31,10 @@ class Node {
   moveTo(ex, wy) {
     this.x = ex;
     this.y = wy;
+  }
+  
+  setId(newId) {
+    this.id = newId;
   }
 }
 
@@ -49,6 +57,7 @@ class Network {
     this.nid = 0;
     this.aid = 0;
     this.selectedNode = -1;
+    this.lastSelectedNode = -1;
   }
 
   addNode(ex, wy) {
@@ -60,6 +69,8 @@ class Network {
   hitOne(ex, wy) {
     for (var i=0;i<this.nodes.length;i++) {
       var n = this.nodes[i];
+      console.log(""+n.id+"  " + n.hit(ex,wy));
+     
       if (n.hit(ex, wy)) {
         return n.id;
       }      
@@ -83,9 +94,15 @@ class Network {
       a.draw();
     }
     for (var i=0;i<this.nodes.length;i++) {
-      var n = this.nodes[i];
-      n.draw();
+      var n = this.nodes[i];   
+      n.draw(n.id == this.lastSelectedNode);
     }
+  }
+
+  renameSelected(newID) {
+    var n = this.getNodeById(this.lastSelectedNode);
+    n.setId(newID);
+    this.selectedNode = newID;
   }
 
   toEDN() {
@@ -130,14 +147,72 @@ var mainMsg;
 
 var network = new Network();
 
+var cnv;
+
 function setup() {
-  createCanvas(600, 900);
+  cnv = createCanvas(600, 900);
   fill(124);
   stroke(30);
   textSize(16);
   background(255);
   bgcol = color(255,255,255);
   mainMsg = "";
+
+  hit = function(x,y) {
+    console.log(""+x + "," + y + " out of " + cnv.width + "," + cnv.height);
+    if (x < 0) { return false; }
+    if (y < 0) { return false;}
+    if (x > cnv.width) { return false; }
+    if (y > cnv.height) { return false; }
+    return true;
+  };
+  
+  cnv.mousePressed(function() {
+        if (hit(mouseX,mouseY)) {
+            network.selectedNode = network.hitOne(mouseX, mouseY);
+        }
+    });
+
+  cnv.mouseReleased(function() {
+      if (! hit(mouseX,mouseY)) { return; }
+      if (network.selectedNode > -1) {
+        // we'd already selected something
+        try {      
+          var hid = network.hitOne(mouseX, mouseY);
+          if (hid < 0) {
+            // we haven't hit anything else, so we move
+            network.getNodeById(network.selectedNode).moveTo(mouseX, mouseY);
+          } else {
+            // we did hit something else so we add an arc
+            network.arcs.push(new Arc(network.getNodeById(network.selectedNode), 
+              network.getNodeById(hid)));
+          }
+        } 
+        catch (e) {
+          console.log("WTF??? " + e);
+        }
+      } else {
+        // we hadn't already selected something, so we create a new node
+        network.addNode(mouseX, mouseY);
+      }
+      network.lastSelectedNode = network.selectedNode;
+      network.selectedNode = -1;
+      
+      var edn = network.scaledTo(600,500).toEDN();
+      console.log(edn);
+      document.getElementById("edn_text").innerHTML=edn;
+    });
+    
+    nameInput = createInput();
+    nameInput.position(30, 100);
+
+    nameButton = createButton('Rename');
+    nameButton.position(nameInput.x + nameInput.width, 100);
+    nameButton.mousePressed(function() {
+        network.renameSelected(nameInput.value());
+    });
+
+
 }
 
 function draw() {
@@ -146,7 +221,7 @@ function draw() {
   push();
       strokeWeight(4);
       stroke(99,99,99);
-      rect(0,0,width,height);
+      rect(0,0,cnv.width,cnv.height);
       fill(bgcol);
       rect(3,3,width-3,height-3);
   pop();
@@ -159,38 +234,6 @@ function draw() {
   text(mainMsg,30,40);
   pop();
 
-}
-
-function mousePressed() {
-  network.selectedNode = network.hitOne(mouseX, mouseY);
-}
-
-function mouseReleased() {
-  if (network.selectedNode > -1) {
-    // we'd already selected something
-    try {      
-      var hid = network.hitOne(mouseX, mouseY);
-      if (hid < 0) {
-        // we haven't hit anything else, so we move
-        network.getNodeById(network.selectedNode).moveTo(mouseX, mouseY);
-      } else {
-        // we did hit something else so we add an arc
-        network.arcs.push(new Arc(network.getNodeById(network.selectedNode), 
-          network.getNodeById(hid)));
-      }
-    } 
-    catch (e) {
-      console.log("WTF??? " + e);
-    }
-  } else {
-    // we hadn't already selected something, so we create a new node
-    network.addNode(mouseX, mouseY);
-  }
-  network.selectedNode = -1;
-  
-  var edn = network.scaledTo(600,500).toEDN();
-  console.log(edn);
-  document.getElementById("edn_text").innerHTML=edn;
 }
 
 

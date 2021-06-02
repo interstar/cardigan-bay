@@ -1,4 +1,18 @@
+A bunch of tests
 
+----
+:embed
+{:type :rss
+ :url "http://thoughtstorms.info/view/api/rc-rss.xml"
+ :caption "ThoughtStorms"}
+----
+:embed
+
+{:type :rss
+ :url "http://scripting.com/rss.xml"
+ :caption "[[RSS]] feed from [[DaveWiner]]"
+ :title "Scripting News"}
+----
 There's now a new way to embed clojurescript that runs on the client using <https://github.com/borkdude/sci>
 
 simply use card type :workspace and have a valid clojurescript code in the card body
