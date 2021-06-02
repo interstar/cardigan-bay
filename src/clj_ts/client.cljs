@@ -414,6 +414,12 @@
     ))
 
 
+(defn not-blank? [card]
+  (do
+    (js/console.log (str card))
+    (not= "" (string/trim (get card "source_data")))
+    )
+  )
 
 (defn card->html [card]
   (-> (get card "server_prepared_data")
@@ -652,7 +658,8 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
    [:div
     (try
       (let [cards (-> @db :cards)]
-        (for [card cards]
+        (for [card (filter not-blank? cards)]
+
           (try
             [one-card card]
             (catch :default e
