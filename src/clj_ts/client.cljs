@@ -415,10 +415,7 @@
 
 
 (defn not-blank? [card]
-  (do
-    (js/console.log (str card))
-    (not= "" (string/trim (get card "source_data")))
-    )
+  (not= "" (string/trim (get card "source_data")))
   )
 
 (defn card->html [card]
