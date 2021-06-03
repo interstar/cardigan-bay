@@ -9,10 +9,19 @@
 
   (alter-var-root #'org.httpkit.client/*default-client* (fn [_] sni/default-client))
 
-(defn http-call [url params]
-  (let [{:keys [status headers body error]
+(defn http-call
+  [url params method]
+  (let [get-it (fn []
+                 (cond
+                   (= method :post)
+                   @(http/post url {:form-params params})
+
+                   (= method :get)
+                   @(http/get url {:form-params params})))
+
+        {:keys [status headers body error]
          :as resp}
-        @(http/post url {:form-params params})]
+        (get-it)]
     (if error
       (str "Failed, exception: " error)
       (do
@@ -37,14 +46,24 @@
      (if caption (str "<div class='embed-caption'>" (caption-renderer caption) "</div>") "")
 )))
 
-(defn generic-oembed [oembed url]
-  (let [call (http-call oembed {:format "json" :url url }) ]
-    (try
-      (str (->
-            call
-            json/read-str (get "html")))
-      (catch Exception e
-        (str (.getMessage e) " " oembed " " url "  " (str call))))))
+(defn generic-oembed [oembed url method]
+  (let [d0 (println (str "api : " oembed " url: " url))
+        call (http-call oembed
+                        {:format "json" :url url}
+                        method
+                        )
+        d1 (println (str "Generic OEmbed got " call) )]
+    (if (= 404 (get "status" call))
+
+      (str "OEmbed call failed
+
+API : " oembed " URL : " url)
+      (try
+        (str (->
+              call
+              json/read-str (get "html")))
+        (catch Exception e
+          (str (.getMessage e) " " oembed " " url "  " (str call)))))))
 
 
 (defn youtube [data caption-renderer]
@@ -68,7 +87,7 @@
 (defn youtube2 [data caption-renderer]
   (generic-embed
    data
-   (generic-oembed "https://www.youtube.com/oembed" (:url data) )
+   (generic-oembed "https://www.youtube.com/oembed" (:url data) :post)
    caption-renderer)
   )
 
@@ -93,7 +112,7 @@
 (defn soundcloud [data caption-renderer]
   (generic-embed
    data
-   (generic-oembed "https://soundcloud.com/oembed" (:url data))
+   (generic-oembed "https://soundcloud.com/oembed" (:url data) :post)
    caption-renderer))
 
 (defn bandcamp [{:keys [id url description title caption] :as data} caption-renderer]
@@ -165,35 +184,57 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
        )
      caption-renderer)))
 
+
+
+(defn codepen [data caption-renderer]
+  (generic-embed
+   data
+   (generic-oembed "https://codepen.io/api/oembed" (:url data) :get)
+   caption-renderer))
+
 (defn process [s for-export? caption-renderer server-state]
   (let [data (read-string s)]
-    (condp = (:type data)
+    (try
+      (condp = (:type data)
 
-      :media-img
-      (media-img data for-export? caption-renderer server-state)
+        :media-img
+        (media-img data for-export? caption-renderer server-state)
 
-      :youtube
-      (youtube data caption-renderer)
+        :youtube
+        (youtube data caption-renderer)
 
-      :vimeo
-      (vimeo data caption-renderer)
+        :vimeo
+        (vimeo data caption-renderer)
 
-      :bandcamp
-      (bandcamp data caption-renderer)
+        :bandcamp
+        (bandcamp data caption-renderer)
 
-      :soundcloud
-      (soundcloud data caption-renderer)
+        :soundcloud
+        (soundcloud data caption-renderer)
 
-      :twitter
-      (twitter data caption-renderer)
+        :twitter
+        (twitter data caption-renderer)
 
-      :rss
-      (rss data caption-renderer)
+        :rss
+        (rss data caption-renderer)
 
-      :oembed
-      (generic-oembed (:api data) (:url data) )
+        :codepen
+        (codepen data caption-renderer)
 
-      (str "Not recognised type:  " (:type data) )
+        :oembed
+        (generic-oembed (:api data) (:url data)
+                        (if (:method data) (:method data) :post))
+
+        (str "Not recognised type:  " (:type data) )
+        )
+      (catch Exception e (str "Embedding failed with embed type " (:type data) "<br/>
+
+and data
+<br/>
+" data "
+<br/>
+" e)
+             )
       )
  )
 )
@@ -213,6 +254,16 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
 
       (string/includes? url "twitter")
       (f url :twitter "URL GOES HERE")
+
+      (string/includes? url "codepen")
+      (f url :codepen "URL GOES HERE")
+
+      (or
+       (string/includes? url ".rss")
+       (string/includes? url "rss.xml")
+       (string/includes? url "/feed/")
+       (string/includes? url "feeds.feedburner.com/"))
+      (f url :rss "URL GOES HERE")
 
       :else
       (str "

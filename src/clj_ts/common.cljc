@@ -239,6 +239,46 @@
 }
 
 "
+    :codepen
+    "
+----
+:embed
+
+{:type :codepen
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+
+    :rss
+
+    "
+----
+:embed
+
+{:type :rss
+ :url \"URL GOES HERE\"
+ :caption \"\"
+ :title \"\"}
+"
+
+    :oembed
+    "
+----
+:embed
+
+{:type :oembed
+ :url \"URL GOES HERE\"
+ :api \"API ENDPOINT
+ :title \"\"
+ :caption \"\"}
+"
+
+
+
+
     (str   "
 ----
 

@@ -15,7 +15,7 @@
 
 
    [clj-ts.common :refer [raw-card->type-and-data
-                          double-comma-table embed-boilerplate
+                          double-comma-table
                           double-bracket-links auto-links ]]
    ;;[clj-ts.common :refer [card->html ]]
             )
@@ -246,6 +246,123 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; This function embed-boilerplate is a copy of the function in common.cljc
+
+;; But for some reason, when we try to include it from common here
+;; it fails on Chrome on my Android tablet.
+;; It works fine on Chromium on desktop, and on Firefox on the same Android tablet
+;; But Chrome on tablet won't work for any of these boilerplate strings.
+
+;; However, the same code works fine on Chrome on Android
+;; when we use a local copy of embed-boilerplate here in this file (client.cljs)
+
+;; VERY MYSTERIOUS
+;;
+
+(defn embed-boilerplate [type]
+
+  (condp = type
+    :youtube
+    "
+----
+:embed
+
+{:type :youtube
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+    :soundcloud
+    "
+----
+:embed
+
+{:type :soundcloud
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+
+"
+    :bandcamp
+    "
+----
+:embed
+
+{:type :bandcamp
+ :id IDHERE
+ :url \"URL GOES HERE\"
+ :description \"DESCRIPTION GOES HERE\"
+ :title \"\"
+ :caption \"\"
+
+}
+
+"
+
+    :twitter
+    "
+----
+:embed
+
+{:type :twitter
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+    :codepen
+    "
+----
+:embed
+
+{:type :codepen
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+
+    :rss
+
+    "
+----
+:embed
+
+{:type :rss
+ :url \"URL GOES HERE\"
+ :caption \"\"
+ :title \"\"}
+"
+
+    :oembed
+    "
+----
+:embed
+
+{:type :oembed
+ :url \"URL GOES HERE\"
+ :api \"API ENDPOINT
+ :title \"\"
+ :caption \"\"}
+"
+
+
+
+
+    (str   "
+----
+
+NO BOILERPLATE FOR EMBED TYPE " type
+           "
+----
+")))
 
 (defn pastebar []
   [:span {:class "pastebar"}
@@ -271,12 +388,33 @@
              (fn [e]
                (insert-text-at-cursor! "
 ----
-:evalclient
+:workspace
 
-;; CODE GOES HERE
+;; Write some code
+[:div
+(str \"Hello Teenage America\")
+]
 
 ----"))}
-    "Code"]
+    "Code Workspace"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! "
+----
+:evalmd
+
+;; Write some code.
+;; Note that if the result of your executed code is a number
+;; You must convert it to a string.
+
+(str \"### \" (+ 1 2 3))
+
+"))}
+    "Code on Server"]
+
+
 
 
    [:button {:class "big-btn"
@@ -303,6 +441,12 @@
              (fn [e]
                (insert-text-at-cursor! (embed-boilerplate :twitter)))}
     "Twitter"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! (embed-boilerplate :rss)))}
+    "RSS Feed"]
    ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
