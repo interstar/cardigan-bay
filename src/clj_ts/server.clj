@@ -193,8 +193,9 @@
         data (embed/boilerplate url (java.time.LocalDateTime/now)  )
         ]
     (do
-      (println data)
-      (card-server/prepend-card-to-page! "InQueue" :embed data )
+      (if (string/includes? data  "Bookmarked at ")
+        (card-server/prepend-card-to-page! "InQueue" :markdown data)
+        (card-server/prepend-card-to-page! "InQueue" :embed data ))
       {:status 303
        :headers {"Location" "/view/InQueue"} }))
 )

@@ -266,7 +266,6 @@ and data
       (f url :rss "URL GOES HERE")
 
       :else
-      (str "
-Bookmarked " timestamp  ",, <" url ">
+      (str "Bookmarked at " timestamp  ",, <" url ">
 
 "))))
