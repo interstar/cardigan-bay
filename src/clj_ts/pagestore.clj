@@ -222,3 +222,17 @@
         res (filter contains-pattern? page-names)]
     res
     ))
+
+
+;; Global Search and replace
+;; Be careful with this.
+
+(defn search-and-replace! [server-state page-names pattern new-string]
+  (let [matched-pages
+        (text-search server-state page-names pattern)]
+    (doseq [page-name matched-pages]
+      (let [text (read-page server-state page-name)
+            new-text (string/replace text pattern new-string)]
+        (write-page-to-file! server-state page-name new-text)
+        )))
+  )

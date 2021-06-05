@@ -2,7 +2,7 @@
   (:require
    [reagent.core :as r]
    [reagent.dom :as dom]
-   [clojure.string :refer [lower-case trim]]
+   [clojure.string :refer [lower-case trim replace]]
    [clojure.string :as string]
    [cljs.core.async :refer [<! timeout]]
    [cljs.core :refer [js->clj]]
@@ -28,6 +28,7 @@
 (defonce db (r/atom
               {:current-page "HelloWorld"
                :raw ""
+               :transcript ""
                :cards []
                :past ["HelloWorld"]
                :future []
@@ -174,6 +175,14 @@
     (swap! db assoc :raw new)
     (-> ta (.-value) (set! new) )))
 
+
+(defn prepend-transcript! [extra]
+  (swap! db assoc :transcript
+         (str extra "
+
+" (-> @db :transcript))))
+
+
 ;; RUN
 
 (let [start-page
@@ -234,10 +243,25 @@
           [:div {:id "nav3"}
 
            [nav-input current]
+
            [:button
             {:class "big-btn"
              :on-click (fn [] (go-new! @current))}
-            [:img {:src "/icons/arrow-right.png"}] " Go!"]
+            ;[:img {:src "/icons/arrow-right.png"}]
+            " Go!"]
+
+           [:button
+            {:class "big-btn"
+             :on-click
+             (fn []
+               (let [result
+                     (sci/eval-string
+                      (-> @current str)
+                      )]
+                 (reset! current (str result))
+                 )
+               )}
+            "Execute"]
 
 
 
@@ -618,7 +642,11 @@ NO BOILERPLATE FOR EMBED TYPE " type
 
         execute-code
         (fn [e]
-          (let [result (sci/eval-string (-> @state :code))]
+          (let [result
+                (sci/eval-string
+                 (-> @state :code)
+                 {:bindings {'replace replace}}
+                 )]
             (swap! state #(conj % {:calc result :result result})))
           )
         ]
