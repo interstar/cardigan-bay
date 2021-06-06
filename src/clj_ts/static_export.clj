@@ -28,6 +28,17 @@
                     #"\[\[(.+?)\]\]"
                     replace-link)))
 
+(defn card-specific-wrapper [card server-prepared]
+  (do
+
+    (condp = (:render_type card)
+      :manual-copy
+      (str "<div class='manual-copy'>" server-prepared "</div>")
+
+      server-prepared))
+  )
+
+
 (defn card->html
   "HTML for an exported card"
   [card pe]
@@ -39,7 +50,7 @@
             (double-bracket-links pe))]
     (str "<div class=\"card-outer\">
 <div class=\"card\">
-" html
+" (card-specific-wrapper card html)
          "</div></div>
 ")))
 

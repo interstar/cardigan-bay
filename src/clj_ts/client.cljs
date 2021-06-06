@@ -34,8 +34,8 @@
                :future []
                :wiki-name "Wiki Name"
                :site-url "Site URL"
-               :editing false
-               :mode :page
+               :mode :viewing
+               ;;:mode :page WHAT WAS THIS? WAS IT USED?
                :port 4545}))
 
 
@@ -158,7 +158,7 @@
 (defn stamp! [stamp]
   (do
     (swap! db assoc
-           :editing true
+           :mode :editing
            :raw (str (-> @db :raw) "\n----\n:stamp\n" {:type stamp} ))))
 
 
@@ -176,11 +176,14 @@
     (-> ta (.-value) (set! new) )))
 
 
-(defn prepend-transcript! [extra]
-  (swap! db assoc :transcript
-         (str extra "
+(defn prepend-transcript! [code result]
+  (do
+    (swap! db assoc :transcript
+           (str "> " code "
+" result "
 
-" (-> @db :transcript))))
+" (-> @db :transcript)))
+    (swap! db assoc :mode :transcript)) )
 
 
 ;; RUN
@@ -199,12 +202,12 @@
   [:input {:type "text"
            :id "navinputbox"
            :value @value
-           :on-change #(reset! value (-> % .-target .-value))}])
+          :on-change #(reset! value (-> % .-target .-value))}])
 
 (defn nav-bar []
   (let [current (r/atom (-> @db :future last))]
     (fn []
-       (let [editing (-> @db :editing)]
+       (let [mode (-> @db :mode)]
          [:div {:class "navbar"}
           [:div {:class "breadcrumbs"}
            [:span (-> @db :wiki-name )]]
@@ -254,11 +257,9 @@
             {:class "big-btn"
              :on-click
              (fn []
-               (let [result
-                     (sci/eval-string
-                      (-> @current str)
-                      )]
-                 (reset! current (str result))
+               (let [code (-> @current str)
+                     result (sci/eval-string code)]
+                 (prepend-transcript! code result)
                  )
                )}
             "Execute"]
@@ -478,9 +479,10 @@ NO BOILERPLATE FOR EMBED TYPE " type
 (defn tool-bar []
   (let [current (r/atom (-> @db :future last))]
     (fn []
-      (let [editing (-> @db :editing)]
+      (let [mode (-> @db :mode)]
         [:div
-         (if editing
+         (condp = mode
+           :editing
            [:div
             [:div
              [:span
@@ -488,14 +490,14 @@ NO BOILERPLATE FOR EMBED TYPE " type
                         :on-click
                         (fn []
                           (do
-                            (swap! db assoc :editing (not editing))
+                            (swap! db assoc :mode :viewing)
                             (reload!)))}
                [:img {:src "/icons/x.png"}] " Cancel"]
               [:button {:class "big-btn"
                         :on-click
                         (fn []
                           (do
-                            (swap! db assoc :editing (not editing))
+                            (swap! db assoc :mode :viewing)
                             (save-page!)) )}
                [:img {:src "/icons/save.png"}] " Save"]
 
@@ -507,10 +509,11 @@ NO BOILERPLATE FOR EMBED TYPE " type
 
             ]
 
+           :viewing
            [:span
             [:button {:class "big-btn"
                       :on-click
-                      #(swap! db assoc :editing (not editing))}
+                      #(swap! db assoc :mode :editing)}
              [:img {:src "/icons/edit.png"}] " Edit"]
 
             [:button {:class "big-btn"}
@@ -518,9 +521,14 @@ NO BOILERPLATE FOR EMBED TYPE " type
               [:img {:src "/icons/package.png"}]
               " Export"]]
 
-
-
-            ])
+            ]
+           :transcript
+           [:span
+            [:button {:class "big-btn"
+                      :on-click
+                      #(swap! db assoc :mode :viewing)}
+             [:img {:src "/icons/x.png"}] " Return"]]
+           )
 
 
          (comment
@@ -732,6 +740,12 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
               ":markdown"
               (inner-html (card->html card))
 
+              ":manual-copy"
+              (inner-html
+               (str "<div class='manual-copy'>"
+                    (card->html card)
+                    "</div>"))
+
               ":html"
               (inner-html (str data))
 
@@ -812,38 +826,47 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
    ])
 
 
-
+(defn transcript []
+  [:div {:class "transcript"}
+   [:pre
+    (-> @db :transcript)]
+   ])
 
 (defn main-container []
 
   [:div
-   (if (= :page (-> @db :mode ))
-     [:div
-      (if (-> @db :editing)
-        [:div {:class "edit-box"}
-         [:textarea
-          {:id "edit-field" :cols 80 :rows 40
-           :on-key-press
-           (fn [e]
-             (js/console.log "KEYPRESS ON TEXTAREA")
-             (let [kc (.-charCode e)]
-               (js/console.log "pressed " kc)
-               (if (-> @db :editing)
-                 (cond
-                   (and (.-ctrlKey e) (= 81))
-                   (insert-text-at-cursor! "THIS IS INSERTED")
-                   :else '())
-                 (if (and (.-ctrlKey e) (= 69 kc))
-                   (swap! db assoc
-                          :editing true)
-                   (-> js/document (.getElementById "edit-field") (.focus) )))))
-           }
-          (-> @db :raw)]]
-        [:div
-         [card-list]]
-        )]
-     [:div
-      [:h2 "Bookmark"]])])
+   [:div
+    (condp = (-> @db :mode)
+      :editing
+      [:div {:class "edit-box"}
+       [:textarea
+        {:id "edit-field" :cols 80 :rows 40
+         :on-key-press
+         (fn [e]
+           (js/console.log "KEYPRESS ON TEXTAREA")
+           (let [kc (.-charCode e)]
+             (js/console.log "pressed " kc)
+             (if (= (-> @db :mode) :editing)
+               (cond
+                 (and (.-ctrlKey e) (= 81))
+                 (insert-text-at-cursor! "THIS IS INSERTED")
+                 :else '())
+               (if (and (.-ctrlKey e) (= 69 kc))
+                 (swap! db assoc
+                        :mode :editing)
+                 (-> js/document (.getElementById "edit-field") (.focus) )))))
+         }
+        (-> @db :raw)]]
+
+      :viewing
+      [:div
+       [card-list]]
+
+      :transcript
+      [:div
+       [transcript]]
+      )]
+   ])
 
 ;;
 
@@ -857,7 +880,10 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
      ]]
    [:div {:class "context-box"}
 
-      [:h2 (-> @db :current-page)
+    [:h2
+     (if (= (-> @db :mode) :transcript)
+       "Transcript"
+       (-> @db :current-page))
        [:span {:class "tslink"}
         [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
 

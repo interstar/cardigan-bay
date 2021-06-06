@@ -320,6 +320,8 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
   (let [[source-type, data] (common/raw-card->type-and-data card)]
     (condp = source-type
       :markdown (common/package-card i source-type :markdown data data)
+      :manual-copy (common/package-card i source-type :manual-copy data data)
+
       :raw (common/package-card i source-type :raw data data)
       :evalraw
       (common/package-card i :evalraw :raw data (server-eval data))
