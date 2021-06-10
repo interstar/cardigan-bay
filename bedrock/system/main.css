@@ -3,6 +3,9 @@ body {
     font-size: 1.6rem;
 
 
+    overflow-wrap: break-word;                                                    +    word-wrap: break-word;
+
+
     line-height: 1.618;
     max-width: 48em;
     margin: auto;
@@ -84,15 +87,14 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 
 .card {
     background-color:white;
-    padding: 10px;
+    padding: 5px;
     margin: 2px;
-    border-radius: 15px;
+    border-radius: 10px;
 }
 
 #content {
 	margin: 10px;
 	padding: 50px;
-
 }
 
 blockquote {
@@ -118,6 +120,17 @@ blockquote {
    background-color:#333366;
 
    padding:2%;
+}
+
+.context-box {
+    border-style:solid;
+    border-width:3px;
+    border-color:#111111;
+    background-color:#eeeeee;
+
+    padding: 5px;
+    margin: 5px;
+    border-radius: 10px;
 }
 text {
     /*      font-family:Verdana; */
@@ -161,6 +174,7 @@ button:hover {
 
 #navinputbox {
     height:3rem;
+    width:100%;
 }
 
 .double-comma-table {
@@ -216,6 +230,42 @@ button:hover {
     height: 20em;
 }
 
+
+.vimeo-embedded {
+    width:100%;
+    position: relative;
+    /*
+    padding-bottom: 56.25%;
+    padding-top: 25px;
+*/
+    height: 20em;
+}
+
 .bandcamp-embedded {
 
+}
+
+.manual-copy {
+    background-color : #fafcf2;
+    padding: 5px;
+    margin: 2px;
+    border-radius: 10px;
+
+}
+
+
+.code {
+    font-size : 0.8rem;
+}
+
+.calculated-out {
+    font-size : 0.8rem;
+}
+
+.results {
+    font-size : 0.8rem;
+}
+
+.workspace-note {
+    font-size : 0.4rem;
 }

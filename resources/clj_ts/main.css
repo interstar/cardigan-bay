@@ -249,6 +249,15 @@ button:hover {
 
 }
 
+.manual-copy {
+    background-color : #fafcf2;
+    padding: 5px;
+    margin: 2px;
+    border-radius: 10px;
+
+}
+
+
 .code {
     font-size : 0.8rem;
 }
