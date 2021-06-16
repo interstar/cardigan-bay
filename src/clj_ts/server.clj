@@ -152,8 +152,10 @@
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body (let [query (extract-query request)
-               result (execute card-server/pagestore-schema query nil nil)]
-           (json/write-str result))})
+               result (execute card-server/pagestore-schema query nil nil)
+               out (json/write-str result)]
+           out
+           )})
 
 
 

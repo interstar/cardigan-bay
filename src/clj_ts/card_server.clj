@@ -382,6 +382,20 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
 
 ;; GraphQL resolvers
 
+(defn resolve-text-search [context arguments value]
+  (let [{:keys [query_string]} arguments
+
+        res (pagestore/text-search (server-state)
+                                   (.all-pages (-> (server-state)
+                                                   :facts-db))
+                                   (re-pattern query_string))
+        out
+        (str "*Pages containing \" " query_string "\"*\n "
+             (apply str (map #(str "* [[" % "]]\n") res))) ]
+
+    {:result_text out}
+    ))
+
 (defn resolve-card
     "Not yet tested"
   [context arguments value]
@@ -460,6 +474,7 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
       (attach-resolvers {:resolve-source-page resolve-source-page
                          :resolve-page resolve-page
                          :resolve-card resolve-card
+                         :resolve-text-search resolve-text-search
                          })
       schema/compile))
 

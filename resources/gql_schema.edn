@@ -38,7 +38,15 @@
     :ip {:type String}
     :system_cards {:type (list :Card)}
 
-    }}}
+    }}
+
+  :SearchResult
+  {:description "Result of a search on the server. In Markdown and intended to be rendered to the Transcript"
+   :fields
+   {:result_text {:type String}
+    }}
+
+  }
 
 
  :queries
@@ -62,6 +70,12 @@
    :args {:page_name {:type (non-null String)}
           :hash {:type (non-null String)}}
    :resolve :resolve-card
-   }}
+   }
 
+  :text_search
+  {:type :SearchResult
+   :description "Search text within the PageStore"
+   :args {:query_string {:type String}}
+   :resolve :resolve-text-search}
+  }
  }

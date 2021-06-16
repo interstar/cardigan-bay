@@ -136,11 +136,36 @@
                :data new-data}))))
 
 
+(declare prepend-transcript!)
+(declare string->html)
+
+(defn search-text! [query_text]
+  (let [query (str "{\"query\" : \"query TextSearch  {
+text_search(query_string:\\\"" query_text "\\\"){     result_text }
+}\",  \"variables\":null, \"operationName\":\"TextSearch\"   }")]
+(.send XhrIo
+      "/clj_ts/graphql"
+      (fn [e]
+        (let [status (-> e .-target .getStatusText)
+              edn (-> e .-target .getResponseText .toString
+                      (#(.parse js/JSON %)) js->clj )
+              data (-> edn (get "data"))
+              result (-> data (get "text_search") (get "result_text"))
+              ]
+          (prepend-transcript! (str "Searching for " query_text) (string->html result))
+          ))
+      "POST"
+      query)
+    ))
+
 
 ;; Nav and History
 
 (defn go-new! [p-name]
-  (load-page! p-name (conj (-> @db :past) (-> @db :current-page))  []))
+  (do
+    (load-page! p-name (conj (-> @db :past) (-> @db :current-page))  [])
+    (swap! db assoc :mode :viewing)
+    ))
 
 (defn forward! [p-name]
   (load-page! p-name (conj (-> @db :past) (-> @db :current-page)) (pop (-> @db :future)) )
@@ -179,9 +204,10 @@
 (defn prepend-transcript! [code result]
   (do
     (swap! db assoc :transcript
-           (str "> " code "
+           (str "<p> > " code "
+<br/>
 " result "
-
+</p>
 " (-> @db :transcript)))
     (swap! db assoc :mode :transcript)) )
 
@@ -264,10 +290,13 @@
                )}
             "Execute"]
 
-
-
-           ]
-          ] ))))
+           [:button
+            {:class "big-btn"
+             :on-click
+             (fn []
+               (search-text! (-> @current str)))}
+            "Search"]
+           ]]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -549,12 +578,17 @@ NO BOILERPLATE FOR EMBED TYPE " type
   (not= "" (string/trim (get card "source_data")))
   )
 
-(defn card->html [card]
-  (-> (get card "server_prepared_data")
+(defn string->html [s]
+  (-> s
       (double-comma-table)
       (md/md->html)
       (auto-links)
-      (double-bracket-links)))
+      (double-bracket-links)
+      ))
+
+(defn card->html [card]
+  (-> (get card "server_prepared_data")
+      (string->html)))
 
 
 
@@ -711,6 +745,16 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
 
   )
 
+(defn on-click-for-links [e]
+  (let [tag (-> e .-target)
+                    classname (.getAttribute tag "class")
+                    data (.getAttribute tag "data")
+                    x (-> @db :dirty)]
+
+                (if (= classname "wikilink")
+                  (go-new! data)))
+  )
+
 (defn one-card [card]
   (let [
         inner-html
@@ -775,14 +819,8 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
                    :display (-> @state2 :toggle)}}
           [:div
            {:class "card"
-            :on-click
-            (fn [e]
-              (let [tag (-> e .-target)
-                    classname (.getAttribute tag "class")
-                    data (.getAttribute tag "data")
-                    x (-> @db :dirty)]
-                (if (= classname "wikilink")
-                  (go-new! data))))
+            :on-click on-click-for-links
+
             }
 
            inner ]]
@@ -826,10 +864,13 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
    ])
 
 
+
 (defn transcript []
-  [:div {:class "transcript"}
-   [:pre
-    (-> @db :transcript)]
+  [:div {:class "transcript"
+         :dangerouslySetInnerHTML {:__html (-> @db :transcript)}
+         :on-click on-click-for-links
+
+         }
    ])
 
 (defn main-container []
