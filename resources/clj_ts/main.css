@@ -263,13 +263,13 @@ button:hover {
 }
 
 .calculated-out {
-    font-size : 0.8rem;
+    font-size : 1rem;
 }
 
 .results {
-    font-size : 0.8rem;
+    font-size : 1rem;
 }
 
 .workspace-note {
-    font-size : 0.4rem;
+    font-size : 0.8rem;
 }
