@@ -120,7 +120,7 @@ API : " oembed " URL : " url)
    data
    (str
     "<div class=\"embed_div\"><div class='bandcamp-embedded'>
-<iframe style='border: 0; width: 550px; height: 555px;'
+<iframe style='border: 0; width: 550px; height: 655px;'
 src='https://bandcamp.com/EmbeddedPlayer/album=" id "/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/'
 seamless><a href='" url "'>" description "</a></iframe></div></div>"
     )

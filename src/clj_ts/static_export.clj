@@ -34,6 +34,8 @@
     (condp = (:render_type card)
       :manual-copy
       (str "<div class='manual-copy'>" server-prepared "</div>")
+      :raw
+      (str "<pre>" server-prepared  "</div>")
 
       server-prepared))
   )
