@@ -16,14 +16,19 @@ We treat it as plain-text and **don't** interpret it as markdown.
 We will be adding more types over time, but the current types are 
 
 * **:markdown** - this is also the default if a type isn't specified
-* **:raw**
-* Embedded Clojure code. See [[EvalExamples]] for how this works.
-  * **:evalraw** (eval Clojure and treat the result it produces as "raw")
-  * **:evalmd** (eval Clojure and treat the result it produces as "markdown")
-* **:system** - System cards contain calls to built-in system functions. At the moment these include queries such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]] and  [[OrphanPages]].
-* **:embed** - See [[EmbeddingExamples]] for examples of cards that embed media from other sites.
-* **:bookmark** - These are usually created created by posting an external link to CardiganBay. They are for easily capturing references to external resources and putting them into the wiki. See [[BookmarkingInstructions]] for full details.
-* **:transclude** (experimental) - Transclusion is still **very experimental** and shouldn't be relied on yet. It's **buggy**, and doesn't do everything we want. But you can see a [[TransclusionExample]]
+* **:raw** - don't run the text through markdown or other preprocessing
+* **:workspace** - a ClojureScript embedded workspace. The card contains the default code that can be modified by the user and executed on the client. See [[WorkspaceExample]]. 
+* **:embed** - See [[EmbeddingExamples]] for examples of cards that embed media from other sites. Included embed types are video (YouTube and Vimeo), music (BandCamp and SoundCloud), Tweets, RSS feeds, CodePen and generic OEmbed from any site that supports it.
+* **:system** - System cards contain calls to built-in system functions. At the moment these include full text search (see [[SearchPage]] for an example), and the queries on metadata such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]], [[OrphanPages]] and [[RecentChanges]].
+* **:evalraw** and **:evalmd** - Clojure code that is run on the server and whose output is rendered either as "raw" or through the Markdown processor.(See [[EvalExamples]])
+
+
+### Experimental Unsupported
+
+There's some work-in progress towards these types, but they are not guaranteed to work or stay 
+
+* **:transclude** - Transclusion is still **very experimental** and shouldn't be relied on yet. It's **buggy**, and doesn't do everything we want. But you can see a [[TransclusionExample]]
+* **:network** - Beginning investigations into drawing a navigable network diagram of pages. Not automatically generated, hand-written. This format is not suitable for writing by humans yet. And probably won't stay constant, so don't use. [[NetworkDiagramExample]]
 
 ----
 
@@ -32,10 +37,8 @@ We will be adding more types over time, but the current types are
 These are currently in the "ideation" phase. They seem like cool ideas, and will be important functionality but they aren't fully specced, let alone implemented. If you are impatient to see them, get involved :-)
 
 * *:hiccup* (complex html represented in hiccup format)
-* *:transclude* (working, fully functional, including transclusion of individual cards. Or from other Cardigan Bay instances.)
 * *:gallery* of images
-* *:network_diagram* / mind-map. I had something like this back in an earlier product, SdiDesk. And network cards would behave similarly.
 * *:outline*
 * *:spreadsheet* (grid data with embeddable clojure functionality)
-* *:widget* (full embedded interactive widgets running in clientside clojurescript.)
+* *:widget* (full embedded interactive widgets written in clientside clojurescript.)
 

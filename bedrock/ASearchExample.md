@@ -7,4 +7,4 @@ See the next card for an example that searches this wiki for the words "function
 :system
 
 {:command :search
- :query "image"}
+ :query "wiki"}
