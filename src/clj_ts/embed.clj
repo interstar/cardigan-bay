@@ -32,10 +32,12 @@
 
 (defn generic-embed [data inner caption-renderer]
   (let [title (:title data)
-        caption (:caption data)]
+        caption (:caption data)
+        extra-link (:extra-link data)]
     (str
 
-     (if  title (str "<div><h3>" title "</h3></div>") "")
+     (if title (str "<div><h3>" title "</h3></div>") "")
+     (if extra-link (str "<div>" extra-link "</div>") "")
      "<div class=\"embed_div\">"
 
      inner
@@ -133,7 +135,9 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
         {:keys [status headers body error]}
         @(http/get api)]
     (generic-embed
-     data
+     (conj {:extra-link (str "<a href='http://threadviewer.com/"
+                             (-> url ((fn [s] (string/split s #"/"))) last)
+                             "'>ThreadView</a>") } data)
      (if error
        (str "Failed, exception: " error)
        (do
