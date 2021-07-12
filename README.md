@@ -6,8 +6,9 @@ CardiganBay is a new wiki-engine which aims to combine the best ideas from class
 
 ![How it looks](http://sdi.thoughtstorms.info/wp-content/uploads/2021/06/Screenshot-from-2021-06-16-01-24-59-1024x746.png)
 
-### CardiganBay motivations
+[Easy Install and Introduction on YouTube](https://www.youtube.com/watch?v=H7_THeK9EBw)
 
+### CardiganBay motivations
 
 I need a new wiki-engine that can 
 * Be the engine to manage and maintain my long-running, publicly facing, and somewhat in need of cleaning up [ThoughtStormsWiki](http://thoughtstorms.info/view/ThoughtStorms).
