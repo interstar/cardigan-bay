@@ -51,6 +51,8 @@ I need a new wiki-engine that can
 
 ## Quick Start (for Users)
 
+*[See also on YouTube in video form](https://www.youtube.com/watch?v=H7_THeK9EBw)*
+
 Make sure you have Java on your machine. 
 
 Go to https://github.com/interstar/cardigan-bay/releases and download the latest zip file. 
