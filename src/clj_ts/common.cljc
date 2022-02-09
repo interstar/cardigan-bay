@@ -19,13 +19,14 @@
        (string/replace-first c rex "")] ) ))
 
 
-(defn package-card [id, source-type, render-type, source-data server-prepared-data]
+(defn package-card [id source-type render-type source-data server-prepared-data user_authored? ]
   {:source_type source-type
    :render_type render-type
    :source_data source-data
    :server_prepared_data server-prepared-data
    :id id
-   :hash (-> source-data (edn-hash) (uuid5))})
+   :hash (-> source-data (edn-hash) (uuid5))
+   :user_authored? user_authored?})
 
 
 (defn card->raw [{:keys [id source_type source_data]}]

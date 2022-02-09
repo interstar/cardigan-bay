@@ -173,42 +173,48 @@
 
 
 
-(defn ldb-query->mdlist-card [i title result qname f]
+(defn ldb-query->mdlist-card [i title result qname f user_authored?]
   (let [items (apply str (map f result))
         body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
-    (common/package-card i :system :markdown body body)))
+    (common/package-card i :system :markdown body body user_authored?)))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
 
-(defn system-card [i data]
-  (let [info (read-string data)
+(defn system-card [i data user_authored?]
+  (let [d0 (println "AAABBB " i)
+        d1 (println data)
+        d2 (println "-----------------------------------")
+        info (read-string data)
         cmd (:command info)
         db (-> (server-state) :facts-db)
         ps (-> (server-state) :page-store)]
 
     (condp = cmd
       :allpages
-      (ldb-query->mdlist-card i "All Pages" (.all-pages db) :allpages item1)
+      (ldb-query->mdlist-card i "All Pages" (.all-pages db) :allpages item1 user_authored?)
 
       :alllinks
       (ldb-query->mdlist-card
        i "All Links" (.all-links db) :alllinks
-       (fn [[a b]] (str "[[" a "]],, &#8594;,, [[" b "]]\n")))
+       (fn [[a b]] (str "[[" a "]],, &#8594;,, [[" b "]]\n"))
+       user_authored?)
 
       :brokenlinks
       (ldb-query->mdlist-card
        i "Broken Internal Links" (.broken-links db) :brokenlinks
-       (fn [[a b]] (str "[[" a "]],, &#8603;,, [[" b "]]\n")))
+       (fn [[a b]] (str "[[" a "]],, &#8603;,, [[" b "]]\n"))
+       user_authored?)
 
       :orphanpages
       (ldb-query->mdlist-card
-       i "Orphan Pages" (.orphan-pages db) :orphanpages item1)
+       i "Orphan Pages" (.orphan-pages db) :orphanpages item1
+       user_authored?)
 
       :recentchanges
       (let [src (.read-recentchanges ps) ]
         (common/package-card
-         "recentchanges" :system :markdown src src))
+         "recentchanges" :system :markdown src src user_authored?))
 
       :search
       (let [res (pagestore/text-search (server-state) (.all-pages db)
@@ -218,7 +224,7 @@
                  (apply str (map #(str "* [[" % "]]\n") res))) ]
 
 
-        (common/package-card (str "search " i) :system :markdown out out))
+        (common/package-card (str "search " i) :system :markdown out out user_authored?))
 
       :about
       (let [sr (str "### System Information
@@ -232,21 +238,21 @@
 
 
                     )]
-        (common/package-card i :system :markdown sr sr))
+        (common/package-card i :system :markdown sr sr user_authored?))
 
       ;; not recognised
       (let [d (str "Not recognised system command in " data  " -- cmd " cmd )]
-        (common/package-card i :system :raw d d )))
+        (common/package-card i :system :raw d d user_authored?)))
     ))
 
 
-(defn transclude [i data]
+(defn transclude [i data user_authored?]
   (let [{:keys [from process]} (read-string data)
         raw (-> from (#(pagestore/read-page (server-state) %)) )
         return-type (if (nil? process) :markdown process)
         head (str "*Transcluded from [[" from "]]* \n")
         body (str head raw)]
-    (common/package-card i :transclude return-type body body)))
+    (common/package-card i :transclude return-type body body user_authored?)))
 
 (defn bookmark-card [data]
   (let [{:keys [url timestamp]} (read-string data)]
@@ -261,11 +267,18 @@ Bookmarked " timestamp  ",, <" url ">
         (-> ns first rest)
         :otherwise (afind n (rest ns))))
 
-(defn network-card [i data for-export?]
+(defn network-card [i data for-export? user_authored?]
   (try
     (let [nodes (-> data read-string :nodes)
           arcs (-> data read-string :arcs)
           links (-> data read-string :links)
+          maxit (fn [f i xs]
+                  (apply f (map  #(nth % i) xs ) ))
+          maxx (maxit max 1 nodes)
+          maxy (maxit max 2 nodes)
+          minx (maxit min 1 nodes)
+          miny (maxit min 2 nodes)
+          d0 (println "network max and mins " maxx ", " maxy " - " minx ", " miny )
           node (fn [[n x y]]
                  (let [[node-target node-label] (get links n [n n])
                        inner
@@ -292,7 +305,8 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
   stroke-width=\"2\" marker-end=\"url(#arrowhead)\"/>")
                       )
                     "")))
-          svg (str "<svg width=\"500\" height=\"400\">
+          svg (str "<svg width=\"500\" height=\"400\"
+viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
 <defs>
     <marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\"
     refX=\"-5\" refY=\"3.5\" orient=\"auto\">
@@ -306,58 +320,58 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
                           (map node nodes )
                           )
 
-                   "</svg>")
-          ]
+                   "</svg>")]
 
-      (common/package-card i :network :markdown data svg)
+      (common/package-card i :network :markdown data svg user_authored?)
       )
-    (catch Exception e (common/package-card i :network :markdown data (str e)))
+    (catch Exception e (common/package-card i :network :markdown data (str e) user_authored?))
     )
   )
 
 (defn process-card
-  [i card for-export?]
+  [i card for-export?  user_authored?]
   (let [[source-type, data] (common/raw-card->type-and-data card)]
     (condp = source-type
-      :markdown (common/package-card i source-type :markdown data data)
-      :manual-copy (common/package-card i source-type :manual-copy data data)
+      :markdown (common/package-card i source-type :markdown data data user_authored?)
+      :manual-copy (common/package-card i source-type :manual-copy data data user_authored?)
 
-      :raw (common/package-card i source-type :raw data data)
+      :raw (common/package-card i source-type :raw data data user_authored?)
       :evalraw
-      (common/package-card i :evalraw :raw data (server-eval data))
+      (common/package-card i :evalraw :raw data (server-eval data) user_authored?)
 
       :evalmd
-      (common/package-card i :evalmd :markdown data (server-eval data))
+      (common/package-card i :evalmd :markdown data (server-eval data) user_authored?)
 
       :workspace
-      (common/package-card i source-type :workspace data data)
+      (common/package-card i source-type :workspace data data user_authored?)
 
       :system
-      (system-card i data)
+      (system-card i data user_authored?)
 
       :embed
       (common/package-card i source-type :html data
                            (embed/process data for-export?
                                           (fn [s] (common/md->html s))
-                                          (server-state)))
+                                          (server-state))
+                           user_authored?)
 
       :transclude
       (transclude i data)
 
       :bookmark
-      (common/package-card i :bookmark :markdown data (bookmark-card data))
+      (common/package-card i :bookmark :markdown data (bookmark-card data) user_authored?)
 
 
       :network
       (network-card i data for-export?)
 
       ;; not recognised
-      (common/package-card i source-type source-type data data)
+      (common/package-card i source-type source-type data data user_authored?)
       )))
 
-(defn raw->cards [raw for-export?]
+(defn raw->cards [raw for-export? user-authored?]
   (let [cards (string/split  raw #"----")]
-    (map process-card (iterate inc 0) cards (repeat for-export?))))
+    (map process-card (iterate inc 0) cards (repeat for-export?) (repeat user-authored?))))
 
 
 (declare backlinks)
@@ -365,13 +379,13 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
 (defn load->cards [page-name]
   (-> (server-state) .page-store
       (.read-page page-name)
-      (raw->cards false))
+      (raw->cards false true))
   )
 
 (defn load->cards-for-export [page-name]
   (-> (server-state) .page-store
       (.read-page page-name)
-      (raw->cards true)))
+      (raw->cards true true)))
 
 (defn generate-system-cards [page-name]
  [(backlinks page-name)] )
@@ -398,7 +412,7 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
 
 (defn resolve-card
     "Not yet tested"
-  [context arguments value]
+  [context arguments value user_authored?]
   (let [{:keys [page_name hash]} arguments
         ps (.page-store (server-state))]
     (if (.page-exists? ps page_name)
@@ -406,7 +420,8 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
           (common/find-card-by-hash hash))
       (common/package-card 0 :markdown :markdown
                            (str "Card " hash " doesn't exist in " page_name)
-                           (str "Card " hash " doesn't exist in " page_name)))))
+                           (str "Card " hash " doesn't exist in " page_name)
+                           user_authored?) )))
 
 (defn resolve-source-page [context arguments value]
   (let [{:keys [page_name]} arguments
@@ -440,6 +455,7 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
        :site_url site-url
        :port port
        :ip ip
+       :public_root (str site-url "/view/")
        :cards (load->cards page_name)
        :system_cards (generate-system-cards page_name)
        }
@@ -448,7 +464,8 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
        :site_url site-url
        :port port
        :ip ip
-       :cards (raw->cards "PAGE DOES NOT EXIST" :false)
+       :public_root (str site-url "/view/")
+       :cards (raw->cards "PAGE DOES NOT EXIST" false false)
        :system_cards
        (let [sim-names (map
                         #(str "\n- [[" % "]]")
@@ -458,7 +475,7 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
              [(common/package-card
                :similarly_name_pages :system :markdown ""
                (str "Here are some similarly named pages :"
-                    (apply str sim-names)))]))
+                    (apply str sim-names)) false)]))
        })))
 
 
@@ -508,19 +525,22 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
       (common/package-card
        :backlinks :system :markdown
        "Backlinks Not Available"
-       "Backlinks Not Available")
+       "Backlinks Not Available"
+       false)
 
       (= bl '())
       (common/package-card
        :backlinks :system :markdown
        "No Backlinks"
-       "No Backlinks")
+       "No Backlinks"
+       false)
 
       :otherwise
       (ldb-query->mdlist-card
        "backlinks" "Backlinks" bl
        :calculated
-       (fn [[a b]] (str "* [[" a "]] \n"))))))
+       (fn [[a b]] (str "* [[" a "]] \n"))
+       false))))
 
 
 

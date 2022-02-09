@@ -251,7 +251,7 @@ and data
       (f url :youtube "URL GOES HERE")
 
       (string/includes? url "soundcloud")
-      (f url :twitter "URL GOES HERE")
+      (f url :soundcloud "URL GOES HERE")
 
       (string/includes? url "bandcamp")
       (f url :bandcamp "URL GOES HERE")

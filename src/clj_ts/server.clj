@@ -170,6 +170,7 @@
 
 (defn move-card-handler [request]
   (let [ps (:params request)]
+    (println "AAAA " ps)
     (card-server/move-card (:from ps) (:hash ps) (:to ps))
     {:status 200
      :headers {"Content-Type" "text/html"}
@@ -181,14 +182,15 @@
 </head>")}))
 
 (defn reorder-card-handler [request]
-  (let [ps (:params request)
-        page-name (:page ps)
-        hash (:hash ps)
-        direction (:direction ps)]
+  (let [form-body (-> request :body .bytes slurp edn/read-string)
+        page-name (:page form-body)
+        hash (:hash form-body)
+        direction (:direction form-body)]
 
     (card-server/reorder-card page-name hash direction)
-    {:status 303
-     :headers {"Location" (str  "/view/" page-name)}}))
+
+    {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}
+    ))
 
 (defn bookmarklet-handler [request]
   (let [url (-> request :params :url)
@@ -350,6 +352,8 @@
   ["-e" "--export-dir DIR" "Export Directory"
    :default "./bedrock/exported/"
    :parse-fn str]
+
+
 
   ])
 

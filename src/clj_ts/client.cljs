@@ -136,6 +136,25 @@
                :data new-data}))))
 
 
+(defn card-reorder! [page-name hash direction]
+
+  (.send XhrIo
+         "/api/reordercard"
+         (fn [e]
+
+           (go
+             (<! (timeout 200))
+
+             (reload!)
+             (r/force-update-all)))
+         "POST"
+         (pr-str {:page page-name
+                  :hash hash
+                  :direction direction}))
+  )
+
+
+
 (declare prepend-transcript!)
 (declare string->html)
 
@@ -603,13 +622,26 @@ NO BOILERPLATE FOR EMBED TYPE " type
                       (swap! state #(conj % {:toggle "none"})))))]
     (fn [card]
       [:div {:class :card-meta}
-       [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
-        (if (= (-> @state :toggle) "none")
-          [:img {:src "/icons/eye.png"}]
-          [:img {:src "/icons/eye-off.png"}]
-          )
+         [:div
+          [:span {:on-click (fn [e] (card-reorder!
+                                       (-> @db :current-page)
+                                       (get card "hash")
+                                       "up"))}
+           [:img {:src "/icons/chevrons-up.png"}]
+           ]
+          [:span {:on-click (fn [e] (card-reorder!
+                                       (-> @db :current-page)
+                                       (get card "hash")
+                                       "down"))}
+           [:img {:src "/icons/chevrons-down.png"}]]
 
-        ]
+          [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
+           (if (= (-> @state :toggle) "none")
+             [:img {:src "/icons/eye.png"}]
+             [:img {:src "/icons/eye-off.png"}]
+             )
+
+           ]]
        [:div {:id meta-id :style {:spacing-top "5px" :display (-> @state :toggle)
                                   }}
         [:div [:h4 "Card Bar"]]
@@ -627,21 +659,7 @@ NO BOILERPLATE FOR EMBED TYPE " type
           [:input { :name "from" :type "hidden" :value (-> @db :current-page )}]
           [:img {:src "/icons/send.png"}]  [:input { :type "submit" :value "Send"}]
           ]
-         [:form {:action "/api/reordercard"}
-          [:input {:name "direction" :type "hidden" :value "up"}]
-          [:input {:name "page" :type "hidden" :value (-> @db :current-page)}]
-          [:input { :name "hash" :type "hidden" :value (get card "hash")}]
-          [:img {:src "/icons/chevrons-up.png"}]
-          [:input {:type "submit" :value "Up"}]]
-         [:form {:action "/api/reordercard"}
-          [:input {:name "direction" :type "hidden" :value "down"}]
-          [:input { :name "hash" :type "hidden" :value (get card "hash")}]
-          [:input {:name "page" :type "hidden" :value (-> @db :current-page)}]
-          [:img {:src "/icons/chevrons-down.png"}]
-          [:input {:type "submit" :value "Down"}]]
          ]
-
-
         ]
        ])))
 
@@ -926,7 +944,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
        "Transcript"
        (-> @db :current-page))
        [:span {:class "tslink"}
-        [:a {:href (str "http://thoughtstorms.info/view/" (-> @db :current-page))} "(TS)" ]] ]
+        [:a {:href (str (-> @db :site-url) "/view/" (-> @db :current-page))} "(public)" ]] ]
 
       [:div [tool-bar]]
       [main-container]]
