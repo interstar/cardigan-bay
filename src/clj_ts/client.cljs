@@ -153,6 +153,21 @@
                   :direction direction}))
   )
 
+(declare go-new!)
+
+(defn card-send-to-page! [page-name hash new-page-name]
+
+  (.send XhrIo
+         "/api/movecard"
+         (fn [e]
+           (go
+             (<! (timeout 200))
+             (go-new! new-page-name)))
+         "POST"
+         (pr-str {:from page-name
+                  :to new-page-name
+                  :hash hash}))
+  )
 
 
 (declare prepend-transcript!)
@@ -610,16 +625,26 @@ NO BOILERPLATE FOR EMBED TYPE " type
       (string->html)))
 
 
+(defn send-to-input-box [value]
+  [:input {:type "text"
+           :id "sendto-inputbox"
+           :value @value
+          :on-change #(reset! value (-> % .-target .-value))}])
+
 
 
 (defn card-bar [card]
   (let [meta-id  (str "cardmeta" (get card "hash") )
         state (r/atom {:toggle "none"})
+        sendval (r/atom "")
         toggle! (fn [e]
                   (do
                     (if (= (-> @state :toggle) "none")
                       (swap! state #(conj % {:toggle "block"}) )
-                      (swap! state #(conj % {:toggle "none"})))))]
+                      (swap! state #(conj % {:toggle "none"})))))
+
+        ]
+
     (fn [card]
       [:div {:class :card-meta}
          [:div
@@ -652,12 +677,19 @@ NO BOILERPLATE FOR EMBED TYPE " type
          [:span (get card "render_type")]]
 
         [:div
-         [:form {:action "/api/movecard"}
+         [:span
           "Send to Another Page : "
-          [:input { :name "to"}]
-          [:input { :name "hash" :type "hidden" :value (get card "hash")}]
-          [:input { :name "from" :type "hidden" :value (-> @db :current-page )}]
-          [:img {:src "/icons/send.png"}]  [:input { :type "submit" :value "Send"}]
+          [send-to-input-box sendval]
+
+          [:input { :name "hash" :id "sendhash" :type "hidden" :value (get card "hash")}]
+          [:input { :name "from" :id "sendcurrent" :type "hidden" :value (-> @db :current-page )}]
+          [:img {:src "/icons/send.png"}]
+          [:button {:on-click
+                    (fn [e]
+                      (card-send-to-page!
+                       (-> @db :current-page)
+                       (get card "hash")
+                       @sendval))}  "Send"]
           ]
          ]
         ]
@@ -954,7 +986,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
      [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
      [:span [:a {:href "/api/system/db"} "DB"] " || "]
      [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
-     "(c) Phil Jones 2020  || "
+     "(c) Phil Jones 2020-2022  || "
      [:span "IP: "(str (-> @db :ip) ) " || "]
      [:a {:href
           (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]])

@@ -169,24 +169,22 @@
                 :headers {"Content-Type" "image/png"}})))
 
 (defn move-card-handler [request]
-  (let [ps (:params request)]
-    (println "AAAA " ps)
-    (card-server/move-card (:from ps) (:hash ps) (:to ps))
+  (let [form-body (-> request :body .bytes slurp edn/read-string)
+        page-name (:from form-body)
+        hash (:hash form-body)
+        new-page-name (:to form-body)]
+    (println "Moving card " hash " on " page-name " to " new-page-name)
+    (card-server/move-card page-name hash new-page-name)
     {:status 200
      :headers {"Content-Type" "text/html"}
-     :body (str
-            "<head>
-  <meta http-equiv=\"Refresh\" content=\"0; URL=/view/"
-(:to ps)
-"\">
-</head>")}))
+     :body "thank you"}))
 
 (defn reorder-card-handler [request]
   (let [form-body (-> request :body .bytes slurp edn/read-string)
         page-name (:page form-body)
         hash (:hash form-body)
         direction (:direction form-body)]
-
+    (println "Reordering card " hash " " direction)
     (card-server/reorder-card page-name hash direction)
 
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}
