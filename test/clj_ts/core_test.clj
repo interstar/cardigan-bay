@@ -26,11 +26,11 @@
 (deftest raw-and-cards
   (testing "raw to card two way conversion"
     (let [r1 "hello teenage america"
-          [t1 d1] (common/raw-card->type-and-data r1)
+          [t1 d1] (common/raw-card-text->raw-card-map r1)
           r2 "
 :unusual
 hello teenage america"
-          [t2 d2] (common/raw-card->type-and-data r2)
+          [t2 d2] (common/raw-card-text->raw-card-map r2)
           c1 (common/package-card 1 t1 t1 d1 d1)
           c2 (common/package-card 2 t2 t2 d2 d2)]
       (is (= t1 :markdown))
