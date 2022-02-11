@@ -9,7 +9,7 @@
 
 ;; Cards
 
-(defn raw-card->type-and-data [c]
+(defn raw-card-text->raw-card-map [c]
   (let [card (string/trim c)
         rex #"^\s+:(\S+)" ]
     (if
@@ -162,7 +162,7 @@
 ;; Cards with commands
 
 (defn contains-commands? [card]
-  (let [[type data] (raw-card->type-and-data card)
+  (let [[type data] (raw-card-text->raw-card-map card)
         lines (string/split-lines data)]
     (if
         (some command-line/command-line? lines) true false)))
@@ -170,7 +170,7 @@
 
 
 (defn gather-all-commands [card]
-  (let [[type data] (raw-card->type-and-data card)
+  (let [[type data] (raw-card-text->raw-card-map card)
         lines (string/split-lines data)
         pseq (command-line/parsed-seq lines)
         ]

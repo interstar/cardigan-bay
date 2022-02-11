@@ -14,7 +14,7 @@
    [markdown.core :as md]
 
 
-   [clj-ts.common :refer [raw-card->type-and-data
+   [clj-ts.common :refer [raw-card-text->raw-card-map
                           double-comma-table
                           double-bracket-links auto-links ]]
    ;;[clj-ts.common :refer [card->html ]]
@@ -173,9 +173,13 @@
 (declare prepend-transcript!)
 (declare string->html)
 
-(defn search-text! [query_text]
-  (let [query (str "{\"query\" : \"query TextSearch  {
-text_search(query_string:\\\"" query_text "\\\"){     result_text }
+(defn search-text! [query-text]
+  (let [cleaned-query
+        (-> query-text
+            (#(replace % "\"" "" ))
+            (#(replace % "'" "")))
+        query (str "{\"query\" : \"query TextSearch  {
+text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 }\",  \"variables\":null, \"operationName\":\"TextSearch\"   }")]
 (.send XhrIo
       "/clj_ts/graphql"
@@ -186,7 +190,7 @@ text_search(query_string:\\\"" query_text "\\\"){     result_text }
               data (-> edn (get "data"))
               result (-> data (get "text_search") (get "result_text"))
               ]
-          (prepend-transcript! (str "Searching for " query_text) (string->html result))
+          (prepend-transcript! (str "Searching for " cleaned-query) (string->html result))
           ))
       "POST"
       query)

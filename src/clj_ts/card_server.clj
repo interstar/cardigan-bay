@@ -330,7 +330,7 @@ viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
 
 (defn process-card
   [i card for-export?  user-authored?]
-  (let [[source-type, data] (common/raw-card->type-and-data card)]
+  (let [[source-type, data] (common/raw-card-text->raw-card-map card)]
     (condp = source-type
       :markdown (common/package-card i source-type :markdown data data user-authored?)
       :manual-copy (common/package-card i source-type :manual-copy data data user-authored?)
@@ -403,8 +403,9 @@ viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
                                    (.all-pages (-> (server-state)
                                                    :facts-db))
                                    (re-pattern query_string))
+        header (str "#### " (count res) " pages containing \"" query_string "\"\n")
         out
-        (str "*Pages containing \" " query_string "\"*\n "
+        (str header
              (apply str (map #(str "* [[" % "]]\n") res))) ]
 
     {:result_text out}
