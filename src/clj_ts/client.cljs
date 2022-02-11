@@ -980,7 +980,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
        "Transcript"
        (-> @db :current-page))
        [:span {:class "tslink"}
-        [:a {:href (str (-> @db :site-url) "/view/" (-> @db :current-page))} "(public)" ]] ]
+        [:a {:href (str (-> @db :site-url) "/" (-> @db :current-page))} "(public)" ]] ]
 
       [:div [tool-bar]]
       [main-container]]
