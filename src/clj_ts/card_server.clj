@@ -356,7 +356,7 @@ viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
                            user-authored?)
 
       :transclude
-      (transclude i data)
+      (transclude i data user-authored?)
 
       :bookmark
       (common/package-card i :bookmark :markdown data (bookmark-card data) user-authored?)
