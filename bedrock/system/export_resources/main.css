@@ -62,6 +62,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 	width:100%;
 */
 
+}
+
 .page-header a {
     color:bb6e3e;
 }
@@ -118,8 +120,7 @@ blockquote {
 
 
 .main-container {
-   /*background-color:#cccccc;*/
-   background-color:#333366;
+   background-color:#cccccc;
 
    padding:2%;
 }
@@ -172,6 +173,13 @@ button:hover {
 .navbar {
     /*padding:20px;*/
     border:10px;
+    Background:dark-blue;
+}
+
+.pastebar {
+    border:10px;
+    background-color:#777788;
+    padding:10px;
 }
 
 #navinputbox {
@@ -203,6 +211,7 @@ button:hover {
 
 .footer {
     font-size: 1rem;
+    color : #333333;
 }
 
 .footer a {
@@ -212,6 +221,12 @@ button:hover {
 .breadcrumbs {
     font-size: 1rem;
 }
+
+
+.twin_pages {
+    color:#333333;
+}
+
 
 .embed_div {
     display: flex;
@@ -261,13 +276,13 @@ button:hover {
 }
 
 .calculated-out {
-    font-size : 0.8rem;
+    font-size : 1rem;
 }
 
 .results {
-    font-size : 0.8rem;
+    font-size : 1rem;
 }
 
 .workspace-note {
-    font-size : 0.4rem;
+    font-size : 0.8rem;
 }
