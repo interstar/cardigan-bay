@@ -1,0 +1,16 @@
+
+Release 0.7 Notes
+
+Breaking Changes
+
+* index.html template for exporter, and main.css should now be placed in system/export_resources/ (where "system" is the system directory)
+
+
+Non-breaking Changes
+
+* Reordering cards no longer reloads page 
+* Moving cards from one page to another no longer reloads page, and therefore preserves back button behaviour
+* Bug with quote marks in search terms now fixed
+* Text search now returns number of results
+
+
