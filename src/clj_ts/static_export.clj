@@ -75,6 +75,10 @@ Export Link Pattern :\t" (ep export-link-pattern) "
 Example Exported Link :\t" (.page-name->exported-link ex "ExamplePage")
          ))
 
+  (export-path [ex]
+    (-> ex .page-store .export-path)
+    )
+
   (page-name->export-file-path [ex page-name]
     (-> ex .page-store .export-path
         (.resolve (str page-name export-extension))))
@@ -88,12 +92,16 @@ Example Exported Link :\t" (.page-name->exported-link ex "ExamplePage")
   (api-path [ex]
     (.resolve (-> ex .page-store .export-path) "api"))
 
+
+
   (load-template [ex]
     (try
-      (let [tpl-path (.resolve (.system-path page-store) "index.html")]
+      (let [tpl-path (.resolve (.system-path page-store) "export_resources/index.html")
+            ]
         (println "Loading template
 " tpl-path)
-        (slurp (.toString tpl-path)))
+        (slurp (.toString tpl-path))
+        )
       (catch Exception e
         (do (println "ERROR FINDING TEMPLATE
 " e "
@@ -102,11 +110,25 @@ USING DEFAULT")
              [:html
               [:head]
               [:body
+               [:div "<!-- NOTE :: Cardigan Bay couldn't find custom template, using hardwired default -->"]
                [:div {:class "navbar"}]
                [:div
                 [:h1 "{{page-title}}"]]
                [:div
                 "{{{page-main-content}}}"]]])))))
+
+  (load-main-css [ex]
+    (try
+      (let [css-path (.resolve (.system-path page-store) "export_resources/main.css")
+            ]
+        (println "Loading CSS
+" css-path)
+        (slurp (.toString css-path))
+        )
+      (catch Exception e
+        (do (println "ERROR FINDING CSS FILE " e "
+USING DEFAULT")
+            ("/* DEFAULT CSS IS EMPTY */")))))
 
   (export-media-dir [ex]
     (let [from-stream (.media-files-as-new-directory-stream page-store)
@@ -134,6 +156,15 @@ USING DEFAULT")
         link-fn (fn [p-name]
                   (str (:site-url server-state) p-name)) ]
     (spit (.toString rc-rss) (card-server/rss-recent-changes link-fn))
+    ))
+
+(defn export-main-css [server-state main-css]
+  (let [
+        css-path (.resolve (-> server-state :page-exporter .export-path)  "main.css" )]
+    (println (str "Exporting main.css to " css-path))
+    (try
+      (spit (.toString css-path) main-css)
+      (catch Exception e (println "Something went wrong ... " e)))
     ))
 
 (defn export-page [page-name server-state tpl]
@@ -167,11 +198,11 @@ USING DEFAULT")
 
 
 
-
 (defn export-all-pages [server-state]
   (if (= :not-available (.all-pages server-state))
     :not-exported
     (let [tpl (-> server-state :page-exporter .load-template)
+          css (-> server-state :page-exporter .load-main-css)
           all   (.all-pages server-state)
           a2
           (filter
@@ -193,6 +224,8 @@ USING DEFAULT")
         )
       (println "Export recentchanges rss")
       (export-recentchanges-rss server-state)
+      (println "Export main.css")
+      (export-main-css server-state css)
       (println "Exporting media")
       (.export-media-dir (:page-exporter server-state))
       )))
