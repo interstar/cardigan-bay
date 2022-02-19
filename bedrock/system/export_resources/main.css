@@ -1,21 +1,21 @@
+/* CSS for system/main.css */
+
 body {
     font-family: serif;
     font-size: 1.6rem;
 
-
-    overflow-wrap: break-word;                                                    +    word-wrap: break-word;
-
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 
     line-height: 1.618;
     max-width: 48em;
     margin: auto;
-    background-color: #f9f9f9;
+
     padding: 13px;
 
 
-   /* background-color:#cccccc;*/
-    background-color:#333366;
-    color: #eeeeee;
+    background-color:#ddddee;
+    color: #333333;
 
 }
 
@@ -62,6 +62,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 	width:100%;
 */
 
+.page-header a {
+    color:bb6e3e;
 }
 
 .headerbar a {color:black;}
