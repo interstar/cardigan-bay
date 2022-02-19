@@ -1,16 +1,18 @@
+/*  CSS for running program */
+
+
 body {
     font-family: serif;
     font-size: 1.6rem;
 
-
-    overflow-wrap: break-word;                                                    +    word-wrap: break-word;
-
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 
     line-height: 1.618;
     max-width: 48em;
     margin: auto;
     color: #4a4a4a;
-    background-color: #f9f9f9;
+
     padding: 13px;
 
 
@@ -214,6 +216,12 @@ button:hover {
 .breadcrumbs {
     font-size: 1rem;
 }
+
+
+.twin_pages {
+    color:#333333;
+}
+
 
 .embed_div {
     display: flex;
