@@ -12,5 +12,5 @@ Non-breaking Changes
 * Moving cards from one page to another no longer reloads page, and therefore preserves back button behaviour
 * Bug with quote marks in search terms now fixed
 * Text search now returns number of results
-
+* Now added a Patterning card type with code from Patterning library
 
