@@ -43,6 +43,10 @@ The next cards have examples of :evalraw and :evalmd
    (str x ",," (* x x) ",," (* x x x) "\n")
 )
 
+
+----
+See [[PatterningExamples]]
+
 ----
 ### IMPORTANT
 

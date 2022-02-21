@@ -8,18 +8,23 @@
    [clj-ts.common :as common]
    [clj-ts.types :as types]
    [clj-ts.embed :as embed]
-
+   [clj-ts.patterning :as patterning]
 
    [com.walmartlabs.lacinia.util :refer [attach-resolvers]]
    [com.walmartlabs.lacinia.schema :as schema]
    [clojure.java.io :as io]
    [clojure.edn :as edn]
    [clj-rss.core :as rss]
+
+   [sci.core :as sci]
+
+
    ]
   (:import (java.net InetAddress)
            (java.net DatagramSocket))
 
   )
+
 
 
 
@@ -159,10 +164,10 @@
 (defn server-eval
   "Evaluate Clojure code embedded in a card. Evaluated on the server. Be careful."
   [data]
-  (let [code (read-string data)
+  (let [code data
         evaluated
         (try
-          (#(apply str (eval code)))
+          (#(apply str (sci/eval-string code)))
           (catch Exception e
             (let [sw (new java.io.StringWriter)
                   pw (new java.io.PrintWriter sw) ]
@@ -170,6 +175,8 @@
               (str "Exception :: " (.getMessage e) (-> sw .toString) ))))]
     evaluated
     ))
+
+
 
 
 
@@ -182,9 +189,7 @@
 
 
 (defn system-card [i data user-authored?]
-  (let [d0 (println "AAABBB " i)
-        d1 (println data)
-        d2 (println "-----------------------------------")
+  (let [
         info (read-string data)
         cmd (:command info)
         db (-> (server-state) :facts-db)
@@ -364,6 +369,10 @@ viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
 
       :network
       (network-card i data for-export? user-authored?)
+
+      :patterning
+      (common/package-card i :patterning :html data
+                           (patterning/one-pattern data) user-authored?)
 
       ;; not recognised
       (common/package-card i source-type source-type data data user-authored?)
