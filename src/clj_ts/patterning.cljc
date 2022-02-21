@@ -7,10 +7,10 @@
    ;; Patterning stuff
   [patterning.maths :as p-maths]
   [patterning.sshapes
-   :refer [->SShape to-triangles ]
+   :refer [->SShape to-triangles add-style]
    :as sshapes]
   [patterning.strings :as p-strings]
-  [patterning.groups :as groups]
+  [patterning.groups :as groups :refer [over-style]]
   [patterning.layouts :refer [framed clock-rotate stack grid-layout diamond-layout
                               four-mirror four-round nested-stack checked-layout
                               half-drop-grid-layout random-turn-groups h-mirror ring
@@ -22,7 +22,7 @@
    :as std]
    [patterning.library.turtle :refer [basic-turtle] :as turtle]
    [patterning.view :refer [make-txpt make-svg] :as p-views]
-   [patterning.color :refer [p-color remove-transparency] :as p-colors ]
+   [patterning.color :refer [p-color remove-transparency rand-col darker-color] :as p-colors ]
 
 
    ])
@@ -39,7 +39,7 @@
     ;; strings
 
     ;; groups
-
+    'over-style over-style
     ;; layouts
     'framed framed
     'clock-rotate clock-rotate
@@ -69,6 +69,8 @@
     'basic-turtle basic-turtle
     ;; colors
     'p-color p-color
+    'rand-col rand-col
+    'darker-color darker-color
     'remove-transparency remove-transparency}}
 )
 
@@ -81,13 +83,16 @@
           (sci/eval-string
            data
            {:namespaces patterning-ns })
-          svg (make-svg 400 400 pattern)
+          svg (make-svg 500 500 pattern)
+
           ]
 
       (str
        "<div>"
        svg
        "</div>
+</div>
+""
  <div class='calculated-out'>
 <pre>"
 
@@ -102,4 +107,8 @@
             pw (new java.io.PrintWriter sw) ]
         (.printStackTrace e pw)
         (println e)
-        (str "Exception :: " (.getMessage e) (-> sw .toString) )) )))
+        (str "<div class='calculated-out'><pre>
+Exception :: " (.getMessage e) "
+
+" (-> sw .toString) "</pre></div>"
+             ) ) )))
