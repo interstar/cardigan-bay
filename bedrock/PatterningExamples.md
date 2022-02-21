@@ -81,3 +81,25 @@ And by looking at the following examples.
   centre
   (poly 0 0 0.9 30 {:fill (p-color 150 255 140)})]
  (framed 11 (repeat corner) (repeat edge) centre))
+
+----
+:patterning
+
+(let
+ [orange (p-color 254 129 64)]
+ (stack
+  (square {:fill (p-color 50 80 100)})
+  (checked-layout
+   18
+   (cycle
+    [(clock-rotate
+      8
+      (drunk-line 10 0.1 {:stroke orange, :stroke-weight 1}))
+     (clock-rotate
+      5
+      (drunk-line 10 0.1 {:stroke orange, :stroke-weight 2}))])
+   (random-turn-groups
+    (repeat
+     [(->SShape
+       {:fill (p-color 230 180 90), :stroke orange}
+       [[-1 -1] [1 -1] [-1 1]])])))))

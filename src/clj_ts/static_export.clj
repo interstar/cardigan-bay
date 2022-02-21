@@ -35,7 +35,7 @@
       :manual-copy
       (str "<div class='manual-copy'>" server-prepared "</div>")
       :raw
-      (str "<pre>" server-prepared  "</div>")
+      (str "<pre>" server-prepared  "</pre>")
 
       server-prepared))
   )
@@ -45,11 +45,15 @@
   "HTML for an exported card"
   [card pe]
   (let [html
-        (-> (get card :server_prepared_data)
-            (common/double-comma-table)
-            (md/md-to-html-string)
-            (common/auto-links)
-            (double-bracket-links pe))]
+        (condp = (:source_type card)
+          :patterning
+          (:server_prepared_data card)
+
+          (-> (get card :server_prepared_data)
+              (common/double-comma-table)
+              (md/md-to-html-string)
+              (common/auto-links)
+              (double-bracket-links pe)))]
     (str "<div class=\"card-outer\">
 <div class=\"card\">
 " (card-specific-wrapper card html)
