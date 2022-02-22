@@ -103,3 +103,23 @@ And by looking at the following examples.
      [(->SShape
        {:fill (p-color 230 180 90), :stroke orange}
        [[-1 -1] [1 -1] [-1 1]])])))))
+
+----
+:patterning
+
+(defn a-round
+  [n style]
+  (clock-rotate
+     n (poly 0 0.5 0.4 n style)))
+
+(->
+ (let
+  [lc (p-color 220 140 180) fc (p-color 255 190 200 100)]
+  (grid-layout
+   4 
+   (iterate (partial scale 0.9) (a-round 9 {:stroke lc :fill fc})
+   )
+  )
+ )
+ h-reflect
+)

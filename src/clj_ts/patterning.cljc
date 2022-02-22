@@ -10,7 +10,8 @@
    :refer [->SShape to-triangles add-style]
    :as sshapes]
   [patterning.strings :as p-strings]
-  [patterning.groups :as groups :refer [over-style]]
+   [patterning.groups :as groups :refer [over-style scale translate translate-to
+                                         h-reflect v-reflect stretch rotate wobble reframe]]
   [patterning.layouts :refer [framed clock-rotate stack grid-layout diamond-layout
                               four-mirror four-round nested-stack checked-layout
                               half-drop-grid-layout random-turn-groups h-mirror ring
@@ -40,6 +41,15 @@
 
     ;; groups
     'over-style over-style
+    'scale scale
+    'translate translate
+    'translate-to translate-to
+    'h-reflect h-reflect
+    'v-reflect v-reflect
+    'stretch stretch
+    'rotate rotate
+    'wobble wobble
+    'reframe reframe
     ;; layouts
     'framed framed
     'clock-rotate clock-rotate
