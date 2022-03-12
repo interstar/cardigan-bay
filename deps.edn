@@ -59,7 +59,7 @@
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
 
     cljstache {:mvn/version "2.0.6"}
-    borkdude/sci {:mvn/version "0.2.4"}
+    org.babashka/sci {:mvn/version "0.3.2"}
 
     org.clojure/core.memoize {:mvn/version "1.0.236"}
 
