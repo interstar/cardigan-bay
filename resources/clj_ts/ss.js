@@ -4,21 +4,25 @@ class Node {
     this.id = eyed;
     this.x = ex;
     this.y = wy;
-    this.name = "" + this.id;
+    this.setLabel("   "+eyed+"   ");  
   }
 
   draw(isSelected) {
     if (isSelected) {
-        fill(124,180,180);
+        fill(124,220,220);
     } else {
-        fill(124);
+        fill(200);
     }
     stroke(30);
 
-    ellipse(this.x, this.y, 50, 35);
-    fill(0);
+    var wide = textWidth(this.getLabel())*1.1;
+    rect(this.x,this.y,wide,50);
+    rectMode(CENTER);
+    //ellipse(this.x, this.y, wide, 30);
     textAlign(CENTER, CENTER);
-    text(""+this.id, this.x, this.y);
+    
+    fill(0);
+    text(this.getLabel(), this.x, this.y);
   }
 
   hit(nx, ny) {
@@ -33,8 +37,18 @@ class Node {
     this.y = wy;
   }
   
-  setId(newId) {
-    this.id = newId;
+  setLabel(l) {
+    this.label = l;
+    console.log(this);
+  }
+  
+  getLabel() { 
+   
+    return this.label; 
+    }
+  
+  toEDN() {
+     return "[\"" + this.id + "\" \"" + this.getLabel() + "\" " + this.x + " " + this.y + "]\n";
   }
 }
 
@@ -99,17 +113,18 @@ class Network {
     }
   }
 
-  renameSelected(newID) {
+  renameSelected(newLabel) {
     var n = this.getNodeById(this.lastSelectedNode);
-    n.setId(newID);
-    this.selectedNode = newID;
+    n.setLabel(newLabel);
+    this.selectedNode = n.id;
+    console.log(n);
   }
 
   toEDN() {
     var s = "{:nodes [ \n";
     for (var i=0;i<this.nodes.length;i++) {
         var n = this.nodes[i];
-        s = s + "[\"" + n.id + "\" " + n.x + " " + n.y + "]\n";
+        s = s + n.toEDN() + "\n";
     }
     s = s + "] :arcs [\n";
     for (var i=0;i<this.arcs.length;i++) {
@@ -149,8 +164,14 @@ var network = new Network();
 
 var cnv;
 
+function updateEDN() {
+      var edn = network.scaledTo(600,500).toEDN();
+      console.log(edn);
+      document.getElementById("edn_text").innerHTML=edn;
+}
+
 function setup() {
-  cnv = createCanvas(600, 900);
+  cnv = createCanvas(500, 500);
   fill(124);
   stroke(30);
   textSize(16);
@@ -197,10 +218,8 @@ function setup() {
       }
       network.lastSelectedNode = network.selectedNode;
       network.selectedNode = -1;
-      
-      var edn = network.scaledTo(600,500).toEDN();
-      console.log(edn);
-      document.getElementById("edn_text").innerHTML=edn;
+      updateEDN();
+
     });
     
     nameInput = createInput();
@@ -210,6 +229,7 @@ function setup() {
     nameButton.position(nameInput.x + nameInput.width, 100);
     nameButton.mousePressed(function() {
         network.renameSelected(nameInput.value());
+        updateEDN();
     });
 
 
@@ -221,9 +241,9 @@ function draw() {
   push();
       strokeWeight(4);
       stroke(99,99,99);
-      rect(0,0,cnv.width,cnv.height);
+      rect(cnv.width/2,cnv.height/2,cnv.width,cnv.height);
       fill(bgcol);
-      rect(3,3,width-3,height-3);
+      rect(cnv.width/2,cnv.height/2,width-3,height-3);
   pop();
   
   network.draw();
