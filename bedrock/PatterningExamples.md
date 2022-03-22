@@ -14,7 +14,7 @@ And by looking at the following examples.
         (fn [n lc fc]
           (clock-rotate
            n (poly
-              0 0.5 0.2 n
+              0 0.3 0.2 n
               {:stroke lc
                :fill fc
                :stroke-weight 2})))        
@@ -52,7 +52,7 @@ And by looking at the following examples.
 (defn a-round
   [n style]
   (clock-rotate
-     n (poly 0 0.5 0.2 n style)))
+     n (poly 0 0.4 0.4 n style)))
 
 (let
  [rand-color
