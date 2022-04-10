@@ -18,6 +18,8 @@
 
    [sci.core :as sci]
 
+   [hiccup.core :refer [html]]
+
 
    ]
   (:import (java.net InetAddress)
@@ -267,6 +269,8 @@ Bookmarked " timestamp  ",, <" url ">
 
 ")))
 
+
+
 (defn afind [n ns]
   (cond (empty? ns) nil
         (= n (-> ns first first))
@@ -277,7 +281,8 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn network-card [i data for-export? user-authored?]
   (try
-    (let [nodes (-> data read-string :nodes)
+    (let [
+          nodes (-> data read-string :nodes)
           arcs (-> data read-string :arcs)
 
           maxit (fn [f i xs]
@@ -289,18 +294,26 @@ Bookmarked " timestamp  ",, <" url ">
 
           node (fn [[n label x y]]
                  (let [an-id (gensym)
-                       inner
-                       (str "<text id='" an-id  "' class='wikilink' data='" label "'  x='" x "' y='" (+ y 20)
-                            "' text-anchor=\"middle\" fill=\"black\">" label "</text>"
-                            ) ]
-                   (str "<ellipse cx='" x "' cy='" y "'
-stroke=\"green\" ry=\"20\" rx=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
-                        (if for-export?
-                          (str "<a href='./" label "'>"
-                               inner
-                               "</a>")
-                          inner
-                          ))))
+                       the-text [:text {:class "wikilink"
+                                        :data label
+                                        :x x :y (+ y 20)
+                                        :text-anchor "middle"
+                                        :fill "black"
+                                        } label]
+
+                       final-text
+                       (if for-export?
+                         [:a {:href label} the-text ]
+                         the-text
+                         )
+                       box [:circle {:cx x :cy y :r 20
+                                     :width 100 :height 20
+                                     :stroke "orange"
+                                     :stroke-width 2 :fill "yellow"}
+                            ]
+
+                       ]
+                   (html [:g {:id an-id} box final-text])))
           arc (fn [[n1 n2]]
                 (let
                     [a1 (afind n1 nodes)
@@ -309,8 +322,10 @@ stroke=\"green\" ry=\"20\" rx=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
                       (and a1 a2)
                     (let [[label x1 y1] a1
                           [label x2 y2] a2]
-                      (str  "<line x1='" x1 "' y1='" y1 "' x2='" x2 "' y2='" y2 "' stroke=\"#000\"
-  stroke-width=\"2\" marker-end=\"url(#arrowhead)\"/>")
+                      (html [:line {:x1 x1  :y1 y1 :x2 x2 :y2 y2
+                                    :stroke "#000" :stroke-width 2
+                                    :marker-end "url(#arrowhead)"}])
+
                       )
                     "")))
           svg (str "<svg width=\"500\" height=\"400\"

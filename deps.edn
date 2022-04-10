@@ -58,7 +58,7 @@
     clj-rss/clj-rss {:mvn/version "0.2.5"}
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
 
-    cljstache {:mvn/version "2.0.6"}
+    cljstache/cljstache {:mvn/version "2.0.6"}
     org.babashka/sci {:mvn/version "0.3.2"}
 
     org.clojure/core.memoize {:mvn/version "1.0.236"}
@@ -71,11 +71,13 @@
     com.h2database/h2 #:mvn{:version "1.4.196"},
     org.clojure/clojurescript #:mvn{:version "1.10.439"},
 
-    rum/rum
-    {:mvn/version "0.11.3",
-     :exclusions [cljsjs/react cljsjs/react-dom]},
-    ;http-kit #:mvn{:version "2.3.0"},
-    http-kit #:mvn{:version "2.4.0-alpha6"},
+
+    hiccup/hiccup #:mvn {:version "1.0.5"}
+
+
+
+                                        ;http-kit #:mvn{:version "2.3.0"},
+    http-kit/http-kit #:mvn{:version "2.4.0-alpha6"},
 
     ring/ring #:mvn{:version "1.7.1"},
     edna/edna
@@ -85,7 +87,7 @@
     org.clojure/java.jdbc #:mvn{:version "0.7.3"},
     org.clojure/tools.reader #:mvn{:version "1.3.2"},
     com.rpl/specter #:mvn{:version "1.0.4"},
-    cljs-react-material-ui
+    cljs-react-material-ui/cljs-react-material-ui
     {:mvn/version "0.2.50",
      :exclusions
      [org.clojure/clojure
