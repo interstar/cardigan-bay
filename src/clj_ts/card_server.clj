@@ -328,22 +328,15 @@ Bookmarked " timestamp  ",, <" url ">
 
                       )
                     "")))
-          svg (str "<svg width=\"500\" height=\"400\"
-viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
-<defs>
-    <marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\"
-    refX=\"-5\" refY=\"3.5\" orient=\"auto\">
-      <polygon points=\"-5 0, 0 3.5, -5 7\" />
-    </marker>
-  </defs>
-"
-                   (apply str
-                          (map arc arcs))
-                   (apply str
-                          (map node nodes )
-                          )
-
-                   "</svg>")]
+          svg (html [:svg {:width "500px" :height "400px"
+                           :viewBox (str "0 0 " (* 1.3 maxx) (* 1.3 maxy)) }
+                     [:defs [:marker {:id "arrowhead" :markerWidth "10" :markerHeight "7"
+                                      :refX "-5" :refY "3.5" :orient "auto"}
+                             [:polygon {:points "-5 0, 0 3.5, -5 7"}]]]
+                     (apply str (map arc arcs))
+                     (apply str (map node nodes))
+                     ])
+          ]
 
       (common/package-card i :network :markdown data svg user-authored?)
       )
