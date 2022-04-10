@@ -115,7 +115,7 @@
 ;; Rendering / special Markup
 
 (defn auto-links [text]
-    (string/replace text #"\s+(http(s)?://(\S))\s+"
+    (string/replace text #"\s+(http(s)?://(\S+))\s+"
                     (str "<a href=\"$1\">$1</span>")))
 
 (defn double-bracket-links [text]

@@ -157,6 +157,13 @@
 
 
 
+;; Useful for errors
+
+(defn exception-stack [e]
+  (let [sw (new java.io.StringWriter)
+        pw (new java.io.PrintWriter sw)]
+    (.printStackTrace e pw)
+    (str "Exception :: " (.getMessage e) (-> sw .toString) ))  )
 
 
 ;; Card Processing
@@ -168,11 +175,7 @@
         evaluated
         (try
           (#(apply str (sci/eval-string code)))
-          (catch Exception e
-            (let [sw (new java.io.StringWriter)
-                  pw (new java.io.PrintWriter sw) ]
-              (.printStackTrace e pw)
-              (str "Exception :: " (.getMessage e) (-> sw .toString) ))))]
+          (catch Exception e exception-stack))]
     evaluated
     ))
 
@@ -240,8 +243,6 @@
 **Site Url Root** ,, " (:site-url (server-state)) "
 **Export Dir** ,, " (.export-path ps) "
 **Number of Pages** ,, " (count (.all-pages db))
-
-
                     )]
         (common/package-card i :system :markdown sr sr user-authored?))
 
@@ -272,28 +273,30 @@ Bookmarked " timestamp  ",, <" url ">
         (-> ns first rest)
         :otherwise (afind n (rest ns))))
 
+
+
 (defn network-card [i data for-export? user-authored?]
   (try
     (let [nodes (-> data read-string :nodes)
           arcs (-> data read-string :arcs)
-          links (-> data read-string :links)
+
           maxit (fn [f i xs]
                   (apply f (map  #(nth % i) xs ) ))
-          maxx (maxit max 1 nodes)
-          maxy (maxit max 2 nodes)
-          minx (maxit min 1 nodes)
-          miny (maxit min 2 nodes)
-          d0 (println "network max and mins " maxx ", " maxy " - " minx ", " miny )
-          node (fn [[n x y]]
-                 (let [[node-target node-label] (get links n [n n])
+          maxx (maxit max 2 nodes)
+          maxy (maxit max 3 nodes)
+          minx (maxit min 2 nodes)
+          miny (maxit min 3 nodes)
+
+          node (fn [[n label x y]]
+                 (let [an-id (gensym)
                        inner
-                       (str "<text class='wikilink' data='" node-target "'  x='" x "' y='" (+ y 20)
-                            "' text-anchor=\"middle\" fill=\"black\">" node-label "</text>"
+                       (str "<text id='" an-id  "' class='wikilink' data='" label "'  x='" x "' y='" (+ y 20)
+                            "' text-anchor=\"middle\" fill=\"black\">" label "</text>"
                             ) ]
-                   (str "<circle cx='" x "' cy='" y "'
-stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
+                   (str "<ellipse cx='" x "' cy='" y "'
+stroke=\"green\" ry=\"20\" rx=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
                         (if for-export?
-                          (str "<a href='./" node-target "'>"
+                          (str "<a href='./" label "'>"
                                inner
                                "</a>")
                           inner
@@ -304,8 +307,8 @@ stroke=\"green\" r=\"20\" stroke-width=\"2\" fill=\"yellow\" />"
                      a2 (afind n2 nodes)]
                   (if
                       (and a1 a2)
-                    (let [[x1 y1] a1
-                          [x2 y2] a2]
+                    (let [[label x1 y1] a1
+                          [label x2 y2] a2]
                       (str  "<line x1='" x1 "' y1='" y1 "' x2='" x2 "' y2='" y2 "' stroke=\"#000\"
   stroke-width=\"2\" marker-end=\"url(#arrowhead)\"/>")
                       )
@@ -329,7 +332,10 @@ viewBox=\"0 0 " (* 1.3 maxx) " " (* 1.3 maxy) " \" >
 
       (common/package-card i :network :markdown data svg user-authored?)
       )
-    (catch Exception e (common/package-card i :network :markdown data (str e) user-authored?))
+    (catch Exception e (common/package-card i :network :raw data
+                                            (str (exception-stack e)
+                                                 "\n" data)
+                                            user-authored?))
     )
   )
 

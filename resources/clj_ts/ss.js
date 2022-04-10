@@ -1,10 +1,10 @@
 class Node {
 
-  constructor(eyed, ex, wy) {
+    constructor(eyed, label,  ex, wy) {
     this.id = eyed;
     this.x = ex;
     this.y = wy;
-    this.setLabel("   "+eyed+"   ");  
+    this.setLabel(label);
   }
 
   draw(isSelected) {
@@ -20,7 +20,7 @@ class Node {
     rectMode(CENTER);
     //ellipse(this.x, this.y, wide, 30);
     textAlign(CENTER, CENTER);
-    
+
     fill(0);
     text(this.getLabel(), this.x, this.y);
   }
@@ -36,17 +36,17 @@ class Node {
     this.x = ex;
     this.y = wy;
   }
-  
+
   setLabel(l) {
-    this.label = l;
+    this.label =     l;
     console.log(this);
   }
-  
-  getLabel() { 
-   
-    return this.label; 
+
+  getLabel() {
+
+    return this.label;
     }
-  
+
   toEDN() {
      return "[\"" + this.id + "\" \"" + this.getLabel() + "\" " + this.x + " " + this.y + "]\n";
   }
@@ -75,19 +75,22 @@ class Network {
   }
 
   addNode(ex, wy) {
-    var n = new Node(this.nid, ex, wy);
+      var n = new Node(this.nid, "  "+this.nid+"  ",ex, wy);
     this.nodes.push(n);
     this.nid++;
   }
 
+    addArc(nid1, nid2) {
+        this.arcs.push(new Arc(this.getNodeById(nid1),
+                          this.getNodeById(nid2)));
+    }
+
   hitOne(ex, wy) {
     for (var i=0;i<this.nodes.length;i++) {
       var n = this.nodes[i];
-      console.log(""+n.id+"  " + n.hit(ex,wy));
-     
       if (n.hit(ex, wy)) {
         return n.id;
-      }      
+      }
     }
     return -1;
   }
@@ -95,7 +98,7 @@ class Network {
   getNodeById(id) {
     for (var i=0;i<this.nodes.length;i++) {
         var n = this.nodes[i];
-        if (n.id == id) { 
+        if (n.id == id) {
             return n;
         }
     }
@@ -108,7 +111,7 @@ class Network {
       a.draw();
     }
     for (var i=0;i<this.nodes.length;i++) {
-      var n = this.nodes[i];   
+      var n = this.nodes[i];
       n.draw(n.id == this.lastSelectedNode);
     }
   }
@@ -119,6 +122,22 @@ class Network {
     this.selectedNode = n.id;
     console.log(n);
   }
+
+    deleteSelected() {
+        var n = this.getNodeById(this.lastSelectedNode);
+
+        this.arcs = this.arcs.filter(function(a,i,xs) {
+            if (a.n1.id == n.id) { return false; }
+            if (a.n2.id == n.id) { return false; }
+            return true;
+        });
+
+        this.nodes = this.nodes.filter(function(value,index,xs){
+            return value.id != n.id;
+        });
+        console.log(this.nodes);
+
+    }
 
   toEDN() {
     var s = "{:nodes [ \n";
@@ -139,13 +158,13 @@ class Network {
     var net = new Network();
     for (var i=0;i<this.nodes.length;i++) {
         var n = this.nodes[i];
-        net.nodes.push(new Node(n.id, map(n.x, 0, width, 0, wi), map(n.y, 0, height, 0, hi)));
+        net.nodes.push(new Node(n.id, n.label,  map(n.x, 0, width, 0, wi), map(n.y, 0, height, 0, hi)));
     }
     for (var i=0;i<this.arcs.length;i++) {
       var a = this.arcs[i];
       try {
         net.arcs.push(new Arc(this.getNodeById(a.n1.id), this.getNodeById(a.n2.id)));
-      } 
+      }
       catch (e) {
         bgcol = color(255, 0, 0);
 
@@ -157,12 +176,13 @@ class Network {
 
 }
 
-var bgcol; 
-var mainMsg; 
+var bgcol;
+var mainMsg;
 
 var network = new Network();
 
-var cnv;
+var cnv, deleteButton, renameInput, renameButton;
+
 
 function updateEDN() {
       var edn = network.scaledTo(600,500).toEDN();
@@ -171,6 +191,24 @@ function updateEDN() {
 }
 
 function setup() {
+
+
+    deleteButton = select("#deleteButton");
+    deleteButton.mousePressed(function() {
+        network.deleteSelected();
+        updateEDN();
+    });
+
+
+    renameInput = select("#renameInput");
+
+    renameButton = select("#renameButton");
+    renameButton.mousePressed(function() {
+        network.renameSelected(renameInput.value());
+        updateEDN();
+    });
+
+
   cnv = createCanvas(500, 500);
   fill(124);
   stroke(30);
@@ -184,10 +222,10 @@ function setup() {
     if (x < 0) { return false; }
     if (y < 0) { return false;}
     if (x > cnv.width) { return false; }
-    if (y > cnv.height) { return false; }
+      if (y > cnv.height) { return false; }
     return true;
   };
-  
+
   cnv.mousePressed(function() {
         if (hit(mouseX,mouseY)) {
             network.selectedNode = network.hitOne(mouseX, mouseY);
@@ -198,17 +236,22 @@ function setup() {
       if (! hit(mouseX,mouseY)) { return; }
       if (network.selectedNode > -1) {
         // we'd already selected something
-        try {      
+        try {
           var hid = network.hitOne(mouseX, mouseY);
           if (hid < 0) {
             // we haven't hit anything else, so we move
             network.getNodeById(network.selectedNode).moveTo(mouseX, mouseY);
           } else {
-            // we did hit something else so we add an arc
-            network.arcs.push(new Arc(network.getNodeById(network.selectedNode), 
-              network.getNodeById(hid)));
+              // we did hit something else, if it's a different
+              // node then we add an arc.
+              if (network.selectedNode != hid) {
+                  network.addArc(network.selectedNode,hid);
+              } else {
+                  // it's the same node so just move it
+                  network.getNodeById(network.selectedNode).moveTo(mouseX, mouseY);
+              }
           }
-        } 
+        }
         catch (e) {
           console.log("WTF??? " + e);
         }
@@ -221,16 +264,7 @@ function setup() {
       updateEDN();
 
     });
-    
-    nameInput = createInput();
-    nameInput.position(30, 100);
 
-    nameButton = createButton('Rename');
-    nameButton.position(nameInput.x + nameInput.width, 100);
-    nameButton.mousePressed(function() {
-        network.renameSelected(nameInput.value());
-        updateEDN();
-    });
 
 
 }
@@ -245,7 +279,7 @@ function draw() {
       fill(bgcol);
       rect(cnv.width/2,cnv.height/2,width-3,height-3);
   pop();
-  
+
   network.draw();
   fill(33,33,33);
   push();
@@ -255,5 +289,3 @@ function draw() {
   pop();
 
 }
-
-
