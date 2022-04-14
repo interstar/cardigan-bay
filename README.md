@@ -110,12 +110,13 @@ clj -A:dev:app -d PATH/TO/PAGES PORT
 * List of Broken Links (links whose destination pages don't exist)
 * List of Orphan Pages (pages without links to them)
 
-
 * Pages are sequences of cards, with card-types.
-* Support for embedding from YouTube, Vimeo, BandCamp, SoundCloud, Twitter and generic OEmbed servers
-* Support for embedding snippets of Clojure (executed on the server). Note that this is powerful but probably not secure. Be careful before enabling CardiganBay on a publicly accessible server.
-* Experimental support for embedding an interactive ClojureScript workspace (executed on the browser). (This is currently in the source-code but not in the release yet.)
+* 
+* Support for embedding from YouTube, Vimeo, BandCamp, SoundCloud, Twitter, RSS Feeds and generic OEmbed servers
+* Support for embedding snippets of Clojure (executed on the server). 
+* Experimental support for embedding an interactive ClojureScript workspace (executed on the browser).
 * Card oriented manipulation (eg. Move Card to another page)
+* Support for Patterning patterns (https://github.com/interstar/Patterning-Core) embedded in pages.
 
 * Exports flat HTML pages to make a static site. You can configure your own template / css for how this looks.
 
