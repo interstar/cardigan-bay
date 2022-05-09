@@ -28,6 +28,52 @@
                     #"\[\[(.+?)\]\]"
                     replace-link)))
 
+
+
+(defn exported-workspace [card]
+  (let [id (-> (hash card) (string/replace "-" ""))
+        fn-name (str "run" id)
+        src-name (str "id" id)
+        output-name (str "out" id)
+        script (str "(defn " fn-name " []
+          (let [src (->
+                       (.getElementById js/document \"" src-name  "\")
+                       .-value
+                    )
+
+               result (js/scittle.core.eval_string src)
+               out (-> (.getElementById js/document \"" output-name  "\")
+                       .-innerHTML
+                       (set! result) )
+
+
+]
+           (.log js/console result)
+
+            ))
+")
+        vname (str ".-" fn-name)
+        set (str "(set! (" vname " js/window) " fn-name ")")]
+
+    (hiccup/html
+     [:div {:class "scittle-workspace"}
+      [:textarea {:id src-name :cols 80 :rows 15}
+       (:source_data card)]
+      [:script {:type "application/x-scittle"}
+       "\n"
+       script
+       "\n"
+       set
+       "\n"
+       ]
+      [:button {:onclick (str fn-name "()")} "Run" ]
+      [:div {:id output-name}]
+      ]
+     )
+
+    )
+  )
+
 (defn card-specific-wrapper [card server-prepared]
   (do
 
@@ -36,7 +82,7 @@
       (str "<div class='manual-copy'>" server-prepared "</div>")
       :raw
       (str "<pre>" server-prepared  "</pre>")
-
+      :workspace (exported-workspace card)
       server-prepared))
   )
 

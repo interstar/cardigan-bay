@@ -4,7 +4,8 @@
             [clojure.string :as string]
             [remus :refer [parse-url parse-file parse-stream]]
             [clj-ts.common :as common]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [hiccup.core :refer [html]]))
 
 
   (alter-var-root #'org.httpkit.client/*default-client* (fn [_] sni/default-client))
@@ -34,6 +35,7 @@
   (let [title (:title data)
         caption (:caption data)
         extra-link (:extra-link data)]
+
     (str
 
      (if title (str "<div><h3>" title "</h3></div>") "")
