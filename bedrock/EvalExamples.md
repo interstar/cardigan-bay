@@ -8,7 +8,7 @@ There are two ways to embed Clojure code in your wiki.
 * evaluation on the client
 * evaluation on the server
 
-In both cases, the code be correct (without bugs or causing exceptions). And not try to use external resources or include libraries etc.
+In both cases, the code needs to be correct (without bugs or causing exceptions). And can't use external resources or include libraries etc.
 
 For more on running ClojureScript in the client / browser, see 
 [[WorkspaceExample]]

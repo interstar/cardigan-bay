@@ -6,10 +6,9 @@ Note that the output of the code is expected to be either a string or [hiccup](h
 
 ;; Write some code
 [:div
-[:ol
-(map (fn [x] [:li x]) (range 20))
+[:ul
+(map (fn [x] [:li (str x ", " (reduce + (range x)))]) (range 20))
 ]]
-
 ----
 
 

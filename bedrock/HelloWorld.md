@@ -4,6 +4,7 @@ This is your default local wiki (affectionately known as Bedrock).
 
 And you are on the initial page which is called HelloWorld.
 
+If you have just installed a new copy of Cardigan Bay see [[ReleaseNotes]] 
 
 ----
 
