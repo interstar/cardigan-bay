@@ -30,14 +30,17 @@ Look at the example in the Workspace below. Note that if you run it in a live Ca
 
 ;; Code that renders as expected in exported pages.
 
+(defn li [x] (str "<li>" x "</li>"))
+
+;;;;PUBLIC
 (str
 (apply str
   "<h3>Some numbers</h3>"
-  (map (fn [x] (str "<li>" x "</li>")) (range 20))
+  (map li (range 20))
 )
   "Total:" (reduce + (range 20))
 )
-
 ----
 
 To test this feature and see what exported workspaces look like, simply hit the Export button for this page and see the exported html file (probably at bedrock/exported/WorkspaceExample )
+
