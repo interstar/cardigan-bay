@@ -30,17 +30,35 @@
 
 
 
+(defn process-script [s]
+  (if (string/includes? s ";;;;PUBLIC")
+    (let [broken (string/split s #";;;;PUBLIC")
+          private (first broken)
+          public (second broken)]
+      [private public]
+      )
+    ["" s])
+  )
+
 (defn exported-workspace [card]
   (let [id (-> (hash card) (string/replace "-" ""))
         fn-name (str "run" id)
         src-name (str "id" id)
+        src-name-private (str "idp" id)
         output-name (str "out" id)
-        script (str "(defn " fn-name " []
-          (let [src (->
+        [private public] (process-script (:source_data card))
+
+
+        final-script (str "(defn " fn-name " []
+          (let [public-src (->
                        (.getElementById js/document \"" src-name  "\")
                        .-value
                     )
-
+               private-src (->
+                       (.getElementById js/document \"" src-name-private "\")
+                       .-value
+                    )
+               src (str private-src " "  public-src )
                result (js/scittle.core.eval_string src)
                out (-> (.getElementById js/document \"" output-name  "\")
                        .-innerHTML
@@ -57,11 +75,15 @@
 
     (hiccup/html
      [:div {:class "scittle-workspace"}
+      [:input {:type :hidden
+               :id src-name-private
+               :value private}
+       ]
       [:textarea {:id src-name :cols 80 :rows 15}
-       (:source_data card)]
+       public]
       [:script {:type "application/x-scittle"}
        "\n"
-       script
+       final-script
        "\n"
        set
        "\n"
