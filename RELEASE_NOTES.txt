@@ -1,4 +1,9 @@
 
+# Release 0.7.1 Notes
+
+Now added private / public separation for Workspaces.
+
+
 # Release 0.7.0 Notes
 
 ## Breaking Changes
