@@ -23,6 +23,7 @@ body {
 @media only screen and (max-width: 600px) {
   body {
       font-size: 1.2rem;
+      hyphens: auto;
   }
 }
 
@@ -69,7 +70,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
 
 
 .card-outer {
-    border-radius: 25px;
+    border-radius: 15px;
     background: #eeeeee;
     padding: 15px;
     margin-bottom:1.5em;
@@ -89,7 +90,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
     background-color:white;
     padding: 5px;
     margin: 2px;
-    border-radius: 10px;
+    border-radius: 5px;
 }
 
 #content {
