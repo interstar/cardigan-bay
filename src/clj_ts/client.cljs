@@ -782,13 +782,17 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
              (cond
 
                (number? result)
-               result
+               (str result)
 
                (string? result)
-               result
+               (if (= (first result) \<)
+                 [:div {:dangerouslySetInnerHTML {:__html result}} ]
+                 result
+                 )
 
                (= (first result) :div)
                result
+
 
                :else
                (str result)))] ]
