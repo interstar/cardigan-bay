@@ -1,7 +1,20 @@
+This is [[CardiganBay]] *0.7.2*
 
+----
+# Release 0.7.2 Notes
+
+Blank cards are now stripped from exported pages.
+
+Navigating to new pages automatically scrolls to the top of the page
+
+Browser's native JS libraries (eg. js/Math etc.) are now accessible from Workspaces in live versions of Cardigan Bay AND exported flat pages. 
+
+----
 # Release 0.7.1 Notes
 
 Now added private / public separation for Workspaces.
+
+----
 
 
 # Release 0.7.0 Notes

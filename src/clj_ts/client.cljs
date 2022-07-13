@@ -104,7 +104,9 @@
                       :system-cards system-cards
                       :past new-past
                       :future new-future)
-               ))
+               )
+             (js/window.scroll 0 0)
+             )
            "POST",
            query )))
 

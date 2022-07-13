@@ -35,7 +35,8 @@
     (str "\n" source_type "\n" (string/trim source_data) )) )
 
 
-
+(defn card-is-blank? [{:keys [source_data]}]
+  (= "" (string/trim source_data)))
 
 (defn match-hash [card hash]
   (= (.toString (:hash card))

@@ -246,7 +246,10 @@ USING DEFAULT")
         last-mod (.last-modified ps page-name)
         file-name (-> (.page-name->export-file-path ex page-name) .toString)
 
-        rendered (string/join "\n" (map #(card->html % ex) cards))
+        rendered (string/join
+                  "\n"
+                  (map #(card->html % ex)
+                       (filter #(not (common/card-is-blank? %)) cards)))
 
         insert-page (hiccup/html
                      [:div
