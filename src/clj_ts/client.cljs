@@ -366,6 +366,43 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 }
 
 "
+    :vimeo
+    "
+----
+:embed
+
+{:type :vimeo
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+
+    :media-img
+    "
+----
+:embed
+
+{:type :media-img
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+"
+
+    :img
+    "
+----
+:embed
+
+{:type :img
+:url \"URL GOES HERE\"
+:title \"\"
+:caption \"\"
+}
+"
+
     :soundcloud
     "
 ----
@@ -508,12 +545,23 @@ NO BOILERPLATE FOR EMBED TYPE " type
 
 
 
-
    [:button {:class "big-btn"
              :on-click
              (fn [e]
                (insert-text-at-cursor! (embed-boilerplate :youtube)))}
     "YouTube"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! (embed-boilerplate :vimeo)))}
+    "Vimeo"]
+
+   [:button {:class "big-btn"
+             :on-click
+             (fn [e]
+               (insert-text-at-cursor! (embed-boilerplate :img)))}
+    "Image"]
 
    [:button {:class "big-btn"
              :on-click
@@ -741,7 +789,10 @@ NO BOILERPLATE FOR EMBED TYPE " type
           (let [result
                 (sci/eval-string
                  (-> @state :code)
-                 {:bindings {'replace replace}}
+                 {:bindings {'replace replace}
+                  :classes {'js goog/global
+                            :allow :all}}
+
                  )]
             (swap! state #(conj % {:calc result :result result})))
           )

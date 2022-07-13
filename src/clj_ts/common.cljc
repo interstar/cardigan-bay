@@ -198,6 +198,43 @@
 }
 
 "
+    :vimeo
+    "
+----
+:embed
+
+{:type :vimeo
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+
+    :media-img
+    "
+----
+:embed
+
+{:type :media-img
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+"
+
+    :img
+    "
+----
+:embed
+
+{:type :img
+:url \"URL GOES HERE\"
+:title \"\"
+:caption \"\"
+}
+"
+
     :soundcloud
     "
 ----

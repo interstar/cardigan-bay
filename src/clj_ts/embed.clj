@@ -190,7 +190,14 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
        )
      caption-renderer)))
 
-
+(defn img [data caption-renderer]
+  (let [src (:url data)
+        width (if (:width data) (:width data) "100%")]
+    (generic-embed
+     data
+     (str "<img src='" src "' class='embedded_image' width='" width "' />")
+     caption-renderer
+     )))
 
 (defn codepen [data caption-renderer]
   (generic-embed
@@ -205,6 +212,9 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
 
         :media-img
         (media-img data for-export? caption-renderer server-state)
+
+        :img
+        (img data caption-renderer)
 
         :youtube
         (youtube data caption-renderer)
