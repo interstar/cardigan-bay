@@ -9,6 +9,7 @@
 
 
  :objects
+
  {:Card
   {:description "A card within the system"
    :fields
@@ -36,6 +37,7 @@
     :site_url {:type String}
     :port {:type Int}
     :ip {:type String}
+    :start_page_name {:type String}
     :system_cards {:type (list :Card)}
 
     }}

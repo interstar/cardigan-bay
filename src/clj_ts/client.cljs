@@ -56,6 +56,7 @@
     site_url
     port
     ip
+    start_page_name
     cards {
       id
       hash
@@ -88,10 +89,12 @@
                    wiki-name (-> data (get "server_prepared_page") (get "wiki_name"))
                    port (-> data (get "server_prepared_page") (get "port"))
                    ip (-> data (get "server_prepared_page") (get "ip"))
+                   start-page-name (-> data (get "server_prepared_page")  (get "start_page_name"))
                    ]
 
-               (js/console.log "Cards " cards)
-               (js/console.log "System Cards " system-cards)
+
+               (js/console.log (str "AAAA" (-> data (get "server_prepared_page"))))
+
 
                (swap! db assoc
                       :current-page page-name
@@ -99,6 +102,7 @@
                       :wiki-name wiki-name
                       :port port
                       :ip ip
+                      :start-page-name start-page-name
                       :raw  raw
                       :cards cards
                       :system-cards system-cards
@@ -273,13 +277,14 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn nav-bar []
   (let [current (r/atom (-> @db :future last))]
     (fn []
-       (let [mode (-> @db :mode)]
+      (let [mode (-> @db :mode)
+            start-page-name (-> @db :start-page-name)]
          [:div {:class "navbar"}
           [:div {:class "breadcrumbs"}
            [:span (-> @db :wiki-name )]]
           [:div {:id "nav1"}
 
-           [:span {:on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]
+           [:span {:on-click (fn [] (go-new! start-page-name)) } start-page-name]
            " || "
            [:span {:on-click (fn [] (go-new! "InQueue")) } "InQueue"]
            " || "

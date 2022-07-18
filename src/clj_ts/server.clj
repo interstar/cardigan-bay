@@ -351,7 +351,9 @@
    :default "./bedrock/exported/"
    :parse-fn str]
 
-
+  ["-b" "--beginner IS_BEGINNER" "Is Beginner Rather Than Expert"
+   :default false
+   :parse-fn boolean]
 
   ])
 
@@ -362,9 +364,11 @@
         as (if *command-line-args* *command-line-args* args)
         xs (parse-opts as cli-options)
         opts (get xs :options)
+        dx2 (println opts)
 
         ps (pagestore/make-page-store (:directory opts) (:export-dir opts))
         dx (println (:site opts) (:links opts))
+
         pe (export/make-page-exporter ps (:site-url opts) (:links opts))]
 
     (println "
@@ -380,6 +384,7 @@ CardServer Created.
 Wiki Name is :\t"
           (:wiki-name (card-server/server-state)) "
 Site URL is :\t" (:site-url (card-server/server-state)) "
+Start Page is :\t" (:start-page (card-server/server-state))"
 Port No is :\t" (:port-no (card-server/server-state)) "
 
 PageStore Report
