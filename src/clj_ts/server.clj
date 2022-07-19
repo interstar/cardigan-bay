@@ -219,11 +219,11 @@
         (export/export-all-pages (card-server/server-state))
         (println "Export finished")))
     {:status 303
-     :headers {"Location" "/view/HelloWorld" }}))
+     :headers {"Location" (str "/view/" (-> card-server/server-state :start-page)) }}))
 
 (defn media-file-handler [request]
   (let [file-name (-> request :uri
-                      (#(re-matches #"/media/(\S+)" %))
+                      (#(re-matches #"/media/(\S+)"  %))
                       second)
         file (card-server/load-media-file file-name)]
     (println "Media file request " file-name)
@@ -233,10 +233,23 @@
       (not-found "Media file not found"))
     ))
 
+(defn custom-file-handler [request]
+  (let [file-name (-> request :uri
+                      (#(re-matches #"/custom/(\S+)"  %))
+                      second)
+        file (card-server/load-custom-file file-name)]
+    (println "Custom file request " file-name)
+    (if (.isFile file)
+      {:status 200
+       :body file}
+      (not-found "Media file not found"))
+    ))
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
   (let [qs (:query-string request)
-        m (re-matches #"/view/(\S+)" uri)]
+        view-matches (re-matches #"/view/(\S+)" uri)]
+    (println (str  "URI: " uri ", " qs ))
 
     (cond
 
@@ -286,15 +299,21 @@
       (= uri "/api/exportallpages")
       (export-all-pages-handler request)
 
+      (= uri "/custom/main.css")
+      (custom-file-handler request)
+
       (re-matches  #"/icons/(\S+)" uri)
       (icons-handler request)
 
       (re-matches #"/media/(\S+)" uri)
       (media-file-handler request)
 
+      (re-matches #"/custom/(\S+)" uri)
+      (custom-file-handler request)
 
-      m
-      (let [pagename (-> m second )]
+
+      view-matches
+      (let [pagename (-> view-matches second )]
         (do
           (card-server/set-start-page! pagename)
           {:status 303
@@ -303,14 +322,18 @@
 
 
       :otherwise
-
-      (or
-       ; if the request is a static file
-       (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
-         (when (.isFile file)
-           {:status 200
-            :body file}))
-       (not-found "Page not found")))))
+      (do
+        (println "in last clause")
+        (or
+         ;; if the request is a static file
+         (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
+           (println file)
+           (when (.isFile file)
+             {:status 200
+              :body file}))
+         (not-found
+          (do
+            (println "Page not found " uri ) "Page not found")))))))
 
 
 

@@ -98,15 +98,15 @@
     (.read-system-file ps "recentchanges")  )
 
   (write-recentchanges! [ps new-rc]
-    (.write-system-file! ps "recentchanges" new-rc)
-    )
+    (.write-system-file! ps "recentchanges" new-rc))
 
   (load-media-file [ps file-name]
     (let [media-dir (.toString (.resolve page-path "media"))]
-      (io/file media-dir file-name))
-    )
+      (io/file media-dir file-name)))
 
-
+  (load-custom-file [ps file-name]
+    (let [dir (.toString (.resolve page-path "system/custom"))]
+      (io/file dir file-name)))
 
   )
 

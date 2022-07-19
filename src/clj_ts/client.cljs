@@ -93,9 +93,6 @@
                    ]
 
 
-               (js/console.log (str "AAAA" (-> data (get "server_prepared_page"))))
-
-
                (swap! db assoc
                       :current-page page-name
                       :site-url site-url
@@ -286,9 +283,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
            [:span {:on-click (fn [] (go-new! start-page-name)) } start-page-name]
            " || "
-           [:span {:on-click (fn [] (go-new! "InQueue")) } "InQueue"]
+           [:span {:on-click (fn [] (go-new! "Help"))} "Help"]
            " || "
-           [:span {:on-click (fn [] (go-new! "AboutThisWiki"))} "AboutThisWiki"]
+           [:span {:on-click (fn [] (go-new! "InQueue")) } "InQueue"]
            " || "
            [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
            " || "
@@ -361,6 +358,11 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn embed-boilerplate [type]
 
   (condp = type
+    :markdown
+    "
+----
+
+"
     :youtube
     "
 ----
@@ -501,14 +503,21 @@ NO BOILERPLATE FOR EMBED TYPE " type
 ")))
 
 (defn pastebar []
-  [:span {:class "pastebar"}
-   "+"
+  [:div {:class "pastebar"}
+   [:div
+    "Quick Paste Bar"]
+   [:div
 
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :markdown)))}
+     "New Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! "
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! "
 ----
 :system
 
@@ -517,12 +526,12 @@ NO BOILERPLATE FOR EMBED TYPE " type
 }
 
 ----"))}
-    "Search"]
+     "Search Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! "
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! "
 ----
 :workspace
 
@@ -532,12 +541,12 @@ NO BOILERPLATE FOR EMBED TYPE " type
 ]
 
 ----"))}
-    "Code Workspace"]
+     "Code Workspace"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! "
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! "
 ----
 :evalmd
 
@@ -548,53 +557,51 @@ NO BOILERPLATE FOR EMBED TYPE " type
 (str \"### \" (+ 1 2 3))
 
 "))}
-    "Code on Server"]
+     "Code on Server"]
 
 
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :youtube)))}
+     "YouTube Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :youtube)))}
-    "YouTube"]
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :vimeo)))}
+     "Vimeo Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :vimeo)))}
-    "Vimeo"]
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :img)))}
+     "Image Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :img)))}
-    "Image"]
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :soundcloud)))}
+     "SoundCloud Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :soundcloud)))}
-    "SoundCloud"]
-
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :bandcamp)))}
-    "BandCamp"]
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :bandcamp)))}
+     "BandCamp Card"]
 
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :twitter)))}
-    "Twitter"]
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :twitter)))}
+     "Twitter Card"]
 
-   [:button {:class "big-btn"
-             :on-click
-             (fn [e]
-               (insert-text-at-cursor! (embed-boilerplate :rss)))}
-    "RSS Feed"]
-   ])
+    [:button {:class "big-btn"
+              :on-click
+              (fn [e]
+                (insert-text-at-cursor! (embed-boilerplate :rss)))}
+     "RSS Feed"]]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -701,6 +708,8 @@ NO BOILERPLATE FOR EMBED TYPE " type
                     (if (= (-> @state :toggle) "none")
                       (swap! state #(conj % {:toggle "block"}) )
                       (swap! state #(conj % {:toggle "none"})))))
+        close! (fn [e]
+                 (swap! state #(conj % {:toggle "none"})))
 
         ]
 
@@ -994,6 +1003,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
   [:div
    [:div
     (condp = (-> @db :mode)
+
       :editing
       [:div {:class "edit-box"}
        [:textarea
@@ -1040,9 +1050,12 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
     [:h2
      (if (= (-> @db :mode) :transcript)
        "Transcript"
-       (-> @db :current-page))
-       [:span {:class "tslink"}
-        [:a {:href (str (-> @db :site-url) "/" (-> @db :current-page))} "(public)" ]] ]
+       [:span
+        (-> @db :current-page)
+        [:span {:class "tslink"}
+         [:a {:href (str
+                     (string/replace (-> @db :site-url) #"/$" "")
+                     "/" (-> @db :current-page))} " (public)" ]]]) ]
 
       [:div [tool-bar]]
       [main-container]]

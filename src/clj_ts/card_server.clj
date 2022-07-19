@@ -619,9 +619,13 @@ Bookmarked " timestamp  ",, <" url ">
     (write-page-to-file! page-name (common/cards->raw new-cards))))
 
 
-;;;; Media files
+;;;; Media and Custom files
 
 (defn load-media-file [file-name]
   (-> (server-state) :page-store (.load-media-file file-name)))
+
+
+(defn load-custom-file [file-name]
+  (-> (server-state) :page-store (.load-custom-file file-name)))
 
 ;;file (io/file (System/getProperty "user.dir") (str "." uri))

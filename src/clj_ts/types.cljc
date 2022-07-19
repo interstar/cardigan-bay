@@ -25,6 +25,7 @@
   (read-recentchanges [ps])
   (write-recentchanges! [ps new-rc] )
   (load-media-file [ps file-name])
+  (load-custom-file [ps file-name])
 
 
 )

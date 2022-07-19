@@ -181,12 +181,18 @@
           )
     ))
 
+;;;
 
 ;;; BOILERPLATE
 
 (defn embed-boilerplate [type]
 
   (condp = type
+    :markdown
+    "
+----
+
+"
     :youtube
     "
 ----
