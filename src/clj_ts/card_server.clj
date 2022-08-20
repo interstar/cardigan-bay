@@ -182,7 +182,13 @@
     ))
 
 
-
+(defn server-custom-script
+  "Evaluate a script from system/custom/ with arguments"
+  [data]
+  (do
+    (println "In server-custom-script")
+    (str "This will (eventually) run a custom script: " data))
+  )
 
 
 (defn ldb-query->mdlist-card [i title result qname f user-authored?]
@@ -247,6 +253,13 @@
 **Number of Pages** ,, " (count (.all-pages db))
                     )]
         (common/package-card i :system :markdown sr sr user-authored?))
+
+      :customscript
+      (let [return-type (or (:return-type data) :markdown)
+            sr (server-custom-script data) ]
+        (common/package-card i :customscript return-type sr sr user-authored?))
+
+
 
       ;; not recognised
       (let [d (str "Not recognised system command in " data  " -- cmd " cmd )]
@@ -571,12 +584,12 @@ Bookmarked " timestamp  ",, <" url ">
 
 
 
-;; trasforms on pages
+;; transforms on pages
 
 (defn append-card-to-page! [page-name type body]
   (let [page-body (try
                     (pagestore/read-page (server-state) page-name)
-                    (catch Exception e (str "New page : " page-name "\n\n"))
+                    (catch Exception e (str "Automatically created a new page : " page-name "\n\n"))
                     )
         new-body (str page-body "----
 " type "
@@ -586,7 +599,7 @@ Bookmarked " timestamp  ",, <" url ">
 (defn prepend-card-to-page! [page-name type body]
   (let [page-body (try
                     (pagestore/read-page (server-state) page-name)
-                    (catch Exception e (str "New page : " page-name "\n\n"))
+                    (catch Exception e (str "Automatically created a new page : " page-name "\n\n"))
                     )
         new-body (str
                       "----
