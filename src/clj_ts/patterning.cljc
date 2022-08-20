@@ -7,7 +7,7 @@
    ;; Patterning stuff
   [patterning.maths :as p-maths :refer [PI half-PI sin cos ]]
   [patterning.sshapes
-   :refer [->SShape to-triangles add-style]
+   :refer [->SShape to-triangles add-style ]
    :as sshapes]
   [patterning.strings :as p-strings]
    [patterning.groups :as groups :refer [group over-style scale translate translate-to
@@ -19,7 +19,7 @@
    :as layouts]
 
    [patterning.library.std :refer [poly star nangle spiral diamond rect
-                                   horizontal-line square drunk-line]
+                                   horizontal-line square drunk-line bez-curve]
    :as std]
    [patterning.library.turtle :refer [basic-turtle] :as turtle]
    [patterning.library.l_systems :refer [l-system]]
@@ -43,6 +43,7 @@
     ;; sshapes
     '->SShape ->SShape
     'to-triangles to-triangles
+    'bez-curve bez-curve
 
     ;; strings
 
