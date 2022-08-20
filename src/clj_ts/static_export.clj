@@ -105,6 +105,7 @@
       :raw
       (str "<pre>" server-prepared  "</pre>")
       :workspace (exported-workspace card)
+      :transclude "<div class='transcluded'>" server-prepared "</div>"
       server-prepared))
   )
 
