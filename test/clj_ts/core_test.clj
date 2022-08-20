@@ -9,7 +9,7 @@
 
 (deftest card-server-stuff
   (testing "Card Server stuff"
-    (println "AAAA "
+    (println "card-server .as-map "
              (-> (card-server/server-state) .as-map))))
 
 (deftest basic-cards
