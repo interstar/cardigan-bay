@@ -242,7 +242,7 @@ And even more sophisticated layouts such as the `framed` layout that takes three
 
 ----
 
-The following card contains a test pattern. If it throws an error you are on an older version of Cardigan Bay
+The following card contains a test pattern. If it throws an error you are on an older version of Cardigan Bay. If it's working, then this version has both l-systems and the turtle.
 
 ----
 :patterning
