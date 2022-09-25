@@ -1,7 +1,7 @@
 {:enums
  {:source_type
   {:description "The original raw type of the card's source"
-   :values [:markdown :raw :evalraw :evalmd :system :embed :html]}
+   :values [:markdown :raw :evalraw :evalmd :system :embed :html :code]}
 
   :render_type
   {:description "A type that is attached to each card to specify how it should be rendered"
