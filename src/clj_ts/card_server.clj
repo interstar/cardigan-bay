@@ -368,6 +368,12 @@ Bookmarked " timestamp  ",, <" url ">
       :manual-copy (common/package-card i source-type :manual-copy data data user-authored?)
 
       :raw (common/package-card i source-type :raw data data user-authored?)
+
+      :code
+      (do
+        (println "Exporting :code card " )
+        (common/package-card i :code :code data data user-authored?))
+
       :evalraw
       (common/package-card i :evalraw :raw data (server-eval data) user-authored?)
 

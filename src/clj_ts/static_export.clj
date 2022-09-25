@@ -102,6 +102,8 @@
     (condp = (:render_type card)
       :manual-copy
       (str "<div class='manual-copy'>" server-prepared "</div>")
+      :code
+      (str "<code>" server-prepared "</code>")
       :raw
       (str "<pre>" server-prepared  "</pre>")
       :workspace (exported-workspace card)
@@ -116,6 +118,9 @@
   (let [html
         (condp = (:source_type card)
           :patterning
+          (:server_prepared_data card)
+
+          :code
           (:server_prepared_data card)
 
           (-> (get card :server_prepared_data)

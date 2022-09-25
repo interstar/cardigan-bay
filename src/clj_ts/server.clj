@@ -392,7 +392,7 @@
         ps (pagestore/make-page-store (:directory opts) (:export-dir opts))
         dx (println (:site opts) (:links opts))
 
-        pe (export/make-page-exporter ps (:site-url opts) (:links opts))]
+        pe (export/make-page-exporter ps (:extension opts) (:links opts))]
 
     (println "
 Welcome to Cardigan Bay

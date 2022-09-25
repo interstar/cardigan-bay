@@ -903,6 +903,9 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
             inner
             (condp = rtype
 
+              ":code"
+              (inner-html (str "<code>" data "</code>"))
+
               ":raw"
               (inner-html (str "<pre>" data "</pre>"))
 
@@ -927,7 +930,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
               ":workspace"
               [workspace card]
 
-              (str "UNKNOWN TYPE(" type ") " data))
+              (str "UNKNOWN TYPE ( " rtype " ) " data))
 
             ]
         [:div {:class :card-outer}
