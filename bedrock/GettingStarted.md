@@ -25,9 +25,11 @@ You can now edit the contents of the page.
 
 The default markup is [Markdown](https://daringfireball.net/projects/markdown/syntax). With this you can add titles, subtitles, bold and italic etc.
 
-To make a link to another page, simply put double square brackets around it like this :
+To make a link to another page, simply put double square brackets around it like this:
 
-When I write [<!-- -->[HelloWorld]] it will become a link like this : [[HelloWorld]]
+[<!-- -->[HelloWorld]] 
+
+will become a link, as in, [[HelloWorld]]
 
 When you have saved your edit, and gone back into the "reading mode" then the link will be active. Click on it to go to the linked page.
 
@@ -42,7 +44,7 @@ If you *don't* do any work on it, then no new page will be created.
 
 ----
 
-So far, this is pretty much just like any other wiki, including the original C2 Wiki AKA "Ward's Wiki" (because it was invented by [WardCunningham]()) and Wikipedia.
+So far, this is pretty much just like any other wiki, including the original C2 Wiki AKA "Ward's Wiki" (because it was invented by [Ward Cunningham](https://en.wikipedia.org/wiki/Ward_Cunningham)) and Wikipedia.
 
 However CardiganBay adds to standard wiki structure in the following ways :
 

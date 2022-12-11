@@ -1,15 +1,18 @@
 The Clojure [Patterning library](https://github.com/interstar/Patterning-Core) is incorporated into Cardigan Bay so that patterns can be added to pages. 
 
-It isn't well documented yet. Partly because Patterning is still work in progress and the API / function names might well change. However this page contains a reasonably up-to-date overview of what you can do in Cardigan Bay. See also [[Patterning Examples]].
+Patterning has its own documentation / tutorial site at : <http://alchemyislands.com/tutorials/HelloWorld.html> which is, itself, a site made with CardiganBay. So everything you see there should also work here in this wiki.
 
+Though because Patterning is still work in progress the API / function names might well change.
+ 
 ----
-
 ## Patterning Overview
 
 
-A basic pattern (also known as a "group") is a vector of SShapes. SShape stands for "styled shape" and is effectively the equivalent of a *path* in something like SVG. It consists of a vector of points + a map containing style information.
+A basic pattern (also known as a "group") is made from SShapes. 
 
-You make an SShape with something like 
+SShape stands for "styled shape" and is effectively the equivalent of a *path* in something like SVG. It consists of a style information in a Clojure *map*, plus a Clojure vector of points.
+
+You make an SShape with something like
 
     (->SShape {:stroke (p-color 255 0 0) :stroke-weight 2 
                :fill (p-color 200 100 100 100)}
@@ -18,14 +21,14 @@ You make an SShape with something like
 
 The first argument is the style map. The second is the vector of points
 
-This is NOT a "pattern" in patterning yet. To make it a pattern, you need to put it into a group, like so.
+This is NOT a "pattern" in patterning yet. To make it a pattern, you need to put it into a group, which is just another Clojure vector. So by putting [ ] around it, like so.
 
     [(->SShape {:stroke (p-color 255 0 0) :stroke-weight 2 
                 :fill (p-color 200 100 100 100)}
        [[-1 1] [1 1] [0 -1] [-1 1]]
     )]
 
-or with
+or with the *group* function.
 
     (group (->SShape {:stroke (p-color 255 0 0) :stroke-weight 2 
                 :fill (p-color 200 100 100 100)}
@@ -52,9 +55,9 @@ The rest of the patterning library consists of functions that transform groups /
 
 It's important to understand that Patterning is written as "*scale independent*". In other words, you think of a pattern being defined in a virtual co-ordinate system between the coordinates (-1,-1) and (1,1).
 
-Patterns are assumed to be drawn within this space, and be roughly bounded by a 2X2 box starting at (-1,-1). You can, if you like, draw outside this box, but many functions will assume that your pattern fits within it, and when they combine patterns into larger layouts such as grids, patterns that leak outside of this box may well collide with others or even get clipped.
+Patterns are assumed to be drawn within this space, and be roughly bounded by a 2X2 box starting at (-1,-1). You can, if you like, draw outside this box, but many functions will assume that your pattern fits within it, and when they combine patterns into larger layouts such as grids, patterns that leak outside of this box may well overlap with others or even get clipped.
 
-The `(reframe p)` function scale your pattern back into this box if you have drawn it too large. This turns out to be very useful as your algorithms become more complex.
+The `(reframe p)` function scales your pattern back into this box if you have drawn it too large. This turns out to be very useful as your algorithms become more complex.
 
 #### Transforming Patterns
 
@@ -62,13 +65,13 @@ Patterning comes with standard functions for scaling, rotating and translating p
 
 There are a couple of more unusual functions.
 
-`(wobble [qx qy] p)`
+`(wobble [qx qy] pattern)`
 
 adds a certain amount of noise (up to qx and qy) to the coordinates of each point in a pattern.
 
-`(over-style new-style p)`
+`(over-style new-style pattern)`
 
-allows certain attributes of a style to be over-written (in a non-mutable way, of course) with those new-style.
+allows certain attributes of a style to be over-written (in a non-mutable way, of course) with those from new-style.
 
 *Note that we can use Clojure's threading macros. But that we must use thread-last (ie. ->>) because a pattern is always the *last* argument to the functions that transform it.*
 
@@ -108,7 +111,7 @@ This is what the `stack` function does.
 
 composes the three patterns.
 
-Another common thing to do is to make a grid or similar layout. However grids, like many of the "layout engines" are slightly more powerful and complex. They don't take a single pattern, but instead a sequence of patterns, and then place them.
+Another common thing to do is to make a grid layout. However grids, like many of the "layout engines" are slightly more powerful and complex. They don't take a single pattern, but instead a sequence of patterns, and then place each item from the sequence at one square in the grid.
 
 For this reason, you must pass grid-layout a collection or even infinite sequence of patterns to be laid out in the grid.
 
@@ -331,7 +334,7 @@ The following card contains a test pattern. If it throws an error you are on an 
 )
 
 ----
-As of the current release XXX on DATE, Cardigan Bay currently supports the following patterning functions:
+As of the current release, Cardigan Bay currently supports the following patterning functions:
 
 
 maths

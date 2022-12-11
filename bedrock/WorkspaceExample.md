@@ -1,4 +1,4 @@
-An example embedded ClojureScript workspace. It uses the Small Clojure Interpreter (<https://github.com/borkdude/sci>), running in the browser.
+An example embedded ClojureScript Workspace. It uses the Small Clojure Interpreter (<https://github.com/borkdude/sci>), running in the browser.
 
 Note that the output of the code is expected to be either a string or [hiccup](https://github.com/weavejester/hiccup) surrounded by [:div :]
 ----
