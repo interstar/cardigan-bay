@@ -70,10 +70,31 @@ API : " oembed " URL : " url)
           (str (.getMessage e) " " oembed " " url "  " (str call)))))))
 
 
+(defn resizable-iframe [url]
+  (let [uid (str "iframe" (string/replace (gensym) #"_" "xxXxx"))]
+    (str
+     "<iframe class='resizable-iframe' id='" uid "' src='" url "' style='width:100%; height:300px;'"
+     " allowfullscreen></iframe>"
+
+     ))
+  )
+
+;; Matching
+
+(def youtube-pattern
+  #"https://www.youtube.com/watch\?v=(\S+)"
+  )
+
+(def mastodon-pattern
+  #"https?:\/\/((www.)?[-a-zA-Z0-9@:%._+~#=]{1,256}.[a-zA-Z0-9()]{1,6})\/(\@\w+)\/(\w+)"
+ )
+
+;; Code
+
 (defn youtube [data caption-renderer]
   (let [url (:url data)
         id (->
-            (re-matches #"https://www.youtube.com/watch\?v=(\S+)" url)
+            (re-matches youtube-pattern url)
             second)]
     (generic-embed
          data
@@ -145,6 +166,19 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
        (do
          (println "HTTP GET success: " status)
          (-> body json/read-str (get "html"))))
+     caption-renderer)))
+
+
+(defn mastodon [data caption-renderer]
+  (let [url (:url data)
+        match (re-matches mastodon-pattern url)
+        new-url
+        (str "https://" (nth match 1) "/" (nth match 3) "/" (nth match 4) "/embed")
+        ]
+    (generic-embed
+     data
+     (resizable-iframe new-url)
+
      caption-renderer)))
 
 (defn strip-tags [html]
@@ -231,6 +265,9 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
         :twitter
         (twitter data caption-renderer)
 
+        :mastodon
+        (mastodon data caption-renderer)
+
         :rss
         (rss data caption-renderer)
 
@@ -273,6 +310,10 @@ and data
 
       (string/includes? url "codepen")
       (f url :codepen "URL GOES HERE")
+
+      (not (nil? (re-matches mastodon-pattern url)))
+      (f url :mastodon "URL GOES HERE")
+
 
       (or
        (string/includes? url ".rss")

@@ -284,6 +284,19 @@
 }
 
 "
+    :mastodon
+ "
+----
+:embed
+
+{:type :mastodon
+ :url \"URL GOES HERE\"
+ :title \"\"
+ :caption \"\"
+}
+
+"
+
     :codepen
     "
 ----
