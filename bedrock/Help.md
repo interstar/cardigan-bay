@@ -5,3 +5,5 @@ New to Cardigan Bay?
 [[AboutThisWiki]]
 
 [[UserGuide]]
+
+Test things in the [[SandBox]]
