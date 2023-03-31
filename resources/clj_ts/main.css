@@ -1,36 +1,36 @@
-/*  CSS for running program */
+/*  This is the default css file used for CardiganBay
+
+However, if you want to override and customize the css in an existing 
+installation, look at bedrock/system/custom/main.css (or your equivalent to bedrock)
+
+*/
 
 
 body {
-    font-family: serif;
     font-size: 1.6rem;
-
+    font-family: Roboto,Noto,sans-serif;
     overflow-wrap: break-word;
     word-wrap: break-word;
 
     line-height: 1.618;
-    max-width: 48em;
+    /*max-width: 48em;*/
     margin: auto;
-    color: #4a4a4a;
+    background-color: #ffffff;
+    font-color: #333333;
+
 
     padding: 13px;
 
 
-    background-color:#cccccc;
+    background-color:#eeeeee;
 
 }
 
-@media only screen and (max-width: 600px) {
-  body {
-      font-size: 1.2rem;
-      hyphens: auto;
-  }
-}
 
 
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.1;
-  font-family: Verdana, Geneva, sans-serif;
+  /*font-family: Inconsolata, Verdana, Geneva, sans-serif;*/
 
   font-weight: 700;
   overflow-wrap: break-word;
@@ -43,28 +43,25 @@ h1, h2, h3, h4, h5, h6 {
   hyphens: auto;
 }
 
-#nav1 span {
-      cursor: pointer;
+
+nav {
+    overflow: hidden;
+    background-color: #ffffee;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    width: 100%; /* Full width */
+    font-size: medium;
+}
+
+#clickable {
+    cursor: pointer;
 }
 
 .wikilink { cursor: pointer; }
 
 .wikiname {color: #555555; text-align: right;}
 
-.headerbar {
-	padding:10px;
-	margin: 0;
-/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#a7cfdf+0,331554+100 */
 
-/*
-background: -moz-linear-gradient(45deg, #a7cfdf  0%, #7375A4 100% );
-background: -webkit-linear-gradient(45deg, #a7cfdf  0%, #7375A4 100%);
-background: linear-gradient(45deg, #a7cfdf  0%, #737594 100%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', endColorstr='#7375A4',GradientType=1 );
-	width:100%;
-*/
-
-}
 
 .headerbar a {color:black;}
 
@@ -76,11 +73,6 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7cfdf', end
     margin-bottom:1.5em;
 }
 
-@media only screen and (max-width: 600px) {
-    .card-outer {
-    background: #ddddff;
-    }
-}
 
 .card-meta {
     font-size: 1rem;
@@ -117,12 +109,12 @@ blockquote {
 
 
 .main-container {
-   background-color:#cccccc;
-
+   background-color:#ffffff;
+   padding-top:200px;
    padding:2%;
 }
 
-.context-box {
+.context-box, .headerbar {
     border-style:solid;
     border-width:3px;
     border-color:#111111;
@@ -132,6 +124,7 @@ blockquote {
     margin: 5px;
     border-radius: 10px;
 }
+
 text {
     /*      font-family:Verdana; */
 }
@@ -149,22 +142,28 @@ div textarea {
 
 button {
 
-    color: #339933;
+    color: #666666;
+    background-color:#ffffff;
 
-
-    margin:5px;
+    margin:3px;
 
     background-repeat: no-repeat;
     background-position: <left|right>;
 
-    padding: 5px;
+    padding: 3px;
 
+    font-size:medium;
+    text-align:top;
+    border-style:solid;
+    border-width:1;
+    border-color:#333333;
 }
 
 
 button:hover {
    background-color: #;
 }
+
 
 
 .navbar {
@@ -175,7 +174,7 @@ button:hover {
 
 .pastebar {
     border:10px;
-    background-color:#777788;
+    background-color:#aaaaaa;
     padding:10px;
 }
 
@@ -281,4 +280,125 @@ button:hover {
 
 .workspace-note {
     font-size : 0.8rem;
+}
+
+
+.fixed-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f3f3f3;
+  z-index: 100;
+  overflow: visible;
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px; /* Add padding around the menu */
+}
+
+.left-menu {
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
+.website-title {
+
+  font-weight: bold;
+  margin-right: 16px;
+
+}
+
+.home-icon {
+  text-decoration: none;
+  font-size: 24px;
+  color: #333;
+}
+
+.home-icon:hover {
+  color: #0078d7;
+}
+
+.menu-icon {
+  display: none;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 8px;
+  margin-left: auto; /* Align the hamburger icon to the right */
+}
+
+nav ul {
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  padding: 8px 16px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: #333;
+}
+
+nav ul li a:hover {
+  color: #0078d7;
+}
+
+
+
+@media screen and (max-width: 768px) {
+
+  .left-menu li {
+    display: block; /* Ensure each item inside .left-menu stacks vertically */
+  }
+
+
+
+  .menu-icon {
+      display: block;
+      cursor: pointer;
+      font-size: 24px;
+      padding: 8px;
+      margin-left: auto; /* Align the hamburger icon to the right */
+      z-index: 101; /* Add a higher z-index value */
+      /*background-color: #f3f3f3; /* Add a background-color */
+      position: relative; /* Add position property */
+      top: 0; /* Adjust the top position */
+      right: 16px; /* Adjust the right position */
+  }
+
+
+  nav ul li {
+    text-align: center;
+  }
+
+  .left-menu > ul {
+    display: none;
+    flex-direction: column;
+  }
+
+
+
+  #menu-toggle:checked ~ ul {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    padding-top: 40px; /* Add padding to the top of the menu */
+    top: 0;
+    right: 0; /* Align the vertical menu to the right */
+    background-color: #f3f3f3;
+    z-index: 1; /* Add this property */
+  }
+
+  .card-outer {
+      background: #ddddff;
+  }
+
 }

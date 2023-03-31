@@ -15,11 +15,13 @@
 
 
    [clj-ts.common :refer [raw-card-text->raw-card-map
-                          double-comma-table
+                          double-comma-table embed-boilerplate
                           double-bracket-links auto-links ]]
    ;;[clj-ts.common :refer [card->html ]]
-            )
+
+   )
   (:import goog.net.XhrIo)
+
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -40,6 +42,7 @@
 
 
 ;; PageStore
+
 
 
 (defn load-page! [page-name new-past new-future]
@@ -90,6 +93,7 @@
                    port (-> data (get "server_prepared_page") (get "port"))
                    ip (-> data (get "server_prepared_page") (get "ip"))
                    start-page-name (-> data (get "server_prepared_page")  (get "start_page_name"))
+
                    ]
 
 
@@ -104,7 +108,9 @@
                       :cards cards
                       :system-cards system-cards
                       :past new-past
-                      :future new-future)
+                      :future new-future
+                      :mode :viewing
+)
                )
              (js/window.scroll 0 0)
              )
@@ -265,242 +271,74 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ;; Rendering Views
 
+(defn mode-selected [viewing editing transcript]
+  (condp = (-> @db :mode)
+    :viewing viewing
+    :editing editing
+    :transcript transcript
+    (str "Unknown mode " (-> @db :mode))
+    )
+  )
+
+(defn viewing-menu []
+  (fn []
+    [:ul
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]]
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "InQueue")) } "InQueue"] ]
+     [:li [:span {:class "clickable" :on-click (fn [] (swap! db assoc :mode :transcript))} "Transcript"]]
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"] ]
+     [:li [:a {:href "/api/exportallpages"} "Export All Pages"]]
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "Help"))} "Help"]]]))
+
+(defn editing-menu []
+  (fn []
+    [:ul
+     ]))
+
+(defn transcript-menu []
+  (fn []
+    [:ul
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]]
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "InQueue")) } "InQueue"] ]
+     [:li [:span {:class "clickable" :on-click  (fn [] (swap! db assoc :mode :viewing))} "Return to View Page"] ]
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"] ]
+     [:li [:a {:href "/api/exportallpages"} "Export All Pages"]]
+     [:li [:span {:class "clickable" :on-click (fn [] (go-new! "Help"))} "Help"]]
+
+     ])
+  )
+
+(defn top-menu []
+  (fn []
+    (let [start-page-name (-> @db :start-page-name)
+          wiki-name (-> @db :wiki-name)]
+      [:header {:class "fixed-menu"}
+       [:div
+        [:span {:class "website-title"} wiki-name]]
+       [:nav {:class "left-menu"}
+        [:label {:for "menu-toggle" :class "menu-icon"} "\u2630"]
+        [:input {:type "checkbox" :id "menu-toggle"}]
+        (mode-selected
+         [viewing-menu]
+         [editing-menu ]
+         [transcript-menu ]
+         )]] ))
+  )
+
 (defn nav-input [value]
   [:input {:type "text"
            :id "navinputbox"
            :value @value
+           :placeholder "Type a page-name to go to, a term to search for, or a Clojure expression to execute."
           :on-change #(reset! value (-> % .-target .-value))}])
 
-(defn nav-bar []
-  (let [current (r/atom (-> @db :future last))]
-    (fn []
-      (let [mode (-> @db :mode)
-            start-page-name (-> @db :start-page-name)]
-         [:div {:class "navbar"}
-          [:div {:class "breadcrumbs"}
-           [:span (-> @db :wiki-name )]]
-          [:div {:id "nav1"}
-
-           [:span {:on-click (fn [] (go-new! start-page-name)) } start-page-name]
-           " || "
-           [:span {:on-click (fn [] (go-new! "Help"))} "Help"]
-           " || "
-           [:span {:on-click (fn [] (go-new! "InQueue")) } "InQueue"]
-           " || "
-           [:span {:on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"]
-           " || "
-           [:span {:on-click (fn [] (go-new! "SandBox"))} "SandBox"]
-
-           " || "
-           [:a {:href "/api/exportallpages"} "Export All Pages"]
-
-
-           ]
-          [:div {:id "nav2"}
-           [:button
-            {:class "big-btn"
-             :on-click (fn [] (back!))}
-            [:img {:src "/icons/skip-back.png"}] " Back"]
-
-           [:button
-           {:class "big-btn"
-             :on-click (fn [] (forward! (-> @db :future last)))} ""
-           [:img {:src "/icons/skip-forward.png"}] " Forward"]
-
-           [:button {:class "big-btn"}
-            [:a {:href "/api/rss/recentchanges"} [:img {:src "/icons/rss.png"}]]]
-           ]
-
-          [:div {:id "nav3"}
-
-           [nav-input current]
-
-           [:button
-            {:class "big-btn"
-             :on-click (fn [] (go-new! @current))}
-            ;[:img {:src "/icons/arrow-right.png"}]
-            " Go!"]
-
-           [:button
-            {:class "big-btn"
-             :on-click
-             (fn []
-               (let [code (-> @current str)
-                     result (sci/eval-string code)]
-                 (prepend-transcript! code result)
-                 )
-               )}
-            "Execute"]
-
-           [:button
-            {:class "big-btn"
-             :on-click
-             (fn []
-               (search-text! (-> @current str)))}
-            "Search"]
-           ]]))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; This function embed-boilerplate is a copy of the function in common.cljc
-
-;; But for some reason, when we try to include it from common here
-;; it fails on Chrome on my Android tablet.
-;; It works fine on Chromium on desktop, and on Firefox on the same Android tablet
-;; But Chrome on tablet won't work for any of these boilerplate strings.
-
-;; However, the same code works fine on Chrome on Android
-;; when we use a local copy of embed-boilerplate here in this file (client.cljs)
-
-;; VERY MYSTERIOUS
-;;
-
-(defn embed-boilerplate [type]
-
-  (condp = type
-    :markdown
-    "
-----
-
-"
-    :youtube
-    "
-----
-:embed
-
-{:type :youtube
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-}
-
-"
-    :vimeo
-    "
-----
-:embed
-
-{:type :vimeo
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-}
-
-"
-
-    :media-img
-    "
-----
-:embed
-
-{:type :media-img
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-}
-"
-
-    :img
-    "
-----
-:embed
-
-{:type :img
-:url \"URL GOES HERE\"
-:title \"\"
-:caption \"\"
-}
-"
-
-    :soundcloud
-    "
-----
-:embed
-
-{:type :soundcloud
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-
-}
-
-
-"
-    :bandcamp
-    "
-----
-:embed
-
-{:type :bandcamp
- :id IDHERE
- :url \"URL GOES HERE\"
- :description \"DESCRIPTION GOES HERE\"
- :title \"\"
- :caption \"\"
-
-}
-
-"
-
-    :twitter
-    "
-----
-:embed
-
-{:type :twitter
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-}
-
-"
-    :codepen
-    "
-----
-:embed
-
-{:type :codepen
- :url \"URL GOES HERE\"
- :title \"\"
- :caption \"\"
-}
-
-"
-
-    :rss
-
-    "
-----
-:embed
-
-{:type :rss
- :url \"URL GOES HERE\"
- :caption \"\"
- :title \"\"}
-"
-
-    :oembed
-    "
-----
-:embed
-
-{:type :oembed
- :url \"URL GOES HERE\"
- :api \"API ENDPOINT
- :title \"\"
- :caption \"\"}
-"
-
-
-
-
-    (str   "
-----
-
-NO BOILERPLATE FOR EMBED TYPE " type
-           "
-----
-")))
+(defn boilerplate-button [label tag]
+  [:button {:class "big-btn"
+            :on-click
+            (fn [e]
+              (insert-text-at-cursor! (embed-boilerplate tag)))}
+   label]
+  )
 
 (defn pastebar []
   [:div {:class "pastebar"}
@@ -560,48 +398,72 @@ NO BOILERPLATE FOR EMBED TYPE " type
      "Code on Server"]
 
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :youtube)))}
-     "YouTube Card"]
+    (boilerplate-button "YouTube Card" :youtube)
+    (boilerplate-button "Vimeo Card" :vimeo)
+    (boilerplate-button "Image Card" :img)
+    (boilerplate-button "SoundCloud Card" :soundcloud)
+    (boilerplate-button "BandCamp Card" :bandcamp)
+    (boilerplate-button "Twitter Card" :twitter)
+    (boilerplate-button "RSS Feed" :rss)
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :vimeo)))}
-     "Vimeo Card"]
+]])
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :img)))}
-     "Image Card"]
+(defn nav-bar []
+  (let [current (r/atom (-> @db :future last))]
+    (fn []
+      (let [mode (-> @db :mode)
+            start-page-name (-> @db :start-page-name)]
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :soundcloud)))}
-     "SoundCloud Card"]
+        (if (= mode :editing)
+              [:div {:class "navbar"}
+               [pastebar]
+               ]
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :bandcamp)))}
-     "BandCamp Card"]
+              [:div {:class "navbar"}
+
+               [nav-input current]
+
+               [:div {:id "nav3"}
+
+                [:button
+                 {:class "big-btn"
+                  :on-click (fn [] (back!))}
+                 [:img {:src "/icons/skip-back.png"}] " Back"]
+
+                [:button
+                 {:class "big-btn"
+                  :on-click (fn [] (go-new! @current))}
+                                        ;[:img {:src "/icons/arrow-right.png"}]
+                 " Go To"]
+
+                [:button
+                 {:class "big-btn"
+                  :on-click
+                  (fn []
+                    (search-text! (-> @current str)))}
+                 "Search"]
+
+                [:button
+                 {:class "big-btn"
+                  :on-click
+                  (fn []
+                    (let [code (-> @current str)
+                          result (sci/eval-string code)]
+                      (prepend-transcript! code result)
+                      )
+                    )}
+                 "Execute"]
+
+                [:button
+                 {:class "big-btn"
+                  :on-click (fn [] (forward! (-> @db :future last)))} ""
+                 [:img {:src "/icons/skip-forward.png"}] " Forward"]
 
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :twitter)))}
-     "Twitter Card"]
+                ]])))))
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :rss)))}
-     "RSS Feed"]]])
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -613,30 +475,28 @@ NO BOILERPLATE FOR EMBED TYPE " type
          (condp = mode
            :editing
            [:div
-            [:div
-             [:span
-              [:button {:class "big-btn"
-                        :on-click
-                        (fn []
-                          (do
-                            (swap! db assoc :mode :viewing)
-                            (reload!)))}
-               [:img {:src "/icons/x.png"}] " Cancel"]
-              [:button {:class "big-btn"
-                        :on-click
-                        (fn []
-                          (do
-                            (swap! db assoc :mode :viewing)
-                            (save-page!)) )}
-               [:img {:src "/icons/save.png"}] " Save"]
+            [:span
+             [:button {:class "big-btn"
+                       :on-click
+                       (fn []
+                         (do
+                           (swap! db assoc :mode :viewing)
+                           (reload!)))}
+              [:img {:src "/icons/x.png"}] " Cancel"]
+             [:button {:class "big-btn"
+                       :on-click
+                       (fn []
+                         (do
+                           (swap! db assoc :mode :viewing)
+                           (save-page!)) )}
+              [:img {:src "/icons/save.png"}] " Save"]
 
 
 
 
-              ]]
-            (pastebar)
+             ]]
 
-            ]
+
 
            :viewing
            [:span
@@ -660,17 +520,7 @@ NO BOILERPLATE FOR EMBED TYPE " type
            )
 
 
-         (comment
-           " :: Stamps :: "
-           [:button {:class "big-btn"
-                     :on-click
-                     (fn []
-                       (stamp! :delete ))} "Delete"]
-           " | "
-           [:button {:class "big-btn"
-                     :on-click
-                     (fn []
-                       (stamp! :fix)) } "Fix"])]))
+         ]))
     ))
 
 
@@ -1010,7 +860,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
       :editing
       [:div {:class "edit-box"}
        [:textarea
-        {:id "edit-field" :cols 80 :rows 40
+        {:id "edit-field" :cols 80 :rows 40 :width "90%"
          :on-key-press
          (fn [e]
            (js/console.log "KEYPRESS ON TEXTAREA")
@@ -1038,18 +888,22 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
       )]
    ])
 
-;;
+
+
+
+
+
+
+;; ===========================================================================
 
 ; Main page
 (defn content []
-  [:div {:class "main-container"}
-   [:div {:class "headerbar"}
-    [:div
-     [:div [nav-bar]]
-
-     ]]
+  [:div
+   [top-menu]
+   [:div {:class "main-container"}
+    [:div {:class "headerbar"}
+     [nav-bar]]
    [:div {:class "context-box"}
-
     [:h2
      (if (= (-> @db :mode) :transcript)
        "Transcript"
@@ -1061,17 +915,22 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
                      "/" (-> @db :current-page))} " (public)" ]]]) ]
 
       [:div [tool-bar]]
-      [main-container]]
+    [main-container]
+    ]
    [:div {:class "footer"}
     [:span
-     [:span "This " (-> @db :wiki-name) " wiki!"]
+     [:span (-> @db :wiki-name) " || " ]
+     [:span (-> @db :mode) " || "]
      [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
      [:span [:a {:href "/api/system/db"} "DB"] " || "]
      [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
      "(c) Phil Jones 2020-2022  || "
      [:span "IP: "(str (-> @db :ip) ) " || "]
      [:a {:href
-          (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]])
+          (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]]
+   ]
+
+  )
 
 
 ;; tells reagent to begin rendering
