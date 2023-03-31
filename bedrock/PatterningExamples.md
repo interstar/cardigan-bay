@@ -2,7 +2,7 @@
 
 The following cards, of type :patterning, show some example patterns to give an idea how the library works. Note that the embedded SVG in these cards was generated from Patterning at [[ExportTime]]
  
-You can learn more about Patterning here : <http://alchemyislands.com/bs/assets/patterning/tutorial_site/index.html#!/tutorial.fp>
+You can learn more about Patterning here : <http://alchemyislands.com/tutorials/HelloWorld.html>
 
 
 
