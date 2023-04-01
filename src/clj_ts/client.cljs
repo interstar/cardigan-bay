@@ -313,16 +313,18 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
     (let [start-page-name (-> @db :start-page-name)
           wiki-name (-> @db :wiki-name)]
       [:header {:class "fixed-menu"}
-       [:div
-        [:span {:class "website-title"} wiki-name]]
-       [:nav {:class "left-menu"}
-        [:label {:for "menu-toggle" :class "menu-icon"} "\u2630"]
-        [:input {:type "checkbox" :id "menu-toggle"}]
-        (mode-selected
-         [viewing-menu]
-         [editing-menu ]
-         [transcript-menu ]
-         )]] ))
+       [:div  {:class "nav-wrapper"}
+         [:span {:class "website-title"} wiki-name]
+        [:nav {:class "left-menu"}
+
+         [:label {:for "menu-toggle" :class "menu-icon"} "\u2630"]
+         [:input {:type "checkbox" :id "menu-toggle"}]
+         (mode-selected
+          [viewing-menu]
+          [editing-menu ]
+          [transcript-menu ]
+          )]]
+] ))
   )
 
 (defn nav-input [value]
@@ -332,30 +334,56 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
            :placeholder "Type a page-name to go to, a term to search for, or a Clojure expression to execute."
           :on-change #(reset! value (-> % .-target .-value))}])
 
-(defn boilerplate-button [label tag]
+
+;;;; Paste Bar
+
+(defn paste-button [label text]
   [:button {:class "big-btn"
             :on-click
             (fn [e]
-              (insert-text-at-cursor! (embed-boilerplate tag)))}
+              (insert-text-at-cursor! text))}
    label]
   )
 
+(defn boilerplate-button [label tag]
+  (paste-button label (embed-boilerplate tag))
+  )
+
+
+
+(defn paged [class  & pages]
+  (let [index (r/atom 0)]
+    (fn []
+      [:div {:class class
+             :style {:display "flex"
+                     :flex-direction "column"}}
+       [:button
+        {:style {:align-self "flex-end"}
+         :on-click #(reset! index (mod (inc @index) (count pages)))}
+        (str @index)]
+       (nth pages @index)
+       ])))
+
+
+
+
 (defn pastebar []
-  [:div {:class "pastebar"}
-   [:div
-    "Quick Paste Bar"]
-   [:div
+  (fn []
+    [paged "pastebar"
+     [:div
+      [:h5 "Quick Paste"]
+      (boilerplate-button "Divider" :markdown)
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! (embed-boilerplate :markdown)))}
-     "New Card"]
+      (paste-button "[[]]" "[[]]")
+      (paste-button "[]()" "[]()")
+      (paste-button "<>" "<>")
+      (paste-button "£" "£")
+      ]
+     [:div
+      [:h5 "Quick Paste Embedded"]
+      (boilerplate-button "Image" :img)
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! "
+      (paste-button "Search" "
 ----
 :system
 
@@ -363,28 +391,32 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
  :query \"\"
 }
 
-----"))}
-     "Search Card"]
+----")
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! "
+
+      (boilerplate-button "YouTube" :youtube)
+      (boilerplate-button "Vimeo" :vimeo)
+
+      (boilerplate-button "SoundCloud" :soundcloud)
+      (boilerplate-button "BandCamp" :bandcamp)
+      (boilerplate-button "Twitter" :twitter)
+      (boilerplate-button "RSS Feed" :rss)
+
+      ]
+     [:div
+      [:h5 "Quick Paste Clojure"]
+      (paste-button "Code Workspace" "
 ----
 :workspace
 
 ;; Write some code
-[:div
-(str \"Hello Teenage America\")
-]
 
-----"))}
-     "Code Workspace"]
+(str \"Hello Teenage America : 2 + 2 = \" (+ 2 2))
 
-    [:button {:class "big-btn"
-              :on-click
-              (fn [e]
-                (insert-text-at-cursor! "
+
+----")
+
+      (paste-button "Code on Server" "
 ----
 :evalmd
 
@@ -394,19 +426,51 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 (str \"### \" (+ 1 2 3))
 
-"))}
-     "Code on Server"]
+")
 
+      (paste-button "(F x)" "(F x)")
+      (paste-button "()" "()")
+      (paste-button "#()" "#()")
+      (paste-button "(map...)" "(map #() XS)")
+      (paste-button "(reduce...)" "(reduce #() INIT XS)")
+      (paste-button "(filter...)" "(filter #() XS)")
+      (paste-button "(defn...)" "
 
-    (boilerplate-button "YouTube Card" :youtube)
-    (boilerplate-button "Vimeo Card" :vimeo)
-    (boilerplate-button "Image Card" :img)
-    (boilerplate-button "SoundCloud Card" :soundcloud)
-    (boilerplate-button "BandCamp Card" :bandcamp)
-    (boilerplate-button "Twitter Card" :twitter)
-    (boilerplate-button "RSS Feed" :rss)
+(defn FNAME [ARGS]
+  (BODY)
+)
 
-]])
+")
+
+      (paste-button "(str..." "(str )")
+      (paste-button "(cond...)" "
+
+(cond
+  (EXP1) RES1
+  (EXP2) RES2
+  :else ELSE
+)
+
+")
+
+      (paste-button "(for..." "
+
+(for [X XS]
+
+)
+
+"                  )
+      (paste-button "(-> ...)" "
+
+  (-> XX
+    (FF)
+  )
+
+")
+
+      (paste-button ";;;;PUBLIC" ";;;;PUBLIC")
+
+      ]]))
 
 (defn nav-bar []
   (let [current (r/atom (-> @db :future last))]
@@ -681,18 +745,20 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
          [:div {:class :code :style {:padding "3px"
                                      :display (display (-> @state :code-toggle))} }
           [:h4 "Source"]
-          [:textarea {:cols 60 :rows 10
+          [:textarea {:rows 10 :width "100%"
                       :on-change
                       (fn [e] (swap! state #(conj % {:code (-> e .-target .-value )})))}
            (trim (-> @state :code))]]
          [:div {:class :calculated-out :style {:padding "3px"
                                                :display (display (-> @state :calc-toggle))}}
+          [:hr]
           [:h4 "Calculated"]
           [:pre
            (with-out-str (pprint (str (-> @state :calc))))
            ]]
          [:div {:class :results :style {:padding "3px"
                                         :display (display (-> @state :result-toggle))}}
+          [:hr]
           [:h4 "Result"]
           [:div
            (let [result (-> @state :result)]
@@ -900,42 +966,43 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
 (defn content []
   [:div
    [top-menu]
-   [:div {:class "main-container"}
-    [:div {:class "headerbar"}
-     [nav-bar]]
-   [:div {:class "context-box"}
-    [:h2
-     (if (= (-> @db :mode) :transcript)
-       "Transcript"
-       [:span
-        (-> @db :current-page)
-        [:span {:class "tslink"}
-         [:a {:href (str
-                     (string/replace (-> @db :site-url) #"/$" "")
-                     "/" (-> @db :current-page))} " (public)" ]]]) ]
-
-      [:div [tool-bar]]
-    [main-container]
+   [:div {:class "navbar-spacer"}
     ]
-   [:div {:class "footer"}
-    [:span
-     [:span (-> @db :wiki-name) " || " ]
-     [:span (-> @db :mode) " || "]
-     [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
-     [:span [:a {:href "/api/system/db"} "DB"] " || "]
-     [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
-     "(c) Phil Jones 2020-2022  || "
-     [:span "IP: "(str (-> @db :ip) ) " || "]
-     [:a {:href
-          (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]]
+   [:div {:class "headerbar"}
+    [nav-bar]]
+   [:div {:class "main-container"}
+
+    [:div {:class "context-box"}
+     [:h2
+      (if (= (-> @db :mode) :transcript)
+        "Transcript"
+        [:span
+         (-> @db :current-page)
+         [:span {:class "tslink"}
+          [:a {:href (str
+                      (string/replace (-> @db :site-url) #"/$" "")
+                      "/" (-> @db :current-page))} " (public)" ]]]) ]
+
+     [:div [tool-bar]]
+     [main-container]
+     ]
+    [:div {:class "footer"}
+     [:span
+      [:span (-> @db :wiki-name) " || " ]
+      [:span (-> @db :mode) " || "]
+      [:span " || Home : " [:a {:href (-> @db :site-url)} (-> @db :site-url)] " || " ]
+      [:span [:a {:href "/api/system/db"} "DB"] " || "]
+      [:a {:href "https://github.com/interstar/cardigan-bay"} "Cardigan Bay "]
+      "(c) Phil Jones 2020-2022  || "
+      [:span "IP: "(str (-> @db :ip) ) " || "]
+      [:a {:href
+           (str "javascript:(function(){window.location='http://localhost:" (-> @db :port) "/api/bookmarklet?url='+document.URL;})();")} "Bookmark to this Wiki"]] ]]
    ]
 
   )
 
 
 ;; tells reagent to begin rendering
-
-
 
 
 (r/render-component [content]

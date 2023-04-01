@@ -53,6 +53,11 @@ nav {
     font-size: medium;
 }
 
+
+.navbar-spacer {
+    padding-top: 50px;
+}
+
 #clickable {
     cursor: pointer;
 }
@@ -267,20 +272,21 @@ button:hover {
 
 
 .code {
-    font-size : 0.8rem;
+    font-size : 1.5rem;
 }
 
 .calculated-out {
-    font-size : 1rem;
+    font-size : 1.2rem;
 }
 
 .results {
-    font-size : 1rem;
+    font-size : 1.5rem;
 }
 
 .workspace-note {
     font-size : 0.8rem;
 }
+
 
 
 .fixed-menu {
@@ -361,18 +367,29 @@ nav ul li a:hover {
 
 
 
-  .menu-icon {
-      display: block;
-      cursor: pointer;
-      font-size: 24px;
-      padding: 8px;
-      margin-left: auto; /* Align the hamburger icon to the right */
-      z-index: 101; /* Add a higher z-index value */
-      /*background-color: #f3f3f3; /* Add a background-color */
-      position: relative; /* Add position property */
-      top: 0; /* Adjust the top position */
-      right: 16px; /* Adjust the right position */
+  .fixed-menu {
+
+      height: 0px;
   }
+
+
+  .nav-wrapper {
+      /*display: none;*/
+      height: 0;
+  }
+
+ .menu-icon {
+    display: block;
+    cursor: pointer;
+    font-size: 24px;
+    padding: 8px;
+    margin-left: auto;
+    z-index: 101;
+    position: absolute; /* Change to absolute */
+    top: 4px; /* Adjust top position */
+    right: 16px; /* Adjust right position */
+  }
+
 
 
   nav ul li {
