@@ -7,3 +7,5 @@ New to Cardigan Bay?
 [[UserGuide]]
 
 Test things in the [[SandBox]]
+
+Look at the RSS Feed : <http://localhost:4545/api/rss/recentchanges>
