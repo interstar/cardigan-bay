@@ -7,4 +7,4 @@ See the next card for an example that searches this wiki for the words "wiki".
 :system
 
 {:command :search
- :query "wiki"}
+ :query "Cardigan"}
