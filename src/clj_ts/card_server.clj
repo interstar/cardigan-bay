@@ -167,6 +167,39 @@
     (.printStackTrace e pw)
     (str "Exception :: " (.getMessage e) (-> sw .toString) ))  )
 
+;; Other functions
+
+(defn search [term]
+  (let [db (-> (server-state) :facts-db)
+        all-pages (.all-pages db)
+
+        name-res (pagestore/name-search (server-state) all-pages
+                                        (re-pattern term))
+
+        count-names (count name-res)
+
+        res (pagestore/text-search (server-state) all-pages
+                                   (re-pattern term))
+
+        count-res (count res)
+
+        name-list (apply str (map #(str "* [[" % "]]\n") name-res))
+        res-list (apply str (map #(str "* [[" % "]]\n") res))
+
+
+        out
+        (str "
+
+*" count-names " PageNames containing \"" term "\"*\n
+" name-list "
+
+*" count-res " Pages containing \" " term "\"*\n "
+             res-list
+            )]
+
+    out
+    )
+  )
 
 ;; Card Processing
 
@@ -233,14 +266,10 @@
          "recentchanges" :system :markdown src src user-authored?))
 
       :search
-      (let [res (pagestore/text-search (server-state) (.all-pages db)
-                                       (re-pattern (:query info)))
-            out
-            (str "*Searching pages containing \" " (:query info) "\"*\n "
-                 (apply str (map #(str "* [[" % "]]\n") res))) ]
-
-
-        (common/package-card (str "search " i) :system :markdown out out user-authored?))
+      (let [res (search (:query info) ) ]
+        (common/package-card
+         "search" :system :markdown
+         res res user-authored?))
 
       :about
       (let [sr (str "### System Information
@@ -440,16 +469,7 @@ Bookmarked " timestamp  ",, <" url ">
 
 (defn resolve-text-search [context arguments value]
   (let [{:keys [query_string]} arguments
-
-        res (pagestore/text-search (server-state)
-                                   (.all-pages (-> (server-state)
-                                                   :facts-db))
-                                   (re-pattern query_string))
-        header (str "#### " (count res) " pages containing \"" query_string "\"\n")
-        out
-        (str header
-             (apply str (map #(str "* [[" % "]]\n") res))) ]
-
+        out (search query_string)]
     {:result_text out}
     ))
 
@@ -473,7 +493,14 @@ Bookmarked " timestamp  ",, <" url ">
       {:page_name page_name
        :body (pagestore/read-page (server-state) page_name)}
       {:page_name page_name
-       :body "PAGE DOES NOT EXIST"})))
+       :body
+       (str "A PAGE CALLED " page_name " DOES NOT EXIST
+
+
+Check if the name you typed, or in the link you followed is correct.
+
+If you would *like* to create a page with this name, simply click the [Edit] button to edit this text. When you save, you will create the page")
+       })))
 
 
 (defn resolve-page [context arguments value]
@@ -511,7 +538,15 @@ Bookmarked " timestamp  ",, <" url ">
        :ip ip
        :start_page_name start-page-name
        :public_root (str site-url "/view/")
-       :cards (raw->cards "PAGE DOES NOT EXIST" false false)
+       :cards (raw->cards
+               (str "<div style='color:#990000'>A PAGE CALLED " page_name " DOES NOT EXIST
+
+
+Check if the name you typed, or in the link you followed is correct.
+
+If you would *like* to create a page with this name, simply click the [Edit] button to edit this text. When you save, you will create the page
+</div>")
+               false false)
        :system_cards
        (let [sim-names (map
                         #(str "\n- [[" % "]]")

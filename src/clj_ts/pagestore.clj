@@ -214,6 +214,7 @@
 
 
 ;; Search
+;; Full Text Search
 (defn text-search [server-state page-names pattern]
   (let [contains-pattern?
         (fn [page-name]
@@ -222,6 +223,11 @@
         res (filter contains-pattern? page-names)]
     res
     ))
+
+;; Name Search - finds names containing substring
+(defn name-search [server-state page-names pattern]
+  (filter #(not (nil? (re-find pattern %))) page-names))
+
 
 
 ;; Global Search and replace

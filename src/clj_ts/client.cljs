@@ -283,6 +283,10 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn viewing-menu []
   (fn []
     [:ul
+     [:li [:span {:on-click (fn [] (back!))}
+           [:img {:src "/icons/skip-back.png"}]]]
+     [:li [:span {:on-click (fn [] (forward! (-> @db :future last)))} ""
+           [:img {:src "/icons/skip-forward.png"}]]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "InQueue")) } "InQueue"] ]
      [:li [:span {:class "clickable" :on-click (fn [] (swap! db assoc :mode :transcript))} "Transcript"]]
@@ -298,6 +302,10 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn transcript-menu []
   (fn []
     [:ul
+     [:li [:span {:on-click (fn [] (back!))}
+           [:img {:src "/icons/skip-back.png"}]]]
+     [:li [:span {:on-click (fn [] (forward! (-> @db :future last)))} ""
+           [:img {:src "/icons/skip-forward.png"}]]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "InQueue")) } "InQueue"] ]
      [:li [:span {:class "clickable" :on-click  (fn [] (swap! db assoc :mode :viewing))} "Return to View Page"] ]
@@ -314,7 +322,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
           wiki-name (-> @db :wiki-name)]
       [:header {:class "fixed-menu"}
        [:div  {:class "nav-wrapper"}
-         [:span {:class "website-title"} wiki-name]
+        [:span {:class "website-title"} wiki-name]
+
+
         [:nav {:class "left-menu"}
 
          [:label {:for "menu-toggle" :class "menu-icon"} "\u2630"]
@@ -327,6 +337,10 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 ] ))
   )
 
+
+
+
+
 (defn nav-input [value]
   [:input {:type "text"
            :id "navinputbox"
@@ -337,16 +351,21 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ;;;; Paste Bar
 
-(defn paste-button [label text]
+(defn send-to-clipboard [s]
+  (-> (js/Promise.resolve (.writeText js/navigator.clipboard s))
+      (.then (fn [_] (js/console.log (str "Text copied to clipboard " s))))
+      (.catch (fn [error] (js/console.error "Failed to copy text:", error)))))
+
+(defn clip-button [label text]
   [:button {:class "big-btn"
             :on-click
             (fn [e]
-              (insert-text-at-cursor! text))}
+              (send-to-clipboard text))}
    label]
   )
 
 (defn boilerplate-button [label tag]
-  (paste-button label (embed-boilerplate tag))
+  (clip-button label (embed-boilerplate tag))
   )
 
 
@@ -357,33 +376,36 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
       [:div {:class class
              :style {:display "flex"
                      :flex-direction "column"}}
-       [:button
-        {:style {:align-self "flex-end"}
-         :on-click #(reset! index (mod (inc @index) (count pages)))}
-        (str @index)]
+       [:div
+        [:span
+         {:on-click #(reset! index (mod (inc @index) (count pages)))}
+         "Copy Bar : " (str @index)]
+       ]
+
        (nth pages @index)
+
        ])))
 
 
 
 
-(defn pastebar []
+(defn copybar []
   (fn []
-    [paged "pastebar"
+    [paged "copybar"
      [:div
-      [:h5 "Quick Paste"]
       (boilerplate-button "Divider" :markdown)
 
-      (paste-button "[[]]" "[[]]")
-      (paste-button "[]()" "[]()")
-      (paste-button "<>" "<>")
-      (paste-button "£" "£")
+      (clip-button "[[]]" "[[PAGENAME]]")
+      (clip-button "[]()" "[LINKTEXT](URL)")
+      (clip-button "<>" "<URL>")
+      (clip-button "£" "£")
+      (clip-button "?" "?")
+      (clip-button "=" "=")
       ]
      [:div
-      [:h5 "Quick Paste Embedded"]
       (boilerplate-button "Image" :img)
 
-      (paste-button "Search" "
+      (clip-button "Search" "
 ----
 :system
 
@@ -404,8 +426,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
       ]
      [:div
-      [:h5 "Quick Paste Clojure"]
-      (paste-button "Code Workspace" "
+      (clip-button "Code Workspace" "
 ----
 :workspace
 
@@ -416,7 +437,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ----")
 
-      (paste-button "Code on Server" "
+      (clip-button "Code on Server" "
 ----
 :evalmd
 
@@ -428,13 +449,17 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ")
 
-      (paste-button "(F x)" "(F x)")
-      (paste-button "()" "()")
-      (paste-button "#()" "#()")
-      (paste-button "(map...)" "(map #() XS)")
-      (paste-button "(reduce...)" "(reduce #() INIT XS)")
-      (paste-button "(filter...)" "(filter #() XS)")
-      (paste-button "(defn...)" "
+      (clip-button "(F x)" "(F x)")
+      (clip-button "()" "(XX)")
+      (clip-button "[]" "[XX]")
+      (clip-button "{}" "{KEY VAL}")
+      (clip-button "#()" "#(OP )")
+      (clip-button "(map...)" "(map #(OP ) XS)")
+      (clip-button "(reduce...)" "(reduce #(OP ) INITIAL XS)")
+      (clip-button "(filter...)" "(filter #(OP ) XS)")
+      (clip-button "(str..." "(str )")
+
+      (clip-button "(defn...)" "
 
 (defn FNAME [ARGS]
   (BODY)
@@ -442,8 +467,8 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ")
 
-      (paste-button "(str..." "(str )")
-      (paste-button "(cond...)" "
+
+      (clip-button "(cond...)" "
 
 (cond
   (EXP1) RES1
@@ -453,14 +478,14 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ")
 
-      (paste-button "(for..." "
+      (clip-button "(for..." "
 
 (for [X XS]
 
 )
 
 "                  )
-      (paste-button "(-> ...)" "
+      (clip-button "(-> ...)" "
 
   (-> XX
     (FF)
@@ -468,7 +493,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ")
 
-      (paste-button ";;;;PUBLIC" ";;;;PUBLIC")
+      (clip-button ";;;;PUBLIC" ";;;;PUBLIC")
 
       ]]))
 
@@ -480,7 +505,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
         (if (= mode :editing)
               [:div {:class "navbar"}
-               [pastebar]
+               [copybar]
                ]
 
               [:div {:class "navbar"}
@@ -489,16 +514,13 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
                [:div {:id "nav3"}
 
-                [:button
-                 {:class "big-btn"
-                  :on-click (fn [] (back!))}
-                 [:img {:src "/icons/skip-back.png"}] " Back"]
+
 
                 [:button
                  {:class "big-btn"
                   :on-click (fn [] (go-new! @current))}
                                         ;[:img {:src "/icons/arrow-right.png"}]
-                 " Go To"]
+                 "View"]
 
                 [:button
                  {:class "big-btn"
@@ -518,18 +540,15 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                     )}
                  "Execute"]
 
-                [:button
-                 {:class "big-btn"
-                  :on-click (fn [] (forward! (-> @db :future last)))} ""
-                 [:img {:src "/icons/skip-forward.png"}] " Forward"]
+
 
 
                 ]])))))
 
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (defn tool-bar []
   (let [current (r/atom (-> @db :future last))]
@@ -984,6 +1003,7 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
                       "/" (-> @db :current-page))} " (public)" ]]]) ]
 
      [:div [tool-bar]]
+
      [main-container]
      ]
     [:div {:class "footer"}
