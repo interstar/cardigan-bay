@@ -15,6 +15,9 @@ In both cases, the code needs to be correct (without bugs or causing exceptions)
 ### Evaluation in the Browser
 
 At the moment there is a particular Workspace card into which the viewer can type Clojure code and have it evaluated. Full details are on  [[WorkspaceExample]]
+
+There is also [[GraphingExample]] which shows you how to implement a simple "graphing calculator" using a workspace.
+
 ----
 ### Evaluation on the Server
 
