@@ -5,9 +5,9 @@ Note that the output of the code is expected to be either a string or [hiccup](h
 :workspace
 
 ;; Write some code
-[:div
-[:ul
-(map (fn [x] [:li (str x ", " (reduce + (range x)))]) (range 20))
+[:div 
+[:ul {:style {:font-size "small"}}
+(map (fn [x] [:li (str x ", " (reduce + (range x)))]) (range 10))
 ]]
 ----
 
