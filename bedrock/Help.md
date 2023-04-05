@@ -8,4 +8,9 @@ New to Cardigan Bay?
 
 Test things in the [[SandBox]]
 
-Look at the RSS Feed : <http://localhost:4545/api/rss/recentchanges>
+Look at the RSS Feed : [/api/rss/recentchanges](/api/rss/recentchanges)
+
+
+### Toolbox
+
+To export all pages : [/api/exportallpages](/api/exportallpages)

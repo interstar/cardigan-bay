@@ -58,7 +58,7 @@ nav {
     padding-top: 50px;
 }
 
-#clickable {
+.clickable  {
     cursor: pointer;
 }
 
@@ -272,7 +272,7 @@ button:hover {
 
 
 .code {
-    font-size : 1.5rem;
+    font-size : 1.4rem;
 }
 
 .calculated-out {
@@ -361,8 +361,12 @@ nav ul li a:hover {
 
 @media screen and (max-width: 768px) {
 
+  body {
+      font-size: 1rem;
+  }
+
   .left-menu li {
-    display: block; /* Ensure each item inside .left-menu stacks vertically */
+      display: block; /* Ensure each item inside .left-menu stacks vertically */
   }
 
 
@@ -417,5 +421,10 @@ nav ul li a:hover {
   .card-outer {
       background: #ddddff;
   }
+
+  .code {
+      font-size : 0.9rem;
+  }
+
 
 }

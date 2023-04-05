@@ -10,8 +10,11 @@ There are two ways to embed Clojure code in your wiki.
 
 In both cases, the code needs to be correct (without bugs or causing exceptions). And can't use external resources or include libraries etc.
 
-For more on running ClojureScript in the client / browser, see 
-[[WorkspaceExample]]
+----
+
+### Evaluation in the Browser
+
+At the moment there is a particular Workspace card into which the viewer can type Clojure code and have it evaluated. Full details are on  [[WorkspaceExample]]
 ----
 ### Evaluation on the Server
 
@@ -22,7 +25,6 @@ The card-types :evalraw and :evalmd allow us to embed Clojure code in a page whi
 :evalmd assumes that the code returned will itself be in markdown format and therefore should be run through the markdown renderer.
 
 The next cards have examples of :evalraw and :evalmd
-
 ----
 :evalraw
 (map 
@@ -45,7 +47,7 @@ The next cards have examples of :evalraw and :evalmd
 
 
 ----
-See [[PatterningExamples]]
+See also [[PatterningExamples]]
 
 ----
 ### IMPORTANT

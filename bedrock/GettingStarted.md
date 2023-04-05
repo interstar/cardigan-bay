@@ -89,6 +89,8 @@ See more on [[CardTypes]]
 
 ### Extra Card Functions
 
+At the bottom left of each card are up and down buttons. These move a card shift the card either up or down in the sequence of cards on the page. It's a quick and convenient way to reorder cards on the page without going to the Edit mode.
+
 At the bottom right of each card is a little "eye" icon. Click this to open and see the **CardBar** which contains extra information about the card, and some buttons to do things like re-order it within the page or move it to a different page.
 
 See [[CardBar]] for details.
