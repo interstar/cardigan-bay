@@ -20,7 +20,7 @@ See next card source for this example.
 [1 "HelloWorld" 180 60]
 [2 "CardiganBay" 100 250]
 [3 "GettingStarted" 340 300]
-[4 "EvalExamples" 200 340]
+[4 "CodeExamples" 200 340]
 ]
  :arcs [
 [1 3]

@@ -14,7 +14,17 @@ By default, CardiganBay comes with some standard pages, to let you see what it's
 You are free to change these pages and customize the notebook to your own taste. But note, that you will discover some pages have specific functions. For example, the page called "[[AllPages]]" shows you a list of all the pages in the wiki. It does this because it contains a special "*system card*" (don't worry about what this means yet, it will be explained later). And if you remove that system card, it will no longer show you all the pages. Don't worry about all this. It should be pretty obvious once you get going. 
 
 ----
+### Navigating and interacting with Cardigan Bay
 
+You can navigate to a new page by either typing its name into [[TheNavBar]] at the top of the window, and clicking the [View It] button.
+
+Or clicking on a link on a page. Hyperlinks work in Cardigan Bay much like they do on the web or on other wikis. Though you should use Cardigan Bay's own [Back] and [Forward] buttons (at the left of the top menu) rather than the browser's back and forward buttons.
+
+If you try to view a page which doesn't currently exist in the wiki, either through the NavBar or following a link, you be shown a dummy page with some red text explaining this. If you want to create the page you can simply click the [Edit] button, clear out this dummy text and write your own content. If, you don't want to create the page, simply hit the [Back] button to return to the page you were on previously. 
+
+You can search for both names of pages or text within the pages, by simply typing it into NavBar and hitting the [Find It] button. The results will appear on [[TheTranscript]], which records the results of this and similar activities. If you find yourself on the Transcript you can simply click the [Return] button to get back to the page you are viewing. The Transcript is *not*, itself, a page. But a convenient place to see the output of more dynamic interactions. 
+
+----
 ### Editing Pages 
 
 To edit any page, just click the **Edit** button at the top. 
