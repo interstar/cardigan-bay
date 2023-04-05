@@ -1,4 +1,16 @@
-This is [[CardiganBay]] *0.7.2*
+This is [[CardiganBay]] *0.7.3*
+----
+# Release 0.7.3 Notes
+
+There's been a considerable overhaul of the look Cardigan Bay, with improved CSS, some changes to hopefully make the UI a lot more friendly and intelligible to new users.
+
+Patterning support has been enhanced (including adding l-systems etc.)
+
+The Export All link on the main menu has been replaced by an Export Recent Pages link. This exports only the pages listed on RecentChanges. So rather than re-exporting the whole wiki after making a few changes, you can now just re-export what's changed.
+
+The "Quick Paste" bar in the editor has been replaced by a "Copy Bar". When you press the buttons, instead of the snippet being inserted into the edit box directly, it's now copied to the clipboard. It was decided that it's more logical to select a snippet and then find where to insert it (using normal browser paste) than position the cursor first and then press the button. The copy bar is also in several pages. Page 0 is things useful for convenient text editing, especially on mobile (eg quick paste of pairs of double square brackets etc.) The second page has the embedded media types. And the third page useful snippets of Clojure.
+
+More documentation in bedrock.
 
 ----
 # Release 0.7.2 Notes

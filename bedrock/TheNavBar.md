@@ -17,3 +17,14 @@ If the page you are trying to view doesn't exist, just as in the case of followi
 If you type some text into the NavBar and hit the [Find It] button,  this will trigger a search of the text both in the names of pages and the bodies of pages. The results of both these searches will be printed to [[TheTranscript]]
 
 If you want to run a small Clojure expression, type it in the NavBar and hit the [Run It] button. The result will, again, be printed to [[TheTranscript]] 
+
+----
+### The Copy Bar
+
+When you switch to Edit mode in Cardigan Bay, the NavBar disappears, and is replaced by the Copy Bar. (See [[RemovingNavBarDuringEditing]] for an explanation)
+
+The Copy Bar is a replacement for the previous Quick Paste bar. It provides a number of boilerplate "snippets" of  things you may want to add to a page, such a embed cards, search cards, workspaces or even simple Markdown and Clojure code.
+
+These are particularly useful on mobile devices where the kinds of brackets and and obscure symbols you need particularly for Clojure are often awkward to reach on the touch keyboard. But particularly the [[CardTypes]] are also useful for anyone who needs to remember the exact format of the data-structure for a particular media embedding.
+
+Originally this was a Quick Paste bar in which clicking the button pasted the snippet into the text at the current position of the cursor. However this was found to be confusing, as users were not always aware where the cursor was. So now the buttons copy the snippet to the clipboard, and you can then find the place in the text you want to insert it, and use standard paste.
