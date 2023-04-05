@@ -221,6 +221,17 @@
     {:status 303
      :headers {"Location" (str "/view/" (-> card-server/server-state :start-page)) }}))
 
+
+(defn export-recent-pages-handler [request]
+  (do
+    (println "Exporting recent pages ... in background")
+    (future
+      (do
+        (export/export-recent-pages (card-server/server-state))
+        (println "Export finished")))
+    {:status 303
+     :headers {"Location"  "/view/RecentChanges" }}))
+
 (defn media-file-handler [request]
   (let [file-name (-> request :uri
                       (#(re-matches #"/media/(\S+)"  %))
@@ -298,6 +309,9 @@
 
       (= uri "/api/exportallpages")
       (export-all-pages-handler request)
+
+      (= uri "/api/exportrecentpages")
+      (export-recent-pages-handler request)
 
       (= uri "/custom/main.css")
       (custom-file-handler request)

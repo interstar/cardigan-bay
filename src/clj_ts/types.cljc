@@ -23,6 +23,7 @@
   (media-export-path [ps])
 
   (read-recentchanges [ps])
+  (recent-changes-as-page-list [ps])
   (write-recentchanges! [ps new-rc] )
   (load-media-file [ps file-name])
   (load-custom-file [ps file-name])

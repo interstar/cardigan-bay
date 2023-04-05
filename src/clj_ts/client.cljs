@@ -283,15 +283,15 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn viewing-menu []
   (fn []
     [:ul
-     [:li [:span {:on-click (fn [] (back!))}
+     [:li [:span {:class "clickable" :on-click (fn [] (back!))}
            [:img {:src "/icons/skip-back.png"}]]]
-     [:li [:span {:on-click (fn [] (forward! (-> @db :future last)))} ""
+     [:li [:span {:class "clickable" :on-click (fn [] (forward! (-> @db :future last)))} ""
            [:img {:src "/icons/skip-forward.png"}]]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "InQueue")) } "InQueue"] ]
      [:li [:span {:class "clickable" :on-click (fn [] (swap! db assoc :mode :transcript))} "Transcript"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"] ]
-     [:li [:a {:href "/api/exportallpages"} "Export All Pages"]]
+     [:li [:a {:href "/api/exportrecentpages"} "Export Recent Pages"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "Help"))} "Help"]]]))
 
 (defn editing-menu []
@@ -302,15 +302,15 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn transcript-menu []
   (fn []
     [:ul
-     [:li [:span {:on-click (fn [] (back!))}
+     [:li [:span {:class "clickable" :on-click (fn [] (back!))}
            [:img {:src "/icons/skip-back.png"}]]]
-     [:li [:span {:on-click (fn [] (forward! (-> @db :future last)))} ""
+     [:li [:span {:class "clickable" :on-click (fn [] (forward! (-> @db :future last)))} ""
            [:img {:src "/icons/skip-forward.png"}]]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "HelloWorld")) } "HelloWorld"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "InQueue")) } "InQueue"] ]
      [:li [:span {:class "clickable" :on-click  (fn [] (swap! db assoc :mode :viewing))} "Return to View Page"] ]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "RecentChanges"))} "RecentChanges"] ]
-     [:li [:a {:href "/api/exportallpages"} "Export All Pages"]]
+     [:li [:a {:href "/api/exportrecentpages"} "Export Recent Pages"]]
      [:li [:span {:class "clickable" :on-click (fn [] (go-new! "Help"))} "Help"]]
 
      ])
@@ -345,7 +345,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
   [:input {:type "text"
            :id "navinputbox"
            :value @value
-           :placeholder "Type a page-name to go to, a term to search for, or a Clojure expression to execute."
+           :placeholder "Type a page-name, a term to search for, or a Clojure expression."
           :on-change #(reset! value (-> % .-target .-value))}])
 
 
@@ -520,14 +520,14 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                  {:class "big-btn"
                   :on-click (fn [] (go-new! @current))}
                                         ;[:img {:src "/icons/arrow-right.png"}]
-                 "View"]
+                 "View It"]
 
                 [:button
                  {:class "big-btn"
                   :on-click
                   (fn []
                     (search-text! (-> @current str)))}
-                 "Search"]
+                 "Find It"]
 
                 [:button
                  {:class "big-btn"
@@ -538,7 +538,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                       (prepend-transcript! code result)
                       )
                     )}
-                 "Execute"]
+                 "Run It"]
 
 
 

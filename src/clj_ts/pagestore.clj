@@ -97,6 +97,11 @@
   (read-recentchanges [ps]
     (.read-system-file ps "recentchanges")  )
 
+  (recent-changes-as-page-list [ps]
+    (->> (clojure.string/split-lines (.read-recentchanges ps))
+         (map (fn [line] (first (re-seq #"\[\[(.+?)\]\]" line))))
+         (map second ) ))
+
   (write-recentchanges! [ps new-rc]
     (.write-system-file! ps "recentchanges" new-rc))
 

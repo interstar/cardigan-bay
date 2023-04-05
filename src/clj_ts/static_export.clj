@@ -278,13 +278,21 @@ USING DEFAULT")
 ))
 
 
+(defn export-list-of-pages [server-state page-names]
+  (let [tpl (-> server-state :page-exporter .load-template)
+        ]
+    (doseq [p-name page-names]
+      (println "Exporting " p-name)
+      (try
+        (export-page p-name server-state tpl )
+        (catch Exception e (println e))
+        ))))
 
 (defn export-all-pages [server-state]
   (if (= :not-available (.all-pages server-state))
     :not-exported
-    (let [tpl (-> server-state :page-exporter .load-template)
-          css (-> server-state :page-exporter .load-main-css)
-          all   (.all-pages server-state)
+    (let [css (-> server-state :page-exporter .load-main-css)
+          all (.all-pages server-state)
           a2
           (filter
            (fn [name]
@@ -296,13 +304,7 @@ USING DEFAULT")
                   :otherwise true  ))
            (.all-pages server-state)
            )]
-      (doseq [p-name a2]
-        (println "Exporting " p-name)
-        (try
-          (export-page p-name server-state tpl )
-(catch Exception e (println e))
-          )
-        )
+      (export-list-of-pages server-state a2)
       (println "Export recentchanges rss")
       (export-recentchanges-rss server-state)
       (println "Export main.css")
@@ -310,6 +312,23 @@ USING DEFAULT")
       (println "Exporting media")
       (.export-media-dir (:page-exporter server-state))
       )))
+
+
+(defn export-recent-pages [server-state]
+  (let [ps (:page-store server-state)
+        css (-> server-state :page-exporter .load-main-css)
+        recent-page-names (.recent-changes-as-page-list ps)]
+      (export-list-of-pages server-state recent-page-names)
+      (println "Export recentchanges rss")
+      (export-recentchanges-rss server-state)
+      (println "Export main.css")
+      (export-main-css server-state css)
+      (println "Exporting media")
+      (.export-media-dir (:page-exporter server-state))
+      )
+  )
+
+
 
 (defn export-one-page [page-name server-state]
   (let [tpl (-> server-state :page-exporter .load-template)]
