@@ -4,11 +4,13 @@
    [clj-ts.types :refer [IPageStore]]
    [clojure.java.io :as io]
    [clojure.core.memoize :refer [memo memo-clear!]]
+   [clj-ts.common :refer [raw-text->card-maps find-card-by-hash]]
    )
   )
 
 ;; Diagnostic T
 (defn P [x label] (do (println (str label " :: " x)) x))
+
 
 
 
@@ -47,6 +49,19 @@
       (-> page .toFile slurp)
       (-> page (#(.page-name->path this %)) .toFile slurp)
       ))
+
+  (get-page-as-card-maps [this page-name]
+    (->> page-name
+         (.page-name->path this)
+         (.read-page this)
+         (raw-text->card-maps)))
+
+  (get-card [this page-name hash]
+    (-> (.get-page-as-card-maps this page-name)
+        (find-card-by-hash hash)))
+
+  (get-cards-from-page [this page-name card-hashes]
+    (remove nil? (map #(.get-card this page-name %) card-hashes)))
 
   (write-page! [this page data]
     (if (instance? java.nio.file.Path page)
@@ -145,7 +160,7 @@
             (str "page-store " page-dir-as-string " is not a directory."))
 
     (assert (-> system-dir-path .toFile .exists)
-            (str "There is no system director. Please make a directory called 'system' under the directory "
+            (str "There is no system directory. Please make a directory called 'system' under the page directory "
                  page-dir-as-string))
 
     (assert (-> system-dir-path .toFile .isDirectory)

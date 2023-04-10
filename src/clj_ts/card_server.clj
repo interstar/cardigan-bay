@@ -60,9 +60,9 @@
   (all-links [cs] (dnn cs all-links) )
   (broken-links [cs] (dnn cs broken-links))
   (orphan-pages [cs] (dnn cs orphan-pages))
-  (links-to [cs p-name] (dnn cs links-to p-name))
+  (links-to [cs p-name] (dnn cs links-to p-name)))
 
-)
+
 
 
 
@@ -296,18 +296,23 @@
     ))
 
 
-(defn transclude [i data user-authored?]
-  (let [{:keys [from process]} (read-string data)
-        raw (-> from (#(pagestore/read-page (server-state) %)) )
-        return-type (if (nil? process) :markdown process)
-        head (str "*Transcluded from [[" from "]]* \n")
-        body (str head raw)]
-    (common/package-card i :transclude return-type body body user-authored?)))
+
+(declare card-maps->processed)
+
+(defn transclude [i data for-export? user-authored?]
+  (let [{:keys [from process ids]} (read-string data)
+        ps (.page-store (server-state))
+        matched-cards (.get-cards-from-page ps from ids)
+        cards (card-maps->processed (* 100 i) matched-cards for-export? user-authored?)
+
+        body (str "## Transcluded from [[" from "]]")
+        ]
+    (concat [(common/package-card i :transclude :markdown body body user-authored?)] cards )))
 
 (defn bookmark-card [data]
   (let [{:keys [url timestamp]} (read-string data)]
     (str "
-Bookmarked " timestamp  ",, <" url ">
+Bookmarked " timestamp  ": <" url ">
 
 ")))
 
@@ -389,61 +394,61 @@ Bookmarked " timestamp  ",, <" url ">
     )
   )
 
-(defn process-card
-  [i card for-export?  user-authored?]
-  (let [[source-type, data] (common/raw-card-text->raw-card-map card)]
-    (condp = source-type
-      :markdown (common/package-card i source-type :markdown data data user-authored?)
-      :manual-copy (common/package-card i source-type :manual-copy data data user-authored?)
+(defn process-card-map
+  [i {:keys [source_type source_data]} for-export?  user-authored?]
+  (if (= source_type :transclude)
+    (transclude i source_data for-export? user-authored?)
+    [(condp = source_type
+       :markdown (common/package-card i source_type :markdown source_data source_data user-authored?)
+       :manual-copy (common/package-card i source_type :manual-copy source_data source_data user-authored?)
 
-      :raw (common/package-card i source-type :raw data data user-authored?)
+       :raw (common/package-card i source_type :raw source_data source_data user-authored?)
 
-      :code
-      (do
-        (println "Exporting :code card " )
-        (common/package-card i :code :code data data user-authored?))
+       :code
+       (do
+         (println "Exporting :code card " )
+         (common/package-card i :code :code source_data source_data user-authored?))
 
-      :evalraw
-      (common/package-card i :evalraw :raw data (server-eval data) user-authored?)
+       :evalraw
+       (common/package-card i :evalraw :raw source_data (server-eval source_data) user-authored?)
 
-      :evalmd
-      (common/package-card i :evalmd :markdown data (server-eval data) user-authored?)
+       :evalmd
+       (common/package-card i :evalmd :markdown source_data (server-eval source_data) user-authored?)
 
-      :workspace
-      (common/package-card i source-type :workspace data data user-authored?)
+       :workspace
+       (common/package-card i source_type :workspace source_data source_data user-authored?)
 
-      :system
-      (system-card i data user-authored?)
+       :system
+       (system-card i source_data user-authored?)
 
-      :embed
-      (common/package-card i source-type :html data
-                           (embed/process data for-export?
-                                          (fn [s] (common/md->html s))
-                                          (server-state))
-                           user-authored?)
+       :embed
+       (common/package-card i source_type :html source_data
+                            (embed/process source_data for-export?
+                                           (fn [s] (common/md->html s))
+                                           (server-state))
+                            user-authored?)
 
-      :transclude
-      (transclude i data user-authored?)
-
-      :bookmark
-      (common/package-card i :bookmark :markdown data (bookmark-card data) user-authored?)
+       :bookmark
+       (common/package-card i :bookmark :markdown source_data (bookmark-card source_data) user-authored?)
 
 
-      :network
-      (network-card i data for-export? user-authored?)
+       :network
+       (network-card i source_data for-export? user-authored?)
 
-      :patterning
-      (common/package-card i :patterning :html data
-                           (patterning/one-pattern data) user-authored?)
+       :patterning
+       (common/package-card i :patterning :html source_data
+                            (patterning/one-pattern source_data) user-authored?)
 
-      ;; not recognised
-      (common/package-card i source-type source-type data data user-authored?)
-      )))
+       ;; not recognised
+       (common/package-card i source_type source_type source_data source_data user-authored?)
+       )]))
+
+(defn card-maps->processed [id-start card-maps for-export? user-authored?]
+  (mapcat process-card-map (iterate inc id-start) card-maps (repeat for-export?) (repeat user-authored?)))
 
 (defn raw->cards [raw for-export? user-authored?]
-  (let [cards (string/split  raw #"----")]
-    (map process-card (iterate inc 0) cards (repeat for-export?) (repeat user-authored?))))
-
+  (let [card-maps (common/raw-text->card-maps raw)]
+    (card-maps->processed 0 card-maps for-export? user-authored?)))
 
 (declare backlinks)
 

@@ -7,16 +7,58 @@
 
 
 
+;; Helpful for print debugging ... diffs two strings
+(defn replace-whitespace [char]
+  (if (Character/isWhitespace char)
+    "_"
+    (str char)))
+
+(defn diff-strings [str1 str2]
+  (let [len1 (count str1)
+        len2 (count str2)
+        min-len (min len1 len2)]
+    (apply str
+           (map (fn [ch1 ch2]
+                  (if (= ch1 ch2)
+                    (replace-whitespace ch1)
+                    (str "[" (replace-whitespace ch1) (replace-whitespace ch2) "]")))
+                (take min-len str1)
+                (take min-len str2)))))
+
+
+
+;; ======================================================
 ;; Cards
 
-(defn raw-card-text->raw-card-map [c]
+(defn split-by-hyphens [input]
+  (->> (string/split input #"-{4,}")
+       (map string/trim)
+       (remove string/blank?)))
+
+(defn hash-it [card-data]
+  (-> card-data (edn-hash) (uuid5)))
+
+(defn raw-card-text->card-map [c]
   (let [card (string/trim c)
-        rex #"^\s+:(\S+)" ]
+        rex #"^:(\S+)"
+        data (string/replace-first card rex "")]
     (if
-      (not (re-find rex c))
-      [:markdown c]
-      [(->> c (re-find rex) second keyword)
-       (string/replace-first c rex "")] ) ))
+      (not (re-find rex card))
+      {:source_type :markdown
+       :source_data  card
+       :hash (hash-it card)}
+      {:source_type (->> c (re-find rex) second keyword)
+       :source_data data
+       :hash (hash-it data)} ) ))
+
+
+(defn raw-text->card-maps [raw]
+  (let [cms
+        (->> raw split-by-hyphens
+             (map raw-card-text->card-map ))]
+    (println "in raw-text->card-maps " raw)
+    (println cms)
+    cms))
 
 
 (defn package-card [id source-type render-type source-data server-prepared-data user_authored? ]
@@ -25,7 +67,7 @@
    :source_data source-data
    :server_prepared_data server-prepared-data
    :id id
-   :hash (-> source-data (edn-hash) (uuid5))
+   :hash (hash-it source-data)
    :user_authored? user_authored?})
 
 
@@ -42,13 +84,14 @@
   (= (.toString (:hash card))
      (.toString hash)))
 
-(defn neh [card hash]
+(defn neh [card hash] ;; Not equal hash
   (not (match-hash card hash)))
 
 
 
 
 ;; Cards in card list
+
 
 (defn find-card-by-hash
   "Take a list of cards and return the one that matches hash or nil"
@@ -163,20 +206,20 @@
 ;; Cards with commands
 
 (defn contains-commands? [card]
-  (let [[type data] (raw-card-text->raw-card-map card)
-        lines (string/split-lines data)]
+  (let [{:keys [source_type source_data]} (raw-card-text->card-map card)
+        lines (string/split-lines source_data)]
     (if
         (some command-line/command-line? lines) true false)))
 
 
 
 (defn gather-all-commands [card]
-  (let [[type data] (raw-card-text->raw-card-map card)
-        lines (string/split-lines data)
+  (let [{:keys [source_type source_data]} (raw-card-text->card-map card)
+        lines (string/split-lines source_data)
         pseq (command-line/parsed-seq lines)
         ]
     (conj pseq
-          {:type type
+          {:type source_type
            :stripped (string/join "\n" (:non-commands pseq) )}
           )
     ))

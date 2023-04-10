@@ -14,7 +14,7 @@
    [markdown.core :as md]
 
 
-   [clj-ts.common :refer [raw-card-text->raw-card-map
+   [clj-ts.common :refer [raw-card-text->card-map
                           double-comma-table embed-boilerplate
                           double-bracket-links auto-links ]]
    ;;[clj-ts.common :refer [card->html ]]
@@ -378,8 +378,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                      :flex-direction "column"}}
        [:div
         [:span
-         {:on-click #(reset! index (mod (inc @index) (count pages)))}
-         "Copy Bar : " (str @index)]
+         {:id "copy-bar-button"
+          :on-click #(reset! index (mod (inc @index) (count pages)))}
+         "Copy Bar : " (str @index) ]
        ]
 
        (nth pages @index)
@@ -401,6 +402,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
       (clip-button "£" "£")
       (clip-button "?" "?")
       (clip-button "=" "=")
+      (clip-button "$" "$")
       ]
      [:div
       (boilerplate-button "Image" :img)
