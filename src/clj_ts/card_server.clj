@@ -224,10 +224,10 @@
   )
 
 
-(defn ldb-query->mdlist-card [i title result qname f user-authored?]
+(defn ldb-query->mdlist-card [i source_data title result qname f user-authored?]
   (let [items (apply str (map f result))
         body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
-    (common/package-card i :system :markdown body body user-authored?)))
+    (common/package-card i :system :markdown source_data body user-authored?)))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
@@ -241,23 +241,23 @@
 
     (condp = cmd
       :allpages
-      (ldb-query->mdlist-card i "All Pages" (.all-pages db) :allpages item1 user-authored?)
+      (ldb-query->mdlist-card i data "All Pages" (.all-pages db) :allpages item1 user-authored?)
 
       :alllinks
       (ldb-query->mdlist-card
-       i "All Links" (.all-links db) :alllinks
+       i data "All Links" (.all-links db) :alllinks
        (fn [[a b]] (str "[[" a "]],, &#8594;,, [[" b "]]\n"))
        user-authored?)
 
       :brokenlinks
       (ldb-query->mdlist-card
-       i "Broken Internal Links" (.broken-links db) :brokenlinks
+       i data "Broken Internal Links" (.broken-links db) :brokenlinks
        (fn [[a b]] (str "[[" a "]],, &#8603;,, [[" b "]]\n"))
        user-authored?)
 
       :orphanpages
       (ldb-query->mdlist-card
-       i "Orphan Pages" (.orphan-pages db) :orphanpages item1
+       i data "Orphan Pages" (.orphan-pages db) :orphanpages item1
        user-authored?)
 
       :recentchanges
@@ -269,7 +269,7 @@
       (let [res (search (:query info) ) ]
         (common/package-card
          "search" :system :markdown
-         res res user-authored?))
+         data res user-authored?))
 
       :about
       (let [sr (str "### System Information
@@ -281,18 +281,18 @@
 **Export Dir** ,, " (.export-path ps) "
 **Number of Pages** ,, " (count (.all-pages db))
                     )]
-        (common/package-card i :system :markdown sr sr user-authored?))
+        (common/package-card i :system :markdown data sr user-authored?))
 
       :customscript
       (let [return-type (or (:return-type data) :markdown)
             sr (server-custom-script data) ]
-        (common/package-card i :customscript return-type sr sr user-authored?))
+        (common/package-card i :customscript return-type data sr user-authored?))
 
 
 
       ;; not recognised
       (let [d (str "Not recognised system command in " data  " -- cmd " cmd )]
-        (common/package-card i :system :raw d d user-authored?)))
+        (common/package-card i :system :raw data d user-authored?)))
     ))
 
 
@@ -396,55 +396,67 @@ Bookmarked " timestamp  ": <" url ">
 
 (defn process-card-map
   [i {:keys [source_type source_data]} for-export?  user-authored?]
-  (if (= source_type :transclude)
-    (transclude i source_data for-export? user-authored?)
-    [(condp = source_type
-       :markdown (common/package-card i source_type :markdown source_data source_data user-authored?)
-       :manual-copy (common/package-card i source_type :manual-copy source_data source_data user-authored?)
+  (try
+    (if (= source_type :transclude)
+      (transclude i source_data for-export? user-authored?)
+      [(condp = source_type
+         :markdown (common/package-card i source_type :markdown source_data source_data user-authored?)
+         :manual-copy (common/package-card i source_type :manual-copy source_data source_data user-authored?)
 
-       :raw (common/package-card i source_type :raw source_data source_data user-authored?)
+         :raw (common/package-card i source_type :raw source_data source_data user-authored?)
 
-       :code
-       (do
-         (println "Exporting :code card " )
-         (common/package-card i :code :code source_data source_data user-authored?))
+         :code
+         (do
+           (println "Exporting :code card " )
+           (common/package-card i :code :code source_data source_data user-authored?))
 
-       :evalraw
-       (common/package-card i :evalraw :raw source_data (server-eval source_data) user-authored?)
+         :evalraw
+         (common/package-card i :evalraw :raw source_data (server-eval source_data) user-authored?)
 
-       :evalmd
-       (common/package-card i :evalmd :markdown source_data (server-eval source_data) user-authored?)
+         :evalmd
+         (common/package-card i :evalmd :markdown source_data (server-eval source_data) user-authored?)
 
-       :workspace
-       (common/package-card i source_type :workspace source_data source_data user-authored?)
+         :workspace
+         (common/package-card i source_type :workspace source_data source_data user-authored?)
 
-       :system
-       (system-card i source_data user-authored?)
+         :system
+         (system-card i source_data user-authored?)
 
-       :embed
-       (common/package-card i source_type :html source_data
-                            (embed/process source_data for-export?
-                                           (fn [s] (common/md->html s))
-                                           (server-state))
-                            user-authored?)
+         :embed
+         (common/package-card i source_type :html source_data
+                              (embed/process source_data for-export?
+                                             (fn [s] (common/md->html s))
+                                             (server-state))
+                              user-authored?)
 
-       :bookmark
-       (common/package-card i :bookmark :markdown source_data (bookmark-card source_data) user-authored?)
+         :bookmark
+         (common/package-card i :bookmark :markdown source_data (bookmark-card source_data) user-authored?)
 
 
-       :network
-       (network-card i source_data for-export? user-authored?)
+         :network
+         (network-card i source_data for-export? user-authored?)
 
-       :patterning
-       (common/package-card i :patterning :html source_data
-                            (patterning/one-pattern source_data) user-authored?)
+         :patterning
+         (common/package-card i :patterning :html source_data
+                              (patterning/one-pattern source_data) user-authored?)
 
-       ;; not recognised
-       (common/package-card i source_type source_type source_data source_data user-authored?)
-       )]))
+         ;; not recognised
+         (common/package-card i source_type source_type source_data source_data user-authored?)
+         )])
+    (catch
+        Exception e
+      [(common/package-card
+        i :raw :raw source_data
+        (str "Error \n\nType was\n" source_type
+             "\nSource was\n" source_data
+             "\n\nStack trace\n"
+             (exception-stack e))
+        user-authored?)])
+    )
+  )
 
 (defn card-maps->processed [id-start card-maps for-export? user-authored?]
-  (mapcat process-card-map (iterate inc id-start) card-maps (repeat for-export?) (repeat user-authored?)))
+  (mapcat process-card-map (iterate inc id-start) card-maps (repeat for-export?) (repeat user-authored?))  )
 
 (defn raw->cards [raw for-export? user-authored?]
   (let [card-maps (common/raw-text->card-maps raw)]
@@ -623,7 +635,7 @@ If you would *like* to create a page with this name, simply click the [Edit] but
 
       :otherwise
       (ldb-query->mdlist-card
-       "backlinks" "Backlinks" bl
+       "backlinks" "backlinks" "Backlinks" bl
        :calculated
        (fn [[a b]] (str "* [[" a "]] \n"))
        false))))
@@ -659,18 +671,28 @@ If you would *like* to create a page with this name, simply click the [Edit] but
     (write-page-to-file! page-name new-body )))
 
 (defn move-card [page-name hash destination-name]
-  (let [from-cards (load->cards page-name)
-        card (common/find-card-by-hash from-cards hash)
-        stripped (into [] (common/remove-card-by-hash from-cards hash))
-        stripped_raw (common/cards->raw stripped)
-        ]
-    (if (not (nil? card))
-      (do
-        (append-card-to-page! destination-name (:source_type card) (:source_data card))
-        (write-page-to-file! page-name stripped_raw)))))
+  (if (= page-name destination-name) nil ;; don't try to move to self
+      (let [ps (.page-store (server-state))
+            from-cards (.get-page-as-card-maps ps page-name)
+            card (common/find-card-by-hash from-cards hash)
+            stripped (into [] (common/remove-card-by-hash from-cards hash))
+            stripped_raw (common/cards->raw stripped)
+            ]
+        (println "===============================")
+        (println "MOVING CARD "  )
+        (println "CARD\n" card)
+        (println "STRIPPED\n" stripped)
+        (println "STRIPPED_RAW\n"  stripped_raw)
+        (println "NOT NIL?" (not (nil? card)))
+        (println "-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=")
+        (if (not (nil? card))
+          (do
+            (append-card-to-page! destination-name (:source_type card) (:source_data card))
+            (write-page-to-file! page-name stripped_raw))))))
 
 (defn reorder-card [page-name hash direction]
-  (let [cards (load->cards page-name)
+  (let [ps (.page-store (server-state))
+        cards (.get-page-as-card-maps ps page-name)
         new-cards (if (= "up" direction)
           (common/move-card-up cards hash)
           (common/move-card-down cards hash))

@@ -53,12 +53,8 @@
 
 
 (defn raw-text->card-maps [raw]
-  (let [cms
-        (->> raw split-by-hyphens
-             (map raw-card-text->card-map ))]
-    (println "in raw-text->card-maps " raw)
-    (println cms)
-    cms))
+  (->> raw split-by-hyphens
+       (map raw-card-text->card-map )))
 
 
 (defn package-card [id source-type render-type source-data server-prepared-data user_authored? ]
@@ -71,10 +67,10 @@
    :user_authored? user_authored?})
 
 
-(defn card->raw [{:keys [id source_type source_data]}]
+(defn card->raw [{:keys [source_type source_data]}]
   (if (= source_type :markdown)
     source_data
-    (str "\n" source_type "\n" (string/trim source_data) )) )
+    (str source_type "\n\n" (string/trim source_data) )) )
 
 
 (defn card-is-blank? [{:keys [source_data]}]
@@ -107,7 +103,7 @@
   (remove #(match-hash % hash) cards)
    )
 
-(defn sub-card
+(defn replace-card
   "Replace the first card that matches p with new-card. If no card matches, return cards unchanged"
   [cards p new-card]
   (let [un-p #(not (p %))
@@ -153,7 +149,7 @@
   )
 
 (defn cards->raw [cards]
-  (string/join "----" (map card->raw cards)))
+  (string/join "\n----\n" (map card->raw cards)))
 
 
 ;; Rendering / special Markup
