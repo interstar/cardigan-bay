@@ -379,6 +379,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
        [:div
         [:span
          {:id "copy-bar-button"
+          :class "mini-button"
           :on-click #(reset! index (mod (inc @index) (count pages)))}
          "Copy Bar : " (str @index) ]
        ]
@@ -633,6 +634,14 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
           :on-change #(reset! value (-> % .-target .-value))}])
 
 
+(defn clip-hash [from-page hash]
+  (send-to-clipboard
+   (str "----
+:transclude
+
+{:from \"" from-page "\"
+ :ids [\"" hash "\"] } "))
+  )
 
 (defn card-bar [card]
   (let [meta-id  (str "cardmeta" (get card "hash") )
@@ -674,8 +683,13 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                                   }}
         [:div [:h4 "Card Bar"]]
         [:div
-         [:span "ID: " (get card "id")] " | Hash: "
-         [:span (get card "hash")] " | Source type: "
+         [:span "ID: " (get card "id")] " | "
+         [:span {:class "mini-button"
+                 :on-click
+                 (fn [e] (clip-hash (-> @db :current-page)
+                                    (get card "hash")))
+                 }
+          "Hash: "(get card "hash")] " | Source type: "
          [:span (get card "source_type")] " | Render type: "
          [:span (get card "render_type")]]
 
