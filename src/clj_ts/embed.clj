@@ -211,12 +211,12 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
      caption-renderer))
   )
 
-(defn media-img [data for-export? caption-renderer server-state]
+(defn media-img [data render-context caption-renderer server-state]
   (let [src (:src data)
         width (if (:width data) (:width data) "100%") ]
     (generic-embed
      data
-     (if for-export?
+     (if (:for-export? render-context)
        (str "<img src='"
             (-> server-state :page-exporter (.media-name->exported-link src))
             "' class='embedded_image_for_export' width='" width "' />")
@@ -239,13 +239,13 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
    (generic-oembed "https://codepen.io/api/oembed" (:url data) :get)
    caption-renderer))
 
-(defn process [s for-export? caption-renderer server-state]
+(defn process [s render-context caption-renderer server-state]
   (let [data (read-string s)]
     (try
       (condp = (:type data)
 
         :media-img
-        (media-img data for-export? caption-renderer server-state)
+        (media-img data render-context caption-renderer server-state)
 
         :img
         (img data caption-renderer)

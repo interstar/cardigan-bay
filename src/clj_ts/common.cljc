@@ -57,14 +57,14 @@
        (map raw-card-text->card-map )))
 
 
-(defn package-card [id source-type render-type source-data server-prepared-data user_authored? ]
+(defn package-card [id source-type render-type source-data server-prepared-data render-context ]
   {:source_type source-type
    :render_type render-type
    :source_data source-data
    :server_prepared_data server-prepared-data
    :id id
    :hash (hash-it source-data)
-   :user_authored? user_authored?})
+   :user_authored? (:user-authored? render-context)})
 
 
 (defn card->raw [{:keys [source_type source_data]}]

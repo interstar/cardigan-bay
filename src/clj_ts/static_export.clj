@@ -248,7 +248,10 @@ USING DEFAULT")
 (defn export-page [page-name server-state tpl]
   (let [ps (:page-store server-state)
         ex (:page-exporter server-state)
-        cards (card-server/load->cards-for-export page-name)
+        cards
+        (card-server/load->cards-for-export
+         page-name
+         (fn [s] (double-bracket-links s ex)))
         last-mod (.last-modified ps page-name)
         file-name (-> (.page-name->export-file-path ex page-name) .toString)
 

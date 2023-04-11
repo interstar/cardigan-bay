@@ -203,8 +203,18 @@
 
 ;; Card Processing
 
+;; We're going to use a map to store flags and other gubbins needed
+;; in the rendering pipeline. Particularly to track whether we're
+;; doing something in a normal rendering context or an export context
+;; And whether a card is system generated or human generated.
+
+;; We'll call it render-context
+;; {:for-export false :user-authored? true}
+
 (defn server-eval
-  "Evaluate Clojure code embedded in a card. Evaluated on the server. Be careful."
+  "Evaluate Clojure code embedded in a card. Evaluated with SCI
+   but on the server. I hope there's no risk for this ...
+   BUT ..."
   [data]
   (let [code data
         evaluated
@@ -224,15 +234,15 @@
   )
 
 
-(defn ldb-query->mdlist-card [i source_data title result qname f user-authored?]
+(defn ldb-query->mdlist-card [i source_data title result qname f render-context]
   (let [items (apply str (map f result))
         body (str "*" title "* " "*(" (count result) " items)*\n\n" items )  ]
-    (common/package-card i :system :markdown source_data body user-authored?)))
+    (common/package-card i :system :markdown source_data body render-context)))
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
 
-(defn system-card [i data user-authored?]
+(defn system-card [i data render-context]
   (let [
         info (read-string data)
         cmd (:command info)
@@ -241,35 +251,35 @@
 
     (condp = cmd
       :allpages
-      (ldb-query->mdlist-card i data "All Pages" (.all-pages db) :allpages item1 user-authored?)
+      (ldb-query->mdlist-card i data "All Pages" (.all-pages db) :allpages item1 render-context)
 
       :alllinks
       (ldb-query->mdlist-card
        i data "All Links" (.all-links db) :alllinks
        (fn [[a b]] (str "[[" a "]],, &#8594;,, [[" b "]]\n"))
-       user-authored?)
+       render-context)
 
       :brokenlinks
       (ldb-query->mdlist-card
        i data "Broken Internal Links" (.broken-links db) :brokenlinks
        (fn [[a b]] (str "[[" a "]],, &#8603;,, [[" b "]]\n"))
-       user-authored?)
+       render-context)
 
       :orphanpages
       (ldb-query->mdlist-card
        i data "Orphan Pages" (.orphan-pages db) :orphanpages item1
-       user-authored?)
+       render-context)
 
       :recentchanges
       (let [src (.read-recentchanges ps) ]
         (common/package-card
-         "recentchanges" :system :markdown src src user-authored?))
+         "recentchanges" :system :markdown src src render-context))
 
       :search
       (let [res (search (:query info) ) ]
         (common/package-card
          "search" :system :markdown
-         data res user-authored?))
+         data res render-context))
 
       :about
       (let [sr (str "### System Information
@@ -281,33 +291,33 @@
 **Export Dir** ,, " (.export-path ps) "
 **Number of Pages** ,, " (count (.all-pages db))
                     )]
-        (common/package-card i :system :markdown data sr user-authored?))
+        (common/package-card i :system :markdown data sr render-context))
 
       :customscript
       (let [return-type (or (:return-type data) :markdown)
             sr (server-custom-script data) ]
-        (common/package-card i :customscript return-type data sr user-authored?))
+        (common/package-card i :customscript return-type data sr render-context))
 
 
 
       ;; not recognised
       (let [d (str "Not recognised system command in " data  " -- cmd " cmd )]
-        (common/package-card i :system :raw data d user-authored?)))
+        (common/package-card i :system :raw data d render-context)))
     ))
 
 
 
 (declare card-maps->processed)
 
-(defn transclude [i data for-export? user-authored?]
+(defn transclude [i data render-context]
   (let [{:keys [from process ids]} (read-string data)
         ps (.page-store (server-state))
         matched-cards (.get-cards-from-page ps from ids)
-        cards (card-maps->processed (* 100 i) matched-cards for-export? user-authored?)
+        cards (card-maps->processed (* 100 i) matched-cards render-context)
 
         body (str "## Transcluded from [[" from "]]")
         ]
-    (concat [(common/package-card i :transclude :markdown body body user-authored?)] cards )))
+    (concat [(common/package-card i :transclude :markdown body body render-context)] cards )))
 
 (defn bookmark-card [data]
   (let [{:keys [url timestamp]} (read-string data)]
@@ -326,7 +336,7 @@ Bookmarked " timestamp  ": <" url ">
 
 
 
-(defn network-card [i data for-export? user-authored?]
+(defn network-card [i data render-context]
   (try
     (let [
           nodes (-> data read-string :nodes)
@@ -349,7 +359,7 @@ Bookmarked " timestamp  ": <" url ">
                                         } label]
 
                        final-text
-                       (if for-export?
+                       (if (:for-export? render-context)
                          [:a {:href label} the-text ]
                          the-text
                          )
@@ -385,63 +395,66 @@ Bookmarked " timestamp  ": <" url ">
                      ])
           ]
 
-      (common/package-card i :network :markdown data svg user-authored?)
+      (common/package-card i :network :markdown data svg render-context)
       )
     (catch Exception e (common/package-card i :network :raw data
                                             (str (exception-stack e)
                                                  "\n" data)
-                                            user-authored?))
+                                            render-context))
     )
   )
 
 (defn process-card-map
-  [i {:keys [source_type source_data]} for-export?  user-authored?]
+  [i {:keys [source_type source_data]} render-context]
   (try
     (if (= source_type :transclude)
-      (transclude i source_data for-export? user-authored?)
+      (transclude i source_data render-context)
       [(condp = source_type
-         :markdown (common/package-card i source_type :markdown source_data source_data user-authored?)
-         :manual-copy (common/package-card i source_type :manual-copy source_data source_data user-authored?)
+         :markdown (common/package-card i source_type :markdown source_data source_data render-context)
+         :manual-copy (common/package-card i source_type :manual-copy source_data source_data render-context)
 
-         :raw (common/package-card i source_type :raw source_data source_data user-authored?)
+         :raw (common/package-card i source_type :raw source_data source_data render-context)
 
          :code
          (do
            (println "Exporting :code card " )
-           (common/package-card i :code :code source_data source_data user-authored?))
+           (common/package-card i :code :code source_data source_data render-context))
 
          :evalraw
-         (common/package-card i :evalraw :raw source_data (server-eval source_data) user-authored?)
+         (common/package-card i :evalraw :raw source_data (server-eval source_data) render-context)
 
          :evalmd
-         (common/package-card i :evalmd :markdown source_data (server-eval source_data) user-authored?)
+         (common/package-card i :evalmd :markdown source_data (server-eval source_data) render-context)
 
          :workspace
-         (common/package-card i source_type :workspace source_data source_data user-authored?)
+         (common/package-card i source_type :workspace source_data source_data render-context)
 
          :system
-         (system-card i source_data user-authored?)
+         (system-card i source_data render-context)
 
          :embed
          (common/package-card i source_type :html source_data
-                              (embed/process source_data for-export?
-                                             (fn [s] (common/md->html s))
+                              (embed/process source_data
+                                             render-context
+                                             (if (:for-export? render-context)
+                                               (:link-renderer render-context)
+                                               (fn [s] (common/md->html s)))
                                              (server-state))
-                              user-authored?)
+                              render-context)
 
          :bookmark
-         (common/package-card i :bookmark :markdown source_data (bookmark-card source_data) user-authored?)
+         (common/package-card i :bookmark :markdown source_data (bookmark-card source_data) render-context)
 
 
          :network
-         (network-card i source_data for-export? user-authored?)
+         (network-card i source_data render-context)
 
          :patterning
          (common/package-card i :patterning :html source_data
-                              (patterning/one-pattern source_data) user-authored?)
+                              (patterning/one-pattern source_data) render-context)
 
          ;; not recognised
-         (common/package-card i source_type source_type source_data source_data user-authored?)
+         (common/package-card i source_type source_type source_data source_data render-context)
          )])
     (catch
         Exception e
@@ -451,29 +464,31 @@ Bookmarked " timestamp  ": <" url ">
              "\nSource was\n" source_data
              "\n\nStack trace\n"
              (exception-stack e))
-        user-authored?)])
+        render-context)])
     )
   )
 
-(defn card-maps->processed [id-start card-maps for-export? user-authored?]
-  (mapcat process-card-map (iterate inc id-start) card-maps (repeat for-export?) (repeat user-authored?))  )
+(defn card-maps->processed [id-start card-maps render-context]
+  (mapcat process-card-map (iterate inc id-start) card-maps (repeat render-context))  )
 
-(defn raw->cards [raw for-export? user-authored?]
+(defn raw->cards [raw render-context]
   (let [card-maps (common/raw-text->card-maps raw)]
-    (card-maps->processed 0 card-maps for-export? user-authored?)))
+    (card-maps->processed 0 card-maps render-context)))
 
 (declare backlinks)
 
 (defn load->cards [page-name]
   (-> (server-state) .page-store
       (.read-page page-name)
-      (raw->cards false true))
+      (raw->cards {:user-authored? true :for-export? false}))
   )
 
-(defn load->cards-for-export [page-name]
+(defn load->cards-for-export [page-name link-renderer]
   (-> (server-state) .page-store
       (.read-page page-name)
-      (raw->cards true true)))
+      (raw->cards {:user-authored? true
+                   :for-export? true
+                   :link-renderer link-renderer})))
 
 (defn generate-system-cards [page-name]
  [(backlinks page-name)] )
@@ -492,7 +507,7 @@ Bookmarked " timestamp  ": <" url ">
 
 (defn resolve-card
     "Not yet tested"
-  [context arguments value user-authored?]
+  [context arguments value render-context]
   (let [{:keys [page_name hash]} arguments
         ps (.page-store (server-state))]
     (if (.page-exists? ps page_name)
@@ -501,7 +516,7 @@ Bookmarked " timestamp  ": <" url ">
       (common/package-card 0 :markdown :markdown
                            (str "Card " hash " doesn't exist in " page_name)
                            (str "Card " hash " doesn't exist in " page_name)
-                           user-authored?) )))
+                           render-context) )))
 
 (defn resolve-source-page [context arguments value]
   (let [{:keys [page_name]} arguments
