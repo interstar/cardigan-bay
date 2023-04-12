@@ -693,13 +693,6 @@ If you would *like* to create a page with this name, simply click the [Edit] but
             stripped (into [] (common/remove-card-by-hash from-cards hash))
             stripped_raw (common/cards->raw stripped)
             ]
-        (println "===============================")
-        (println "MOVING CARD "  )
-        (println "CARD\n" card)
-        (println "STRIPPED\n" stripped)
-        (println "STRIPPED_RAW\n"  stripped_raw)
-        (println "NOT NIL?" (not (nil? card)))
-        (println "-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=")
         (if (not (nil? card))
           (do
             (append-card-to-page! destination-name (:source_type card) (:source_data card))
@@ -714,6 +707,17 @@ If you would *like* to create a page with this name, simply click the [Edit] but
         ]
     (write-page-to-file! page-name (common/cards->raw new-cards))))
 
+
+(defn replace-card [page-name hash source-type new-body]
+  (let [ps (.page-store (server-state))
+        cards (.get-page-as-card-maps ps page-name)
+        new-card (common/raw-card-text->card-map new-body)
+        d1 (println "THE NEW CARD :: " new-card)
+        new-cards (common/replace-card
+                   cards
+                   #(common/match-hash % hash)
+                   new-card)]
+    (write-page-to-file! page-name (common/cards->raw new-cards))))
 
 ;;;; Media and Custom files
 

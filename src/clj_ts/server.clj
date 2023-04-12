@@ -190,6 +190,18 @@
     {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}
     ))
 
+(defn replace-card-handler [request]
+  (let [form-body (-> request :body .bytes slurp edn/read-string)
+        page-name (:page form-body)
+        hash (:hash form-body)
+        source-type (:source_type form-body)
+        new-val (:data form-body)]
+    (println form-body)
+    (println "Replacing card " hash " on " page-name " with " new-val)
+    (card-server/replace-card page-name hash source-type new-val)
+    {:status 200 :headers {"Content-Type" "text/html"} :body "thank you"}
+    ))
+
 (defn bookmarklet-handler [request]
   (let [url (-> request :params :url)
         data (embed/boilerplate url (java.time.LocalDateTime/now)  )
@@ -290,6 +302,9 @@
 
       (= uri "/api/reordercard")
       (reorder-card-handler request)
+
+      (= uri "/api/replacecard")
+      (replace-card-handler request)
 
       (= uri "/api/rss/recentchanges")
       {:status 200

@@ -145,6 +145,28 @@
                :data new-data}))))
 
 
+(defn save-card! [page-name hash source-type new-val]
+  (let [form-data (generate-form-data
+                   {"page" page-name
+                    "hash" hash
+                    "source_type" source-type
+                    "new" new-val})]
+    (.send XhrIo
+           "/api/replacecard"
+           (fn [e]
+             (go
+               (<! (timeout 500))
+               (reload!)
+               (r/force-update-all)))
+           "POST"
+           (pr-str {:page page-name
+                    :data new-val
+                    :hash hash
+                    :source_type source-type}))
+
+    ))
+
+
 (defn card-reorder! [page-name hash direction]
 
   (.send XhrIo
@@ -650,7 +672,14 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
         toggle! (fn [e]
                   (do
                     (if (= (-> @state :toggle) "none")
-                      (swap! state #(conj % {:toggle "block"}) )
+                      (do
+                        (swap! state #(conj % {:toggle "block"}))
+                        (-> js/document
+                            (.getElementById (str "edit-" (get card "hash")))
+                            (.-value)
+                            (set! (get card "source_data"))
+                            )
+                        )
                       (swap! state #(conj % {:toggle "none"})))))
         close! (fn [e]
                  (swap! state #(conj % {:toggle "none"})))
@@ -708,6 +737,37 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                        (get card "hash")
                        @sendval))}  "Send"]
           ]
+         ]
+        [:div
+         [:span "Edit Card"]
+
+         [:div
+          [:textarea {:id (str "edit-" (get card "hash")) :rows 10 :width "100%"}
+           ]
+          ]
+         [:div
+            [:span
+             [:button {:class "big-btn"
+                       :on-click
+                       (fn []
+                         (reload!))}
+              [:img {:src "/icons/x.png"}] " Cancel"]
+             [:button {:class "big-btn"
+                       :on-click
+                       (fn []
+                         (do
+                           (swap! db assoc :mode :viewing)
+                           (save-card!
+                            (-> @db :current-page)
+                            (get card "hash")
+                            (get card "source_type")
+                            (-> js/document
+                                (.getElementById (str "edit-" (get card "hash")) )
+                                .-value)
+                            )))}
+              [:img {:src "/icons/save.png"}] " Save"]
+
+             ]]
          ]
         ]
        ])))
