@@ -578,7 +578,7 @@ Check if the name you typed, or in the link you followed is correct.
 
 If you would *like* to create a page with this name, simply click the [Edit] button to edit this text. When you save, you will create the page
 </div>")
-               false false)
+               {:user-authored? false :for-export? false})
        :system_cards
        (let [sim-names (map
                         #(str "\n- [[" % "]]")
