@@ -1,33 +1,40 @@
- This is a page for experimenting with adding markup, cards of specific types etc. to check how they work. 
- 
+Yes we can!!!!!
+----
+This is a page for experimenting with adding markup, cards of specific types etc. to check how they work.
 ----
 :evalmd
 
-;; Write some code.
-;; Note that if the result of your executed code is a number
-;; You must convert it to a string.
-
-(str "### " (+ 1 2 3))
-
-
+(str "### " (+ 1 2 3 4 5))
 ----
 :workspace
+
 (defn f [x y]
   (+ (* x x) (* y y))
 ) 
 
 ;;;;PUBLIC
-(f 6 3)
+(f 2 3)
+----
+:system
 
+{:command :search
+ :query ":network"
+}
 ----
 :evalmd
-
-;; Write some code.
-;; Note that if the result of your executed code is a number
-;; You must convert it to a string.
 
 (defn f [x]
 (str "Hello Teenage America : " x " + " x " = "  (+ x x))
 )
 
-(f 4)  
+(f 7)
+----
+:system
+
+{:command :search
+ :query "Hello"
+}
+----
+:system
+
+{:command :allpages}

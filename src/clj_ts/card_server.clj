@@ -711,7 +711,7 @@ If you would *like* to create a page with this name, simply click the [Edit] but
 (defn replace-card [page-name hash source-type new-body]
   (let [ps (.page-store (server-state))
         cards (.get-page-as-card-maps ps page-name)
-        new-card (common/raw-card-text->card-map new-body)
+        new-card (common/raw-card-text->card-map (str source-type "\n" new-body))
         d1 (println "THE NEW CARD :: " new-card)
         new-cards (common/replace-card
                    cards

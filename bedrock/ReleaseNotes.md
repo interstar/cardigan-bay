@@ -1,4 +1,20 @@
-This is [[CardiganBay]] *0.7.3*
+This is [[CardiganBay]] *0.7.4*
+
+----
+# Release 0.7.4 Notes
+
+Cardigan Bay now officially does Transclusion of cards from one page to another. 
+
+See [[TransclusionExample]] for how it's done.
+
+A version of transclusion existed in Cardigan Bay before, but it was buggy to the extent of risking damage to your data. And not officially supported.
+
+As of 0.7.4 those bugs are fixed. There is now a transclusion card type which causes a number of cards to be pulled from another page into this page. You can reorder and move cards containing transclusions. And the hash displayed on the Card Bar now doubles up as a button which copies the boilerplate for transcluding the card, to the clipboard.
+
+I've fixed the bug that internal links in captions of embedded videos and similar cards weren't working when the page was exported. This is now fine.
+
+Internally there's been some important code changes. Namely a revision and cleaning up of the processing / rendering code (in order to fix this). The hash-identity of a card is now far more robust. Previously automated moving / resequencing of cards risked adding extra blank lines to them, leading to them receiving different hash values. 
+
 ----
 # Release 0.7.3 Notes
 
