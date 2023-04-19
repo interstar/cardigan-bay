@@ -13,7 +13,7 @@
    [sci.core :as sci]
    [markdown.core :as md]
 
-
+   [clj-ts.networks :refer [network-canvas]]
    [clj-ts.common :refer [raw-card-text->card-map
                           double-comma-table embed-boilerplate
                           double-bracket-links auto-links ]]
@@ -649,11 +649,6 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
       (string->html)))
 
 
-(defn send-to-input-box [value]
-  [:input {:type "text"
-           :id "sendto-inputbox"
-           :value @value
-          :on-change #(reset! value (-> % .-target .-value))}])
 
 
 (defn clip-hash [from-page hash]
@@ -669,18 +664,18 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
   (let [meta-id  (str "cardmeta" (get card "hash") )
         state (r/atom {:toggle "none"})
         sendval (r/atom "")
+        text-val (r/atom (get card "source_data")) ;; Edit box
+
+
         toggle! (fn [e]
-                  (do
-                    (if (= (-> @state :toggle) "none")
-                      (do
-                        (swap! state #(conj % {:toggle "block"}))
-                        (-> js/document
-                            (.getElementById (str "edit-" (get card "hash")))
-                            (.-value)
-                            (set! (get card "source_data"))
-                            )
-                        )
-                      (swap! state #(conj % {:toggle "none"})))))
+          (do
+            (if (= (-> @state :toggle) "none")
+              (do
+                (swap! state #(conj % {:toggle "block"}))
+                ; Update text-val instead of setting the textarea value directly
+                (reset! text-val (get card "source_data")))
+              (swap! state #(conj % {:toggle "none"})))))
+
         close! (fn [e]
                  (swap! state #(conj % {:toggle "none"})))
 
@@ -708,9 +703,11 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
              )
 
            ]]
-       [:div {:id meta-id :style {:spacing-top "5px" :display (-> @state :toggle)
+       [:div {:id meta-id
+              :class :card-bar
+              :style {:spacing-top "5px" :display (-> @state :toggle)
                                   }}
-        [:div [:h4 "Card Bar"]]
+        [:div [:h3 "Card Bar"]]
         [:div
          [:span "ID: " (get card "id")] " | "
          [:span {:class "mini-button"
@@ -722,52 +719,65 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
          [:span (get card "source_type")] " | Render type: "
          [:span (get card "render_type")]]
 
-        [:div
-         [:span
-          "Send to Another Page : "
-          [send-to-input-box sendval]
+        [:hr]
+        [:div {:class :send-to-bar}
+         [:h4 "Send to Another Page"]
+         [:div {:class :send-to-inner}
+
 
           [:input { :name "hash" :id "sendhash" :type "hidden" :value (get card "hash")}]
           [:input { :name "from" :id "sendcurrent" :type "hidden" :value (-> @db :current-page )}]
+          [:input {:type "text"
+                  :id "sendto-inputbox"
+                  :value @sendval
+                  :on-change #(reset! sendval (-> % .-target .-value))}]
           [:img {:src "/icons/send.png"}]
           [:button {:on-click
                     (fn [e]
                       (card-send-to-page!
                        (-> @db :current-page)
                        (get card "hash")
-                       @sendval))}  "Send"]
-          ]
+                       @sendval))}  "Send"]]
+
          ]
+        [:hr]
         [:div
-         [:span "Edit Card"]
-
+         [:h4 "Edit Card"]
          [:div
-          [:textarea {:id (str "edit-" (get card "hash")) :rows 10 :width "100%"}
-           ]
-          ]
-         [:div
-            [:span
-             [:button {:class "big-btn"
-                       :on-click
-                       (fn []
-                         (reload!))}
-              [:img {:src "/icons/x.png"}] " Cancel"]
-             [:button {:class "big-btn"
-                       :on-click
-                       (fn []
-                         (do
-                           (swap! db assoc :mode :viewing)
-                           (save-card!
-                            (-> @db :current-page)
-                            (get card "hash")
-                            (get card "source_type")
-                            (-> js/document
-                                (.getElementById (str "edit-" (get card "hash")) )
-                                .-value)
-                            )))}
-              [:img {:src "/icons/save.png"}] " Save"]
-
+          [:span
+           [:button {:class "big-btn"
+                     :on-click
+                     (fn [e]
+                       (toggle! e)
+                       (reload!))}
+            [:img {:src "/icons/x.png"}] " Cancel"]
+           [:button {:class "big-btn"
+                     :on-click
+                     (fn [e]
+                       (do
+                         (swap! db assoc :mode :viewing)
+                         (toggle! e)
+                         (save-card!
+                          (-> @db :current-page)
+                          (get card "hash")
+                          (get card "source_type")
+                          (-> js/document
+                              (.getElementById (str "edit-" (get card "hash")) )
+                              .-value)
+                          )))}
+            [:img {:src "/icons/save.png"}] " Save"]
              ]]
+         [:div
+          ; Bind the textarea value to text-val and add :on-change handler to update text-val
+[:textarea {:id (str "edit-" (get card "hash"))
+            :rows 10
+            :width "100%"
+            :value @text-val
+            :on-change #(reset! text-val (-> % .-target .-value))}]
+
+
+          ]
+
          ]
         ]
        ])))
@@ -976,13 +986,14 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
         (for [card (filter not-blank? cards)]
 
           (try
-            [one-card card]
+
+            ^{:key (get card "hash")} [one-card card] ; Add a key based on the card's hash
+
             (catch :default e
               [:div {:class :card-outer}
                [:div {:class "card"}
                 [:h4 "Error"]
-                (str e)]]))
-          )
+                (str e)]]))          )
         )
       (catch :default e
         (do
@@ -1001,7 +1012,6 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
       (catch :default e
         (js/alert e)))]
    ])
-
 
 
 (defn transcript []
@@ -1044,6 +1054,8 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
        [card-list]]
 
       :transcript
+      [:div
+       [network-canvas]]
       [:div
        [transcript]]
       )]

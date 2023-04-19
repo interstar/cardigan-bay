@@ -367,57 +367,73 @@
 
 
 ;; Parse command line args
-(def cli-options
+(defn cli-options [configs]
  [
   ["-p" "--port PORT" "Port number"
-   :default 4545
+   :default (:port configs)
    :parse-fn #(Integer/parseInt %)
    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
 
   ["-d" "--directory DIR" "Pages directory"
-   :default "./bedrock/"
+   :default (:directory configs)
    :parse-fn str]
 
   ["-n" "--name NAME" "Wiki Name"
-   :default "Yet Another CardiganBay Wiki"
+   :default (:name configs)
    :parse-fn str]
 
   ["-s" "--site SITE" "Site URL "
-   :default "/"
+   :default (:site configs)
    :parse-fn str
    ]
 
   ["-i" "--init INIT" "Start Page"
-   :default "HelloWorld"
+   :default (:init configs)
    :parse-fn str]
 
   ["-l" "--links LINK" "Export Links"
-   :default "./"
+   :default (:links configs)
    :parse-fn str]
 
   ["-x" "--extension EXPORTED_EXTENSION" "Exported Extension"
-   :default ".html"
+   :default (:extension configs)
    :parse-fn str]
 
   ["-e" "--export-dir DIR" "Export Directory"
-   :default "./bedrock/exported/"
+   :default (:export-dir configs)
    :parse-fn str]
 
   ["-b" "--beginner IS_BEGINNER" "Is Beginner Rather Than Expert"
-   :default false
+   :default (:beginner configs)
    :parse-fn boolean]
 
   ])
+
+(defn check-and-read-config-file []
+  (try
+    (-> "config.edn"
+        slurp
+        edn/read-string )
+    (catch Exception e
+      (do
+        (println "No config file")
+        {}))))
 
 
 ; runs when the server starts
 (defn -main [& args]
   (let [
-        as (if *command-line-args* *command-line-args* args)
-        xs (parse-opts as cli-options)
-        opts (get xs :options)
-        dx2 (println opts)
+        configs (check-and-read-config-file)
+        dx3 (println configs)
 
+        as (if *command-line-args* *command-line-args* args)
+        xs (parse-opts as (cli-options configs))
+
+        opts_ (get xs :options)
+        dx2 (println opts_)
+
+
+        opts (conj configs opts_)
         ps (pagestore/make-page-store (:directory opts) (:export-dir opts))
         dx (println (:site opts) (:links opts))
 
