@@ -1,12 +1,9 @@
 (ns clj-ts.networks
   (:require
    [reagent.core :as r]
-   [reagent.dom :as dom])
-
-  )
+   [reagent.dom :as dom]))
 
 ;;;;;;;;;;;;;;;;;;; NETWORK DIAGRAM
-
 
 
 (defn node [id label x y]
@@ -60,31 +57,41 @@
 (defn find-node [net id]
   (first (filter #(= (:id %) id) (:nodes net))))
 
-(defn delete-node [net id]
-  (let [filtered-nodes (filter #(not= (:id %) id) (:nodes net))]
-    (assoc net :nodes filtered-nodes)))
+(declare delete-arc)
 
-(defn delete-arc [net node-id]
-  (let [filtered-arcs (filter #(not (or (= (:id (:n1 %)) node-id) (= (:id (:n2 %)) node-id))) (:arcs net))]
-    (assoc net :arcs filtered-arcs)))
+(defn delete-node [net id]
+  (let [filtered-nodes (filter #(not= (:id %) id) (:nodes net))
+        filtered-arcs (filter #(not (or (= (:n1 %) id) (= (:n2 %) id))) (:arcs net))]
+    (assoc net :nodes filtered-nodes
+                :arcs filtered-arcs)))
+
+
 
 (defn draw-node [ctx node selected? editing?]
   (let [x (:x node)
         y (:y node)
         label (:label node)
+        font-size 20 ; Change font size here
+        font-family "Arial"
+        font-setting (str font-size "px " font-family)
+        _ (set! (.-font ctx) font-setting) ; Set the new font size
         text-width (.measureText ctx label)
         padding 10
         width (+ (.-width text-width) (* 2 padding))
         height 40
         half-width (/ width 2)
         half-height (/ height 2)]
-    (set! (.-fillStyle ctx) (if editing? "white" "black"))
-    (.fillText ctx label (- x half-width) (+ y half-height))
     (set! (.-strokeStyle ctx) (if selected? "red" "blue"))
     (set! (.-lineWidth ctx) 2)
     (.beginPath ctx)
     (.rect ctx (- x half-width) (- y half-height) width height)
-    (.stroke ctx)))
+    (set! (.-fillStyle ctx) (if editing? "black" "white"))
+    (.fill ctx) ; Fill the node's background with color
+    (.stroke ctx)
+    (set! (.-fillStyle ctx) (if editing? "white" "black")) ; Switch the fillStyle for drawing the text
+    (.fillText ctx label (- x half-width) (+ y (- half-height (/ font-size 2)))))) ; Adjust Y position
+
+
 
 
 (defn draw-arc [ctx arc net]
@@ -102,7 +109,6 @@
   (doseq [node (:nodes net)] (draw-node ctx node (= (:id node) (:last-selected-node net)) (= (:id node) (:editing-node net)))))
 
 
-
 (defn handle-mouse-up [net ctx x y]
   (let [selected-node-id (:selected-node net)
         hit-node-id (->> (:nodes net)
@@ -114,12 +120,16 @@
       (add-node net x y ctx)
       (and hit-node-id (not= selected-node-id hit-node-id)) ; If dragging from one node to another, create an arc
       (add-arc net selected-node-id hit-node-id)
-      :else ; If clicking on a node without moving it, start editing the node
-      (assoc net :editing-node selected-node-id
+      (and selected-node-id (not hit-node-id)) ; If moving the node
+      (assoc net :selected-node -1
              :nodes (map #(if (= (:id %) selected-node-id)
                             (move-node % x y)
                             %)
-                          (:nodes net))))))
+                          (:nodes net)))
+      :else ; If clicking on a node without moving it, start editing the node
+      (assoc net :editing-node selected-node-id))))
+
+
 
 (defn handle-mouse-down [net ctx x y]
   (let [selected-node-id (->> (:nodes net)
@@ -136,17 +146,29 @@
 
 
 
-(defn on-input-change [net e node-id]
-  (let [new-label (.-value (.-target e))]
-    (update net :nodes (fn [nodes]
-                         (map #(if (= (:id %) node-id)
-                                 (set-label % new-label)
-                                 %)
-                              nodes
-                              nodes)))))
+(defn on-input-change [net e node-id ctx]
+  (let [new-label (.-value (.-target e))
+        updated-nodes (map #(if (= (:id %) node-id)
+                              (let [text-width (.measureText ctx new-label)
+                                    padding 10
+                                    width (+ (.-width text-width) (* 2 padding))
+                                    height 40]
+                                (-> %
+                                    (set-label new-label)
+                                    (assoc :width width :height height)))
+                              %)
+                            (:nodes net))]
+    (assoc net :nodes updated-nodes)))
 
 
-(defn to-edn [net] {:nodes (:nodes net) :arcs (:arcs net)})
+(defn node->edn [node]
+  [(str (:id node)) (:label node) (:x node) (:y node)])
+
+(defn arc->edn [arc]
+  [(str (:n1 arc)) (str (:n2 arc))])
+
+
+(defn to-edn [net] {:nodes (map node->edn (:nodes net)) :arcs (map arc->edn (:arcs net))})
 
 
 (defn get-x-y [e canvas]
@@ -160,6 +182,33 @@
 
 
 
+;; Update the node-editor component
+(defn node-editor [net-ref editing-node ctx]
+  [:div {:style {:display "flex"
+                 :flex-direction "column"
+                 :align-items "center"
+                 :justify-content "center"
+                 :position "absolute"
+                 :top 0 :left 0
+                 :width "500px" :height "500px"
+                 :zIndex 1
+                 :background-color "rgba(0, 0, 0, 0.5)"}}
+   [:input {:type "text"
+            :value (:label editing-node)
+            :style {:width "150px"} ; Set the input width to 150px
+            :onBlur #(swap! net-ref assoc :editing-node -1)
+            :onChange #(swap! net-ref on-input-change % (:id editing-node) ctx)
+            :onKeyDown #(when (= (.-key %) "Enter")
+                          (do
+                            (.preventDefault %)
+                            (.blur (.-target %))))}]
+   [:div {:style {:display "flex" :justify-content "space-between" :width "100%" :margin-top "10px"}}
+    [:button {:onClick #(swap! net-ref delete-node (:id editing-node))}
+     "Delete"]
+    [:button {:onClick #(swap! net-ref assoc :editing-node -1)}
+     "Cancel"]]])
+
+;; Update the network-canvas component to pass the context to the node-editor component
 (defn network-canvas []
   (let [canvas-id (str (gensym "network-canvas-"))
         net-ref (r/atom (network))]
@@ -168,7 +217,7 @@
             editing-node-id (:editing-node net)
             editing-node (when (not= editing-node-id -1)
                            (find-node net editing-node-id))]
-        [:div
+        [:div {:style {:position "relative"}}
          [:canvas
           {:id canvas-id
            :width 500
@@ -189,23 +238,9 @@
                 (.clearRect ctx 0 0 500 500)
                 (draw-network ctx net)))))
          (when editing-node
-           [:input {:type "text"
-                    :value (:label editing-node)
-                    :style {:position "absolute"
-                            :left (+ (:x editing-node) 25) "px"
-                            :top (- (:y editing-node) 10) "px"}
-                    :onBlur #(swap! net-ref assoc :editing-node -1)
-                    :onChange #(swap! net-ref on-input-change % (:id editing-node))
-                    :onKeyDown #(when (= (.-key %) "Enter")
-                                  (do
-                                    (.preventDefault %)
-                                    (.blur (.-target %))))
-
-
-                    }])
+           [node-editor net-ref editing-node (-> (js/document.getElementById canvas-id)
+                                                 (.getContext "2d"))]) ; Pass the context to node-editor
          [:pre {:style {:white-space "pre-wrap"}} (to-edn net)]]))))
-
-
 
 
 

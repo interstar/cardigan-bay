@@ -336,7 +336,104 @@ Bookmarked " timestamp  ": <" url ">
 
 
 
-(defn network-card [i data render-context]
+
+;;; Network drawing
+
+(defn calculate-node-size [label {:keys [font-size padding]}]
+  (let [text-width (* (count label) font-size 0.6) ; Assuming each character has a width of 0.6 * font-size
+        rect-width (+ text-width (* 2 padding))
+        rect-height 40]
+    [rect-width rect-height]))
+
+(defn node-center [node style-map]
+  (let [x (nth node 2)
+        y (nth node 3)
+        label (nth node 1)
+        [w h] (calculate-node-size label style-map )]
+    [(+ x (/ w 2)) (+ y (/ h 2))]))
+
+
+(defn node->svg [node style-map]
+  (let [[id label x y] node
+        font-size (:font-size style-map)
+        font-family (:font-family style-map)
+        text-anchor (:text-anchor style-map)
+        text-y-offset (/ font-size 2)
+        padding (:padding style-map)
+        [rect-width rect-height] (calculate-node-size label style-map)]
+    [:g {:key id}
+     [:rect {:x (- x (/ rect-width 2)) :y (- y (/ rect-height 2))
+             :width rect-width :height rect-height
+             :stroke "black" :fill "white"}]
+     [:text {:x x :y (+ y text-y-offset) :font-family font-family
+             :font-size font-size :text-anchor text-anchor
+             :class "wikilink" :data label}
+      label]]))
+
+
+
+(defn line-rect-intersect [x1 y1 x2 y2 x y w h]
+  (let [dx (if (< x1 x2) -1 1)
+        dy (if (< y1 y2) -1 1)
+        half-w (/ w 2)
+        half-h (/ h 2)
+        cx (+ x half-w)
+        cy (+ y half-h)
+
+        distances [(if (= dy 1) (- half-h) half-h)
+            (/ (* (- x2 cx) half-h) (+ (- y2 cy) 1e-10))
+            (if (= dx 1) (- half-w) half-w)
+            (/ (* (- y2 cy) half-w) (+ (- x2 cx) 1e-10))]
+
+        intersect (apply min (filter #(> % 0) distances))]
+    [(+ cx (* intersect dx)) (+ cy (* intersect dy))]))
+
+
+
+(defn arc->svg [arc nodes style-map]
+  (let [[n1 n2] arc
+        node1 (some #(when (= (first %) n1) %) nodes)
+        node2 (some #(when (= (first %) n2) %) nodes)
+        [x1 y1] (node-center node1 style-map)
+        [x2 y2] (node-center node2 style-map)
+        [w2 h2] (calculate-node-size (nth node2 1) style-map)
+        [dest-x dest-y] (line-rect-intersect x1 y1 x2 y2 (nth node2 2) (nth node2 3) w2 h2)]
+    [:line {:x1 x1 :y1 y1 :x2 dest-x :y2 dest-y
+            :stroke "black" :stroke-width 2 :marker-end "url(#arrow)"}]))
+
+
+(defn network->svg [network]
+  (let [style-map {:font-size 20
+                   :font-family "Arial"
+                   :text-anchor "middle"
+                   :padding 10}]
+    [:svg {:width "100%" :height "100%" :viewBox "0 0 500 500"}
+     [:defs
+      [:marker {:id "arrow" :markerWidth 10 :markerHeight 10 :refX 0 :refY 3
+                :orient "auto" :markerUnits "strokeWidth"}
+       [:path {:d "M0,0 L0,6 L9,3 z" :fill "black"}]]]
+     (map #(node->svg % style-map) (network :nodes))
+     (map #(arc->svg % (network :nodes) style-map) (network :arcs))]))
+
+
+(defn xxnetwork->svg [net]
+  (let [net-edn (-> net read-string)
+        nodes (:nodes net-edn)
+        arcs (:arcs net-edn)
+        svg-width 500
+        svg-height 500]
+    [:svg {:width svg-width :height svg-height}
+     (map arc->svg arcs (repeat nodes))
+     (map node->svg nodes)]))
+
+(defn network-card [i data  render-context]
+  (let [svg (html (network->svg (read-string data))) ]
+    (common/package-card
+     i :network :markdown data
+     svg render-context))
+)
+
+(defn xnetwork-card [i data render-context]
   (try
     (let [
           nodes (-> data read-string :nodes)
