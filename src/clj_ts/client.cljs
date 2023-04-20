@@ -791,7 +791,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                        :result-toggle true
                        :code (get card "server_prepared_data")
                        :calc []
-                       :result ""})
+                       :result ""
+                       :hash (get card "hash")
+                       :source_type (get card "source_type")})
 
 
         id (str "ws" (get card "hash"))
@@ -831,6 +833,15 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                  )]
             (swap! state #(conj % {:calc result :result result})))
           )
+
+        save-code-card
+        (fn [e]
+          (let [new-code (-> @state :code) ]
+            (save-card! (-> @db :current-page)
+                        (-> @state :hash)
+                        (-> @state :source_type)
+                        (-> @state :code))
+            ))
         ]
 
     (fn [card]
@@ -844,6 +855,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 You'll need to  edit the page fully to make permanent changes to the code. "]]
          [:div {:class :workspace-buttons}
           [:button {:class :workspace-button :on-click execute-code} "Run"]
+          [:button {:class :workspace-button :on-click save-code-card} "Save Changes"]
+          ]
+         [:div
           [:button {:class :workspace-button :on-click toggle-code!} "Code"]
           [:button {:class :workspace-button :on-click toggle-calc!} "Calculated"]
           [:button {:class :workspace-button :on-click toggle-result!} "Output"]]
