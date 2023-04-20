@@ -345,12 +345,7 @@ Bookmarked " timestamp  ": <" url ">
         rect-height 40]
     [rect-width rect-height]))
 
-(defn node-center [node style-map]
-  (let [x (nth node 2)
-        y (nth node 3)
-        label (nth node 1)
-        [w h] (calculate-node-size label style-map )]
-    [(+ x (/ w 2)) (+ y (/ h 2))]))
+
 
 
 (defn node->svg [node style-map]
@@ -372,21 +367,26 @@ Bookmarked " timestamp  ": <" url ">
 
 
 
-(defn line-rect-intersect [x1 y1 x2 y2 x y w h]
-  (let [dx (if (< x1 x2) -1 1)
-        dy (if (< y1 y2) -1 1)
+(defn line-rect-intersect [x1 y1 x2 y2 w h]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)
         half-w (/ w 2)
         half-h (/ h 2)
-        cx (+ x half-w)
-        cy (+ y half-h)
+        left   (- x2 half-w)
+        right  (+ x2 half-w)
+        top    (- y2 half-h)
+        bottom (+ y2 half-h)
 
-        distances [(if (= dy 1) (- half-h) half-h)
-            (/ (* (- x2 cx) half-h) (+ (- y2 cy) 1e-10))
-            (if (= dx 1) (- half-w) half-w)
-            (/ (* (- y2 cy) half-w) (+ (- x2 cx) 1e-10))]
+        t-min-x (if (not= dx 0) (/ (- left x1) dx) Double/POSITIVE_INFINITY)
+        t-max-x (if (not= dx 0) (/ (- right x1) dx) Double/NEGATIVE_INFINITY)
 
-        intersect (apply min (filter #(> % 0) distances))]
-    [(+ cx (* intersect dx)) (+ cy (* intersect dy))]))
+        t-min-y (if (not= dy 0) (/ (- top y1) dy) Double/POSITIVE_INFINITY)
+        t-max-y (if (not= dy 0) (/ (- bottom y1) dy) Double/NEGATIVE_INFINITY)
+
+        t-enter (max (min t-min-x t-max-x) (min t-min-y t-max-y))
+        ]
+    [(+ x1 (* t-enter dx)) (+ y1 (* t-enter dy))]))
+
 
 
 
@@ -394,12 +394,20 @@ Bookmarked " timestamp  ": <" url ">
   (let [[n1 n2] arc
         node1 (some #(when (= (first %) n1) %) nodes)
         node2 (some #(when (= (first %) n2) %) nodes)
-        [x1 y1] (node-center node1 style-map)
-        [x2 y2] (node-center node2 style-map)
+        [x1 y1] [(nth node1 2) (nth node1 3)]
+        [x2 y2] [(nth node2 2) (nth node2 3)]
+        [w1 h1] (calculate-node-size (nth node1 1) style-map)
         [w2 h2] (calculate-node-size (nth node2 1) style-map)
-        [dest-x dest-y] (line-rect-intersect x1 y1 x2 y2 (nth node2 2) (nth node2 3) w2 h2)]
+
+
+        [dest-x dest-y] (line-rect-intersect x1 y1 x2 y2 w2 h2)
+
+        ]
     [:line {:x1 x1 :y1 y1 :x2 dest-x :y2 dest-y
             :stroke "black" :stroke-width 2 :marker-end "url(#arrow)"}]))
+
+
+
 
 
 (defn network->svg [network]
@@ -409,22 +417,13 @@ Bookmarked " timestamp  ": <" url ">
                    :padding 10}]
     [:svg {:width "100%" :height "100%" :viewBox "0 0 500 500"}
      [:defs
-      [:marker {:id "arrow" :markerWidth 10 :markerHeight 10 :refX 0 :refY 3
+      [:marker {:id "arrow" :markerWidth 10 :markerHeight 10 :refX 9 :refY 3
                 :orient "auto" :markerUnits "strokeWidth"}
        [:path {:d "M0,0 L0,6 L9,3 z" :fill "black"}]]]
      (map #(node->svg % style-map) (network :nodes))
      (map #(arc->svg % (network :nodes) style-map) (network :arcs))]))
 
 
-(defn xxnetwork->svg [net]
-  (let [net-edn (-> net read-string)
-        nodes (:nodes net-edn)
-        arcs (:arcs net-edn)
-        svg-width 500
-        svg-height 500]
-    [:svg {:width svg-width :height svg-height}
-     (map arc->svg arcs (repeat nodes))
-     (map node->svg nodes)]))
 
 (defn network-card [i data  render-context]
   (let [svg (html (network->svg (read-string data))) ]
@@ -433,73 +432,9 @@ Bookmarked " timestamp  ": <" url ">
      svg render-context))
 )
 
-(defn xnetwork-card [i data render-context]
-  (try
-    (let [
-          nodes (-> data read-string :nodes)
-          arcs (-> data read-string :arcs)
+;;;;;;;;;;;;;;;;;;
 
-          maxit (fn [f i xs]
-                  (apply f (map  #(nth % i) xs ) ))
-          maxx (maxit max 2 nodes)
-          maxy (maxit max 3 nodes)
-          minx (maxit min 2 nodes)
-          miny (maxit min 3 nodes)
 
-          node (fn [[n label x y]]
-                 (let [an-id (gensym)
-                       the-text [:text {:class "wikilink"
-                                        :data label
-                                        :x x :y (+ y 20)
-                                        :text-anchor "middle"
-                                        :fill "black"
-                                        } label]
-
-                       final-text
-                       (if (:for-export? render-context)
-                         [:a {:href label} the-text ]
-                         the-text
-                         )
-                       box [:circle {:cx x :cy y :r 20
-                                     :width 100 :height 20
-                                     :stroke "orange"
-                                     :stroke-width 2 :fill "yellow"}
-                            ]
-
-                       ]
-                   (html [:g {:id an-id} box final-text])))
-          arc (fn [[n1 n2]]
-                (let
-                    [a1 (afind n1 nodes)
-                     a2 (afind n2 nodes)]
-                  (if
-                      (and a1 a2)
-                    (let [[label x1 y1] a1
-                          [label x2 y2] a2]
-                      (html [:line {:x1 x1  :y1 y1 :x2 x2 :y2 y2
-                                    :stroke "#000" :stroke-width 2
-                                    :marker-end "url(#arrowhead)"}])
-
-                      )
-                    "")))
-          svg (html [:svg {:width "500px" :height "400px"
-                           :viewBox (str "0 0 " (* 1.3 maxx) (* 1.3 maxy)) }
-                     [:defs [:marker {:id "arrowhead" :markerWidth "10" :markerHeight "7"
-                                      :refX "-5" :refY "3.5" :orient "auto"}
-                             [:polygon {:points "-5 0, 0 3.5, -5 7"}]]]
-                     (apply str (map arc arcs))
-                     (apply str (map node nodes))
-                     ])
-          ]
-
-      (common/package-card i :network :markdown data svg render-context)
-      )
-    (catch Exception e (common/package-card i :network :raw data
-                                            (str (exception-stack e)
-                                                 "\n" data)
-                                            render-context))
-    )
-  )
 
 (defn process-card-map
   [i {:keys [source_type source_data]} render-context]
