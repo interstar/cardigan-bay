@@ -83,6 +83,28 @@ nav {
     font-size: 1rem;
 }
 
+.card-bar {
+    padding:5px;
+    margin:10px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#333333;
+}
+
+.send-to-bar {
+    padding:3px;
+    spacing:3px;
+}
+.send-to-inner {
+    display: flex;
+    flex-direction: row;
+
+    border-style:solid;
+    border-color:#555555;
+    border-width:1px;
+
+}
+
 .card {
     background-color:white;
     padding: 5px;
