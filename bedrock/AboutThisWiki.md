@@ -11,6 +11,7 @@ Overviews and statistics
 * [[BrokenInternalLinks]] : the pages you have linked to but haven't created yet 
 * [[OrphanPages]] : the pages you have created but haven't linked to yet
 * [[AllLinks]] : every link between pages
+* [[MediaFiles]] : a listing of the files in the media directory
 ----
 
 Try the [[SandBox]] 

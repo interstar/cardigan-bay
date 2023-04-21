@@ -12,7 +12,7 @@ Note, that while this is very useful, particularly on longer pages, it will **ne
 
 **Network Cards**. These are still an *experimental* feature. But it's always been the intention for Cardigan Bay to support a type of card which is a hand-drawn network diagram of boxes and arrows. Each node is, itself, a link to a page. So you can make graphical overviews of topics that are then covered on their own pages. There's currently no graphical editor for this card type. But this version of CB does at least now have a reasonable looking rendering. (The graphical editor is being worked on, but not yet enabled)
 
-
+Added a command for listing the media directory to the system card. And an extra card type for linking to a media file.
 
 ----
 # Release 0.7.4 Notes
