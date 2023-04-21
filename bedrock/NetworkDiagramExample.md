@@ -11,7 +11,6 @@ And :arcs as a list of connections between page ids: [id1 id2]
 To re-iterate. Play with this if you like. Don't rely on it not to change.
 
 See next card source for this example.
-
 ----
 :network
 
@@ -25,4 +24,5 @@ See next card source for this example.
 [1 3]
 [1 2]
 [3 4]
+ 
 ]}

@@ -22,14 +22,14 @@ We will be adding more types over time, but the current types are
 * **:system** - System cards contain calls to built-in system functions. At the moment these include full text search (see [[SearchPage]] for an example), and the queries on metadata such as those on [[AllPages]] [[AllLinks]] [[BrokenLinks]], [[OrphanPages]] and [[RecentChanges]].
 * **:evalraw** and **:evalmd** - Clojure code that is run on the server and whose output is rendered either as "raw" or through the Markdown processor.(See [[CodeExamples]])
 * **:patterning** - The [Patterning library](https://github.com/interstar/Patterning-Core) has been made available to scripts within the special :patterning card type. See [[PatterningSupportInCardiganBay]]. Note that only a subset of the current Patterning API is available and this is subject to change. Patterning itself is likely to stay, but the API might change in future.
+* **:transclude** - Transclusion is now officially supported. See [[TransclusionExample]] for more.
 
 ### Experimental Unsupported
 
 There's some work-in progress towards these types, but they are not guaranteed to work or stay 
+* **:network** - These are still an experimental feature. But it's always been the intention for Cardigan Bay to support a type of card which is a hand-drawn network diagram of boxes and arrows. Each node is, itself, a link to a page. So you can make graphical overviews of topics that are then covered on their own pages. There's currently no graphical editor for this card type. But this version of CB does at least now have a reasonable looking rendering. (The graphical editor is being worked on, but not yet enabled) This is still an experimental feature that isn't officially supported. And the format might change.
 
-* **:transclude** - Transclusion is still **very experimental** and shouldn't be relied on yet. It's **buggy**, and doesn't do everything we want. But you can see a [[TransclusionExample]]
-* **:network** - Beginning investigations into drawing a navigable network diagram of pages. Not automatically generated, hand-written. This format is not suitable for writing by humans yet. And probably won't stay constant, so don't use. [[NetworkDiagramExample]]
-
+ 
 ----
 
 ### Future Types

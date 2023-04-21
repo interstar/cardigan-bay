@@ -1,4 +1,18 @@
-This is [[CardiganBay]] *0.7.4*
+This is [[CardiganBay]] *0.8.0*
+
+# Release 0.8.0 Notes
+
+A lot of big changes, and some fixes.
+
+**Card level editing**. This is the BIG ONE anyone who has used CB will have been waiting for. You can now edit an individual card. It's not particularly pretty yet (though hopefully it will get prettier soon), but now, when you open up the card bar at the bottom of a card, there's another edit-box with just the source of that particular card. So you can now do more focused editing.
+
+Note, that while this is very useful, particularly on longer pages, it will **never** replace the one-big-text-box philosophy of Cardigan Bay. There will *always* be a canonical single text file view of a page.
+
+**Workspace Saving**. This is also a big deal. As the server now has the ability to accept individual card updates, it means that the Workspace finally gets a [Save] button. So as you are working on code interactively in the workspace, you can hit the save button to store it. No need to copy and paste it into the page level editor.
+
+**Network Cards**. These are still an *experimental* feature. But it's always been the intention for Cardigan Bay to support a type of card which is a hand-drawn network diagram of boxes and arrows. Each node is, itself, a link to a page. So you can make graphical overviews of topics that are then covered on their own pages. There's currently no graphical editor for this card type. But this version of CB does at least now have a reasonable looking rendering. (The graphical editor is being worked on, but not yet enabled)
+
+
 
 ----
 # Release 0.7.4 Notes
