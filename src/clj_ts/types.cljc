@@ -34,6 +34,7 @@
   (load-media-file [ps file-name])
   (load-custom-file [ps file-name])
 
+  (media-list [ps])
 
 )
 

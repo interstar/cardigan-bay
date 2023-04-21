@@ -13,7 +13,6 @@
 
 
 
-
 ;; Data structures / types
 
 ;; page-path, system-path, export-path are Java nio Paths
@@ -128,7 +127,12 @@
     (let [dir (.toString (.resolve page-path "system/custom"))]
       (io/file dir file-name)))
 
-  )
+
+  (media-list [ps]
+    (let [files (.media-files-as-new-directory-stream ps)]
+      (map #(.getFileName %) files)))
+
+)
 
 
 ;; Constructing

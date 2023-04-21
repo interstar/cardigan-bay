@@ -241,6 +241,13 @@
 
 (defn item1 [s] (str "* [[" s "]]\n"))
 
+(defn file-link [data]
+  (let [{:keys [file-name label] } (-> data read-string)]
+    (str "<a href='" "/media/" file-name "'>"
+         (if label label file-name)
+         "</a>")
+    ))
+
 
 (defn system-card [i data render-context]
   (let [
@@ -298,6 +305,19 @@
             sr (server-custom-script data) ]
         (common/package-card i :customscript return-type data sr render-context))
 
+
+      :filelist
+      (let  [file-names
+             (-> (.page-store (server-state))
+                 .media-list)
+             file-list
+             (str "<ul>\n"
+                  (apply
+                   str
+                   (map #(str "<li> <a href='/media/" %  "'>" % "</a></li>\n")
+                        file-names))
+                  "</ul>") ]
+        (common/package-card i :system :html data file-list render-context))
 
 
       ;; not recognised
@@ -435,6 +455,9 @@ Bookmarked " timestamp  ": <" url ">
 
 
 
+
+;;;;;;;;;;;;;;;;;;
+
 (defn process-card-map
   [i {:keys [source_type source_data]} render-context]
   (try
@@ -483,6 +506,11 @@ Bookmarked " timestamp  ": <" url ">
          :patterning
          (common/package-card i :patterning :html source_data
                               (patterning/one-pattern source_data) render-context)
+
+         :filelink
+         (common/package-card i :filelink  :html source_data
+                              (file-link source_data) render-context)
+
 
          ;; not recognised
          (common/package-card i source_type source_type source_data source_data render-context)
