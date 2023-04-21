@@ -1,0 +1,10 @@
+{:port 4545
+ :directory "./bedrock/"
+ :name "Yet Another Cardigan Bay Wiki"
+ :site "http://www.example.com/"
+ :init "HelloWorld"
+ :links "./"
+ :extension ".html"
+ :export-dir "./bedrock/exported/"
+ :beginner false
+}

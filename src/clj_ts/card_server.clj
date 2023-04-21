@@ -398,13 +398,12 @@ Bookmarked " timestamp  ": <" url ">
         [x2 y2] [(nth node2 2) (nth node2 3)]
         [w1 h1] (calculate-node-size (nth node1 1) style-map)
         [w2 h2] (calculate-node-size (nth node2 1) style-map)
-
-
+        [src-x src-y] (line-rect-intersect x2 y2 x1 y1 w1 h1) ; Reversed the origin and destination nodes
         [dest-x dest-y] (line-rect-intersect x1 y1 x2 y2 w2 h2)
-
         ]
-    [:line {:x1 x1 :y1 y1 :x2 dest-x :y2 dest-y
+    [:line {:x1 src-x :y1 src-y :x2 dest-x :y2 dest-y
             :stroke "black" :stroke-width 2 :marker-end "url(#arrow)"}]))
+
 
 
 

@@ -731,7 +731,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                   :id "sendto-inputbox"
                   :value @sendval
                   :on-change #(reset! sendval (-> % .-target .-value))}]
-          [:img {:src "/icons/send.png"}]
+
           [:button {:on-click
                     (fn [e]
                       (card-send-to-page!
@@ -1067,9 +1067,11 @@ You'll need to  edit the page fully to make permanent changes to the code. "]]
       [:div
        [card-list]]
 
-      :transcript
+      :network-editor
       [:div
        [network-canvas]]
+
+      :transcript
       [:div
        [transcript]]
       )]
