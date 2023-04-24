@@ -7,7 +7,7 @@ Files in the media directory of this wiki
 
 ----
 
-Note you can also link to a particular media file as in the next card.
+Note you can also :filelink to a particular media file as in the next card.
 
 ----
 :filelink
