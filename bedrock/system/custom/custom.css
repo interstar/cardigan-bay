@@ -133,7 +133,11 @@ blockquote {
 
 }
 
-
+.edit-card {
+    background-color: #cccccc;
+    padding:5px;
+    margin:5px;
+}
 
 .main-container {
    background-color:#ffffff;
