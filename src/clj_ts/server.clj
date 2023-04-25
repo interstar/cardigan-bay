@@ -367,55 +367,59 @@
 
 
 ;; Parse command line args
-(defn cli-options [configs]
+(def cli-options
  [
   ["-p" "--port PORT" "Port number"
-   :default (:port configs)
+   :default 4545
    :parse-fn #(Integer/parseInt %)
    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
 
   ["-d" "--directory DIR" "Pages directory"
-   :default (:directory configs)
+   :default "./bedrock"
    :parse-fn str]
 
   ["-n" "--name NAME" "Wiki Name"
-   :default (:name configs)
+   :default "Cardigan Bay Wiki"
    :parse-fn str]
 
   ["-s" "--site SITE" "Site URL "
-   :default (:site configs)
+   :default "http://example.com"
    :parse-fn str
    ]
 
   ["-i" "--init INIT" "Start Page"
-   :default (:init configs)
+   :default "HelloWorld"
    :parse-fn str]
 
   ["-l" "--links LINK" "Export Links"
-   :default (:links configs)
+   :default "./"
    :parse-fn str]
 
   ["-x" "--extension EXPORTED_EXTENSION" "Exported Extension"
-   :default (:extension configs)
+   :default ".html"
    :parse-fn str]
 
   ["-e" "--export-dir DIR" "Export Directory"
-   :default (:export-dir configs)
+   :default "./bedrock/exported"
    :parse-fn str]
 
   ["-b" "--beginner IS_BEGINNER" "Is Beginner Rather Than Expert"
-   :default (:beginner configs)
+   :default :false
    :parse-fn boolean]
 
   ])
 
-(defn check-and-read-config-file []
+(defn check-and-read-config-file [path]
   (try
-    (-> "config.edn"
+    (-> (str path
+             (if (= (last path) "/")
+               "system/config.edn"
+               "/system/config.edn"))
         slurp
         edn/read-string )
     (catch Exception e
       (do
+        (println e)
         (println "No config file")
         {}))))
 
@@ -423,19 +427,17 @@
 ; runs when the server starts
 (defn -main [& args]
   (let [
-        configs (check-and-read-config-file)
-        dx3 (println configs)
 
-        as (if *command-line-args* *command-line-args* args)
-        xs (parse-opts as (cli-options configs))
+        ags (if *command-line-args* *command-line-args* args)
+        xs (parse-opts ags cli-options)
 
         opts_ (get xs :options)
-        dx2 (println opts_)
 
+        configs (check-and-read-config-file (:directory opts_))
 
-        opts (conj configs opts_)
+        opts (conj opts_ configs)
+
         ps (pagestore/make-page-store (:directory opts) (:export-dir opts))
-        dx (println (:site opts) (:links opts))
 
         pe (export/make-page-exporter ps (:extension opts) (:links opts))]
 

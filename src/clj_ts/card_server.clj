@@ -335,7 +335,7 @@
         matched-cards (.get-cards-from-page ps from ids)
         cards (card-maps->processed (* 100 i) matched-cards render-context)
 
-        body (str "## Transcluded from [[" from "]]")
+        body (str "### Transcluded from [[" from "]]")
         ]
     (concat [(common/package-card i :transclude :markdown body body render-context)] cards )))
 
