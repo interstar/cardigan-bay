@@ -58,7 +58,7 @@ nav {
     padding-top: 50px;
 }
 
-#clickable {
+.clickable  {
     cursor: pointer;
 }
 
@@ -81,6 +81,28 @@ nav {
 
 .card-meta {
     font-size: 1rem;
+}
+
+.card-bar {
+    padding:5px;
+    margin:10px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#333333;
+}
+
+.send-to-bar {
+    padding:3px;
+    spacing:3px;
+}
+.send-to-inner {
+    display: flex;
+    flex-direction: row;
+
+    border-style:solid;
+    border-color:#555555;
+    border-width:1px;
+
 }
 
 .card {
@@ -111,7 +133,11 @@ blockquote {
 
 }
 
-
+.edit-card {
+    background-color: #cccccc;
+    padding:5px;
+    margin:5px;
+}
 
 .main-container {
    background-color:#ffffff;
@@ -170,6 +196,15 @@ button:hover {
 }
 
 
+.mini-button {
+    margin:3px;
+    padding:3px;
+    border-style:solid;
+    border-width:1;
+    border-color:#333333;
+    cursor:pointer;
+
+}
 
 .navbar {
     /*padding:20px;*/
@@ -272,7 +307,7 @@ button:hover {
 
 
 .code {
-    font-size : 1.5rem;
+    font-size : 1.4rem;
 }
 
 .calculated-out {
@@ -361,8 +396,12 @@ nav ul li a:hover {
 
 @media screen and (max-width: 768px) {
 
+  body {
+      font-size: 1rem;
+  }
+
   .left-menu li {
-    display: block; /* Ensure each item inside .left-menu stacks vertically */
+      display: block; /* Ensure each item inside .left-menu stacks vertically */
   }
 
 
@@ -417,5 +456,10 @@ nav ul li a:hover {
   .card-outer {
       background: #ddddff;
   }
+
+  .code {
+      font-size : 0.9rem;
+  }
+
 
 }

@@ -741,7 +741,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
          ]
         [:hr]
-        [:div
+        [:div {:class "edit-card"}
          [:h4 "Edit Card"]
          [:div
           [:span
