@@ -37,3 +37,18 @@ For example :
 <path style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" stroke-width="3px" stroke="rgb(140,220,180)" fill="rgb(190,255,200)" fill-opacity="0.39" d="M 100 120.00000000000001 L 156.5685424949238 143.4314575050762 L 180 200 L 156.5685424949238 256.5685424949238 L 100 280 L 43.431457505076196 256.5685424949238 L 19.999999999999996 200 L 43.431457505076175 143.43145750507622 L 100 120.00000000000001"></path>
 <path style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" stroke-width="3px" stroke="rgb(140,220,180)" fill="rgb(190,255,200)" fill-opacity="0.39" d="M 185.85786437626905 72.72077938642146 L 209.28932188134524 129.28932188134524 L 185.85786437626905 185.85786437626905 L 129.28932188134524 209.28932188134527 L 72.72077938642143 185.85786437626908 L 49.28932188134523 129.28932188134527 L 72.72077938642143 72.72077938642146 L 129.28932188134522 49.28932188134523 L 185.85786437626905 72.72077938642146"></path></svg>
 </div>
+
+
+----
+### Manual Copying
+
+I've been copying texts I've written elsewhere into Cardigan Bay. For this it's useful to have a card type which is like a quote, but at a slightly larger scale. I call this a "manual-copy". It's not an automatic embedding from another server. And it's not "here are the words from someone" like a blockquote.
+
+Instead it's "here's something I wrote elsewhere"
+
+The following card is an example of card-type :manual-copy, to show how it looks.
+
+----
+:manual-copy
+
+Here's what a manual-copy or extract from text that was written somewhere else looks like.
