@@ -386,8 +386,11 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
    label]
   )
 
-(defn boilerplate-button [label tag]
-  (clip-button label (embed-boilerplate tag))
+(defn boilerplate-button
+  ([label tag]
+   (clip-button label (embed-boilerplate tag)))
+  ([label tag new-url]
+   (clip-button label (-> (embed-boilerplate tag) (string/replace "URL GOES HERE" new-url))))
   )
 
 
@@ -441,7 +444,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 ----")
 
 
-      (boilerplate-button "YouTube" :youtube)
+      (boilerplate-button "YouTube" :youtube "https://www.youtube.com/watch?v=URL")
       (boilerplate-button "Vimeo" :vimeo)
 
       (boilerplate-button "SoundCloud" :soundcloud)
