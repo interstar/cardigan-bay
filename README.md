@@ -6,7 +6,7 @@ CardiganBay is a new wiki-engine which aims to combine the best ideas from class
 
 ![How it looks](http://sdi.thoughtstorms.info/wp-content/uploads/2023/04/Screenshot-from-2023-04-05-20-45-15.png)
 
-[Easy Install and Introduction on YouTube](https://www.youtube.com/watch?v=H7_THeK9EBw)
+[Easy Install and Introduction on YouTube](https://www.youtube.com/watch?v=1QA5imZMdSI)
 
 ### CardiganBay motivations
 
