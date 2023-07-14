@@ -220,7 +220,7 @@
         evaluated
         (try
           (#(apply str (sci/eval-string code)))
-          (catch Exception e exception-stack))]
+          (catch Exception e (exception-stack e)))]
     evaluated
     ))
 
