@@ -444,8 +444,8 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 ----")
 
 
-      (boilerplate-button "YouTube" :youtube "https://www.youtube.com/watch?v=URL")
-      (boilerplate-button "Vimeo" :vimeo)
+      (boilerplate-button "YouTube" :youtube "https://www.youtube.com/watch?v=IDNUMBER")
+      (boilerplate-button "Vimeo" :vimeo "http://vimeo.com/IDNUMBER")
 
       (boilerplate-button "SoundCloud" :soundcloud)
       (boilerplate-button "BandCamp" :bandcamp)
@@ -853,9 +853,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
          [:h3 "Workspace"]
          [:p {:class :workspace-note} [:i "Note : this is a ClojureScript workspace based on "
                  [:a {:href "https://github.com/borkdude/sci"} "SCI"]
-                 ". Be aware that it does not save any changes you make in the textbox.
-
-You'll need to  edit the page fully to make permanent changes to the code. "]]
+                 ". Don't forget to click the [Save Changes] button to save any changes you make in this workspace. Otherwise they will be lost when you move to another page. "]]
          [:div {:class :workspace-buttons}
           [:button {:class :workspace-button :on-click execute-code} "Run"]
           [:button {:class :workspace-button :on-click save-code-card} "Save Changes"]
