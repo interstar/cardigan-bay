@@ -11,7 +11,11 @@
    :as sshapes]
   [patterning.strings :as p-strings]
    [patterning.groups :as groups :refer [group over-style scale translate translate-to
-                                         h-reflect v-reflect stretch rotate wobble reframe]]
+                                         h-reflect v-reflect stretch rotate wobble reframe
+                                         horizontal-centre-pattern-in-pattern
+                                         vertical-centre-pattern-in-pattern
+                                         centre-pattern-in-pattern
+                                         ]]
   [patterning.layouts :refer [framed clock-rotate stack grid-layout diamond-layout
                               four-mirror four-round nested-stack checked-layout
                               half-drop-grid-layout random-turn-groups h-mirror ring
@@ -59,6 +63,9 @@
     'rotate rotate
     'wobble wobble
     'reframe reframe
+    'horizontal-centre-pattern-in-pattern horizontal-centre-pattern-in-pattern
+    'vertical-centre-pattern-in-pattern vertical-centre-pattern-in-pattern
+    'centre-pattern-in-pattern centre-pattern-in-pattern
 
     ;; layouts
     'framed framed
@@ -114,17 +121,22 @@
           ]
 
       (str
-       "<div>"
+       "<div class='embedded-patterning'>
+<div class='svg-wrapper'>
+  <div class='patterning-svg'>"
        svg
        "</div>
-</div>
+   </div>
+
 ""
- <div class='calculated-out'>
+   <div class='calculated-out patterning-code'>
 <pre>"
 
        data
 
-       "</pre></div>"
+       "</pre>
+  </div>
+</div>"
        )
 
       )
