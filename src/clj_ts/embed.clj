@@ -40,7 +40,7 @@
 
      (if title (str "<div><h3>" title "</h3></div>") "")
      (if extra-link (str "<div>" extra-link "</div>") "")
-     "<div class=\"embed_div\">"
+     "<div class=\"outer-embed\">"
 
      inner
 
@@ -99,10 +99,10 @@ API : " oembed " URL : " url)
     (generic-embed
          data
          (str
-          "   <div class='youtube-embedded'>
+          "   <div class='embed-container'>
 <iframe src='http://www.youtube.com/embed/" id  "'
-        style=\" width:100%; height:100%;\"
-        frameborder='0' allowfullscreen>
+ allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+allowfullscreen='' frameborder='0'>
 </iframe>
 </div>
 ")
@@ -124,8 +124,10 @@ API : " oembed " URL : " url)
     (generic-embed
      data
      (str
-      "<div class=\"vimeo-embedded\">
-<iframe src='https://player.vimeo.com/video/" id "' width='640' height='360' frameborder='0' allow='autoplay; fullscreen' allowfullscreen></iframe>
+      "<div class=\"embed-container\">
+<iframe src='https://player.vimeo.com/video/" id "'
+allow='autoplay; fullscreen; picture-in-picture' allowfullscreen='' frameborder='0'
+</iframe>
 <p><a href='https://vimeo.com/" id "'>"
 
                    url "</a></p>
@@ -286,11 +288,7 @@ and data
 <br/>
 " data "
 <br/>
-" e)
-             )
-      )
- )
-)
+" e)))))
 
 (defn boilerplate  [url timestamp]
   (let [f (fn [url type m]
