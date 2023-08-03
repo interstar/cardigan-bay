@@ -20,14 +20,12 @@ The following card transcludes a card from the pages CardiganBay, PatterningSupp
  :ids ["1e088496-5ef1-5542-922d-0b386e9035ad" "38621dcd-8104-5d37-97fb-83a2b4b9c929"]
 }
 
--------
+
+----
 :transclude
 
 {:from "VideoEmbedding"
- :type :Markdown
-:ids ["36658abe-9a09-5926-ad15-ff7ba4de43e8" ]
-}
-
+ :ids ["39c06ead-ffc9-5104-9f29-681608e165b6"] } 
 ----
 
 ### Hint
