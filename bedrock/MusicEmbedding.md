@@ -1,12 +1,11 @@
 Embedding examples from Soundcloud and BandCamp
-
 ----
 :embed
 
 {:type :soundcloud
- :url "https://soundcloud.com/mentufacturer/sets/deeper-into-sepia"
+ :url "https://soundcloud.com/user-189653812/sets/arrokoth"
  :title "A SoundCloud Playlist"}
-:caption "My recent album, released early 2023."
+:caption "My side-project album, released late 2023."
 ----
 :embed
 

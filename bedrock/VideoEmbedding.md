@@ -3,7 +3,7 @@ Two examples of embedding video
 ----
 :embed
 {:type :youtube
- :url "https://www.youtube.com/watch?v=3WHPcsJ2BRY"
+ :url "https://www.youtube.com/watch?v=RHfeCvi5WGg"
  :title "A YouTube Video"
  :caption "This is a caption"}
 
