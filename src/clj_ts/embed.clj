@@ -100,7 +100,7 @@ API : " oembed " URL : " url)
          data
          (str
           "   <div class='embed-container'>
-<iframe src='http://www.youtube.com/embed/" id  "'
+<iframe src='https://www.youtube.com/embed/" id  "'
  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
 allowfullscreen='' frameborder='0'>
 </iframe>
