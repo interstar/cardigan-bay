@@ -53,9 +53,8 @@
 
     remus/remus {:mvn/version "0.1.0"}
 
-
-    com.alchemyislands/patterning {:git/url "https://github.com/interstar/Patterning-Core.git"
-                                    :sha "c22baf29cf33be1dd83dde3d0226b38ae96f77fa"}
+    com.alchemyislands/patterning {:mvn/version "0.5.6-SNAPSHOT"}
+    
 
     clj-rss/clj-rss {:mvn/version "0.2.5"}
     com.walmartlabs/lacinia {:mvn/version "0.36.0"}
