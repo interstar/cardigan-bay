@@ -160,9 +160,7 @@ seamless><a href='" url "'>" description "</a></iframe></div></div>"
         {:keys [status headers body error]}
         @(http/get api)]
     (generic-embed
-     (conj {:extra-link (str "<a href='http://threadviewer.com/"
-                             (-> url ((fn [s] (string/split s #"/"))) last)
-                             "'>ThreadView</a>") } data)
+     data
      (if error
        (str "Failed, exception: " error)
        (do
@@ -303,7 +301,9 @@ and data
       (string/includes? url "bandcamp")
       (f url :bandcamp "URL GOES HERE")
 
-      (string/includes? url "twitter")
+      (or
+       (string/includes? url "twitter.com")
+       (string/includes? url "x.com"))      
       (f url :twitter "URL GOES HERE")
 
       (string/includes? url "codepen")

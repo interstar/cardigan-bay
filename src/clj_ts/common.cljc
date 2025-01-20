@@ -242,7 +242,7 @@
 :embed
 
 {:type :youtube
- :url \"URL GOES HERE\"
+ :url \"https://www.youtube.com/watch?v=\"
  :title \"\"
  :caption \"\"
 }
