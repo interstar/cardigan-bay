@@ -470,9 +470,11 @@ Bookmarked " timestamp  ": <" url ">
          :raw (common/package-card i source_type :raw source_data source_data render-context)
 
          :code
-         (do
-           (println "Exporting :code card " )
-           (common/package-card i :code :code source_data source_data render-context))
+         (common/package-card i :code :code source_data source_data render-context)
+
+         :data
+         (let [the-data (read-string source_data)]
+           (common/package-card i :data :raw source_data (pr-str the-data) render-context))
 
          :evalraw
          (common/package-card i :evalraw :raw source_data (server-eval source_data) render-context)
