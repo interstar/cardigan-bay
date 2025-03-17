@@ -215,11 +215,12 @@
   "Evaluate Clojure code embedded in a card. Evaluated with SCI
    but on the server. I hope there's no risk for this ...
    BUT ..."
-  [data]
+  [data page-data]
   (let [code data
         evaluated
         (try
-          (#(apply str (sci/eval-string code)))
+          (#(apply str (sci/eval-string code 
+                                       {:bindings {'page-data page-data}})))
           (catch Exception e (exception-stack e)))]
     evaluated
     ))
@@ -458,6 +459,21 @@ Bookmarked " timestamp  ": <" url ">
 
 ;;;;;;;;;;;;;;;;;;
 
+(defn collect-page-data
+  "Extracts and merges data from all :data cards in a list of cards.
+   Returns a map containing all the data."
+  [cards]
+  (let [data-cards (filter #(= (:source_type %) :data) cards)
+        parsed-data (map #(try 
+                            (read-string (:source_data %))
+                            (catch Exception e 
+                              (println "Error parsing data card:" (:source_data %))
+                              {})) 
+                         data-cards)]
+    (do
+      (println "Found" (count data-cards) "data cards")
+      (reduce merge {} parsed-data))))
+
 (defn process-card-map
   [i {:keys [source_type source_data]} render-context]
   (try
@@ -477,10 +493,16 @@ Bookmarked " timestamp  ": <" url ">
            (common/package-card i :data :raw source_data (pr-str the-data) render-context))
 
          :evalraw
-         (common/package-card i :evalraw :raw source_data (server-eval source_data) render-context)
+         (common/package-card i :evalraw :raw source_data 
+                             (server-eval source_data 
+                                         (or (:page-data render-context) {})) 
+                             render-context)
 
          :evalmd
-         (common/package-card i :evalmd :markdown source_data (server-eval source_data) render-context)
+         (common/package-card i :evalmd :markdown source_data 
+                             (server-eval source_data 
+                                         (or (:page-data render-context) {})) 
+                             render-context)
 
          :workspace
          (common/package-card i source_type :workspace source_data source_data render-context)
@@ -530,7 +552,12 @@ Bookmarked " timestamp  ": <" url ">
   )
 
 (defn card-maps->processed [id-start card-maps render-context]
-  (mapcat process-card-map (iterate inc id-start) card-maps (repeat render-context))  )
+  (let [page-data (collect-page-data card-maps)
+        render-context-with-data (assoc render-context :page-data page-data)]
+    (mapcat process-card-map 
+            (iterate inc id-start) 
+            card-maps 
+            (repeat render-context-with-data))))
 
 (defn raw->cards [raw render-context]
   (let [card-maps (common/raw-text->card-maps raw)]
@@ -595,7 +622,6 @@ Check if the name you typed, or in the link you followed is correct.
 If you would *like* to create a page with this name, simply click the [Edit] button to edit this text. When you save, you will create the page")
        })))
 
-
 (defn resolve-page [context arguments value]
   (let [{:keys [page_name]} arguments
         ps (:page-store (server-state))
@@ -610,27 +636,32 @@ If you would *like* to create a page with this name, simply click the [Edit] but
 
              (catch Exception e (str e))
             )
-
         ]
 
     (if (.page-exists? ps page_name)
+      (let [cards (load->cards page_name)
+            page-data (collect-page-data cards)]
+        (println "Page data for" page_name ":")
+        (println page-data)
+        {:page_name page_name
+         :wiki_name wiki-name
+         :site_url site-url
+         :port port
+         :ip ip
+         :public_root (str site-url "/view/")
+         :start_page_name start-page-name
+         :cards cards
+         :system_cards (generate-system-cards page_name)
+         :page_data (pr-str page-data)
+         })
       {:page_name page_name
        :wiki_name wiki-name
        :site_url site-url
        :port port
        :ip ip
-       :public_root (str site-url "/view/")
-       :start_page_name start-page-name
-       :cards (load->cards page_name)
-       :system_cards (generate-system-cards page_name)
-       }
-      {:page_name page_name
-       :wiki_name wiki-name
-       :site_url site-url
-       :port port
-       :ip ip
        :start_page_name start-page-name
        :public_root (str site-url "/view/")
+       :page_data "{}"
        :cards (raw->cards
                (str "<div style='color:#990000'>A PAGE CALLED " page_name " DOES NOT EXIST
 

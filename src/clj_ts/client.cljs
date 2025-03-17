@@ -11,6 +11,7 @@
 
    [sci.core :as sci]
    [markdown.core :as md]
+   [garden.core :as css]
 
    [clj-ts.networks :refer [network-canvas]]
    [clj-ts.common :refer [raw-card-text->card-map
@@ -59,6 +60,7 @@
     port
     ip
     start_page_name
+    page_data
     cards {
       id
       hash
@@ -91,11 +93,16 @@
                    wiki-name (-> data (get "server_prepared_page") (get "wiki_name"))
                    port (-> data (get "server_prepared_page") (get "port"))
                    ip (-> data (get "server_prepared_page") (get "ip"))
-                   start-page-name (-> data (get "server_prepared_page")  (get "start_page_name"))
-
+                   start-page-name (-> data (get "server_prepared_page") (get "start_page_name"))
+                   page-data-str (-> data (get "server_prepared_page") (get "page_data"))
+                   page-data (try 
+                               (read-string page-data-str) 
+                               (catch js/Error e 
+                                 (js/console.error "Error parsing page data:" e)
+                                 {}))
                    ]
 
-
+               (js/console.log "Page data loaded:" (clj->js page-data))
                (swap! db assoc
                       :current-page page-name
                       :site-url site-url
@@ -103,9 +110,10 @@
                       :port port
                       :ip ip
                       :start-page-name start-page-name
-                      :raw  raw
+                      :raw raw
                       :cards cards
                       :system-cards system-cards
+                      :page-data page-data
                       :past new-past
                       :future new-future
                       :mode :viewing
@@ -787,119 +795,159 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 
 
+(defn process-script [src]
+  (let [parts (string/split src #"//\s*PUBLIC\s*")
+        private (if (> (count parts) 1) (first parts) "")
+        public (if (> (count parts) 1) (second parts) src)]
+    [private public]))
+
+(defn execute-code [card private public ui-id toggle-workspace-visibility! toggle-editor-visibility!]
+  (let [page-data (:page-data @db)
+        _ (js/console.log "Executing with page data:" (clj->js page-data))
+        src (str private " " public)
+        result (try
+                 (sci/eval-string
+                  src
+                  {:bindings {'replace replace
+                              'page-data page-data
+                              'ui-element-id ui-id  ;; Pass the UI element ID to the script
+                              'hide-workspace (fn [] (toggle-workspace-visibility!))
+                              'show-workspace (fn [] (toggle-workspace-visibility!))
+                              'toggle-workspace (fn [] (toggle-workspace-visibility!))
+                              'hide-editor (fn [] (toggle-editor-visibility!))
+                              'show-editor (fn [] (toggle-editor-visibility!))
+                              'toggle-editor (fn [] (toggle-editor-visibility!))
+                              '*print-fn* (fn [& args] 
+                                            (js/console.log (apply str args)))
+                              'println (fn [& args] 
+                                         (let [s (apply str args)]
+                                           (js/console.log s)
+                                           s))}
+                   :classes {'js goog/global
+                             :allow :all}})
+                 (catch :default e
+                   (str "Error: " (.-message e))))]
+    result))
+
 (defn workspace [card]
-  (let [state (r/atom {:code-toggle true
-                       :calc-toggle false
-                       :result-toggle true
-                       :code (get card "server_prepared_data")
-                       :calc []
-                       :result ""
-                       :hash (get card "hash")
-                       :source_type (get card "source_type")})
-
-
-        id (str "ws" (get card "hash"))
-        code-id (str id "-code")
-        calc-id (str id "-calc")
-        result-id (str id "-result")
-
-        toggle-code!
-        (fn [e]
-          (js/console.log (str "Toggle code " (-> @state :code-toggle)))
-
-          (swap! state #(conj % {:code-toggle (-> @state :code-toggle not)})))
-
-        toggle-calc!
-        (fn [e]
-          (js/console.log (str "Toggle calc " (-> @state :calc-toggle)) )
-          (swap! state #(conj % {:calc-toggle (-> @state :calc-toggle not)})))
-
-        toggle-result!
-        (fn [e]
-          (js/console.log "Toggle result "  (-> @state :result-toggle))
-          (swap! state #(conj % {:result-toggle (-> @state :result-toggle not)})))
-
-        display
-        (fn [d]
-          (if d "block" "none"))
-
-        execute-code
-        (fn [e]
-          (let [result
-                (sci/eval-string
-                 (-> @state :code)
-                 {:bindings {'replace replace}
-                  :classes {'js goog/global
-                            :allow :all}}
-
-                 )]
-            (swap! state #(conj % {:calc result :result result})))
-          )
-
-        save-code-card
-        (fn [e]
-          (let [new-code (-> @state :code) ]
-            (save-card! (-> @db :current-page)
-                        (-> @state :hash)
-                        (-> @state :source_type)
-                        (-> @state :code))
-            ))
-        ]
-
+  (let [id (-> (hash card) str (string/replace "-" ""))
+        state (r/atom {:output ""
+                       :workspace-visible true
+                       :editor-visible true
+                       :src (get card "source_data")})
+        ui-id (str id "-ui")
+        toggle-workspace-visibility! (fn []
+                                       (swap! state update :workspace-visible not))
+        toggle-editor-visibility! (fn []
+                                    (swap! state update :editor-visible not))]
+    
     (fn [card]
-      (let []
-        [:div {:class :workspace}
-         [:h3 "Workspace"]
-         [:p {:class :workspace-note} [:i "Note : this is a ClojureScript workspace based on "
-                 [:a {:href "https://github.com/borkdude/sci"} "SCI"]
-                 ". Don't forget to click the [Save Changes] button to save any changes you make in this workspace. Otherwise they will be lost when you move to another page. "]]
-         [:div {:class :workspace-buttons}
-          [:button {:class :workspace-button :on-click execute-code} "Run"]
-          [:button {:class :workspace-button :on-click save-code-card} "Save Changes"]
-          ]
-         [:div
-          [:button {:class :workspace-button :on-click toggle-code!} "Code"]
-          [:button {:class :workspace-button :on-click toggle-calc!} "Calculated"]
-          [:button {:class :workspace-button :on-click toggle-result!} "Output"]]
-         [:div {:class :code :style {:padding "3px"
-                                     :display (display (-> @state :code-toggle))} }
-          [:h4 "Source"]
-          [:textarea {:rows 10 :width "100%"
-                      :on-change
-                      (fn [e] (swap! state #(conj % {:code (-> e .-target .-value )})))}
-           (trim (-> @state :code))]]
-         [:div {:class :calculated-out :style {:padding "3px"
-                                               :display (display (-> @state :calc-toggle))}}
-          [:hr]
-          [:h4 "Calculated"]
-          [:pre
-           (with-out-str (pprint (str (-> @state :calc))))
-           ]]
-         [:div {:class :results :style {:padding "3px"
-                                        :display (display (-> @state :result-toggle))}}
-          [:hr]
-          [:h4 "Result"]
-          [:div
-           (let [result (-> @state :result)]
-             (cond
+      (let [[private public] (process-script (get card "source_data"))]
+        [:div.workspace-container
+         ;; Add a div for custom UI (always visible)
+         [:div {:id ui-id :class "workspace-ui"}]
+         
+         ;; Workspace content (can be hidden)
+         (when (:workspace-visible @state)
+           [:div.workspace
+            ;; Editor section (can be hidden independently)
+            (when (:editor-visible @state)
+              [:div.workspace-editor-section
+               [:textarea.workspace-editor {:value public
+                                            :on-change #(swap! state assoc :src (.. % -target -value))}]
+               [:div.workspace-buttons
+                [:button.workspace-run {:on-click #(let [result (execute-code card private (:src @state) ui-id toggle-workspace-visibility! toggle-editor-visibility!)]
+                                                     (swap! state assoc :output (if (string? result) result (str result))))} "Run"]
+                [:button.workspace-hide-editor {:on-click toggle-editor-visibility!} "Hide Editor"]]])
+            
+            ;; Output section (always visible when workspace is visible)
+            [:div.workspace-output {:dangerouslySetInnerHTML {:__html (:output @state)}}]])
+         
+         ;; Show buttons (only visible when respective elements are hidden)
+         (when (not (:workspace-visible @state))
+           [:button.workspace-show {:on-click toggle-workspace-visibility!} "Show Workspace"])
+         
+         (when (and (:workspace-visible @state) (not (:editor-visible @state)))
+           [:button.workspace-show-editor {:on-click toggle-editor-visibility!} "Show Editor"])]))))
 
-               (number? result)
-               (str result)
-
-               (string? result)
-               (if (= (first result) \<)
-                 [:div {:dangerouslySetInnerHTML {:__html result}} ]
-                 result
-                 )
-
-               (= (first result) :div)
-               result
-
-
-               :else
-               (str result)))] ]
-         ]))))
-
+;; Update CSS styles for the workspace
+(def workspace-styles
+  (css/css
+   [:.workspace-container
+    {:margin "10px 0"
+     :font-family "sans-serif"}]
+   
+   [:.workspace-ui
+    {:margin-bottom "15px"}]
+   
+   [:.workspace
+    {:background-color "#f5f5f5"
+     :border "1px solid #ddd"
+     :border-radius "4px"
+     :padding "10px"
+     :margin-bottom "15px"}]
+   
+   [:.workspace-editor-section
+    {:margin-bottom "10px"}]
+   
+   [:.workspace-editor
+    {:width "100%"
+     :min-height "150px"
+     :font-family "monospace"
+     :padding "8px"
+     :border "1px solid #ccc"
+     :border-radius "4px"
+     :margin-bottom "10px"
+     :resize "vertical"}]
+   
+   [:.workspace-buttons
+    {:display "flex"
+     :gap "10px"
+     :margin-bottom "10px"}]
+   
+   [:.workspace-run
+    {:background-color "#4CAF50"
+     :color "white"
+     :border "none"
+     :padding "8px 16px"
+     :border-radius "4px"
+     :cursor "pointer"
+     :font-weight "bold"}]
+   
+   [:.workspace-hide-editor
+    {:background-color "#ff9800"
+     :color "white"
+     :border "none"
+     :padding "8px 16px"
+     :border-radius "4px"
+     :cursor "pointer"}]
+   
+   [:.workspace-show
+    {:background-color "#2196F3"
+     :color "white"
+     :border "none"
+     :padding "8px 16px"
+     :border-radius "4px"
+     :cursor "pointer"
+     :font-weight "bold"
+     :margin-bottom "10px"}]
+   
+   [:.workspace-show-editor
+    {:background-color "#ff9800"
+     :color "white"
+     :border "none"
+     :padding "8px 16px"
+     :border-radius "4px"
+     :cursor "pointer"
+     :font-weight "bold"
+     :margin-bottom "10px"}]
+   
+   [:.workspace-output
+    {:background-color "white"
+     :border "1px solid #ddd"
+     :border-radius "4px"
+     :padding "10px"
+     :min-height "50px"}]))
 
 (defn card-top-bar [card]
 
@@ -1088,6 +1136,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 ; Main page
 (defn content []
   [:div
+   ;; Add workspace styles to the page
+   [:style (css/css workspace-styles)]
+   
    [top-menu]
    [:div {:class "navbar-spacer"}
     ]
