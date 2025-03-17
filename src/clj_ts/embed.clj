@@ -4,6 +4,7 @@
             [clojure.string :as string]
             [remus :refer [parse-url parse-file parse-stream]]
             [clj-ts.common :as common]
+            [clj-ts.embed-templates :as templates]
             [clojure.data.json :as json]
             [hiccup.core :refer [html]]))
 
@@ -288,39 +289,39 @@ and data
 <br/>
 " e)))))
 
-(defn boilerplate  [url timestamp]
-  (let [f (fn [url type m]
-            (apply str (drop 14 (string/replace (common/embed-boilerplate type) m url) )))]
-    (cond
-      (string/includes? url "youtube")
-      (f url :youtube "URL GOES HERE")
+(defn boilerplate [url timestamp]
+  (cond
+    (string/includes? url "youtube")
+    (templates/format-for-bookmarklet :youtube url)
 
-      (string/includes? url "soundcloud")
-      (f url :soundcloud "URL GOES HERE")
+    (string/includes? url "vimeo.com")
+    (templates/format-for-bookmarklet :vimeo url)
 
-      (string/includes? url "bandcamp")
-      (f url :bandcamp "URL GOES HERE")
+    (string/includes? url "soundcloud")
+    (templates/format-for-bookmarklet :soundcloud url)
 
-      (or
-       (string/includes? url "twitter.com")
-       (string/includes? url "x.com"))      
-      (f url :twitter "URL GOES HERE")
+    (string/includes? url "bandcamp")
+    (templates/format-for-bookmarklet :bandcamp url)
 
-      (string/includes? url "codepen")
-      (f url :codepen "URL GOES HERE")
+    (or
+     (string/includes? url "twitter.com")
+     (string/includes? url "x.com"))      
+    (templates/format-for-bookmarklet :twitter url)
 
-      (not (nil? (re-matches mastodon-pattern url)))
-      (f url :mastodon "URL GOES HERE")
+    (string/includes? url "codepen")
+    (templates/format-for-bookmarklet :codepen url)
 
+    (not (nil? (re-matches mastodon-pattern url)))
+    (templates/format-for-bookmarklet :mastodon url)
 
-      (or
-       (string/includes? url ".rss")
-       (string/includes? url "rss.xml")
-       (string/includes? url "/feed/")
-       (string/includes? url "feeds.feedburner.com/"))
-      (f url :rss "URL GOES HERE")
+    (or
+     (string/includes? url ".rss")
+     (string/includes? url "rss.xml")
+     (string/includes? url "/feed/")
+     (string/includes? url "feeds.feedburner.com/"))
+    (templates/format-for-bookmarklet :rss url)
 
-      :else
-      (str "Bookmarked at " timestamp  ",, <" url ">
+    :else
+    (str "Bookmarked at " timestamp  ",, <" url ">
 
-"))))
+")))

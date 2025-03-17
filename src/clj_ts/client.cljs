@@ -17,6 +17,7 @@
    [clj-ts.common :refer [raw-card-text->card-map
                           double-comma-table embed-boilerplate
                           double-bracket-links auto-links ]]
+   [clj-ts.embed-templates :as templates]
    ;;[clj-ts.common :refer [card->html ]]
 
    )
@@ -397,8 +398,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
   ([label tag]
    (clip-button label (embed-boilerplate tag)))
   ([label tag new-url]
-   (clip-button label (-> (embed-boilerplate tag) (string/replace "URL GOES HERE" new-url))))
-  )
+   (clip-button label (templates/replace-url-in-template tag new-url))))
 
 
 
