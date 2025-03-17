@@ -35,10 +35,12 @@
   (if (string/includes? s ";;;;PUBLIC")
     (let [broken (string/split s #";;;;PUBLIC")
           private (first broken)
-          public (second broken)]
+          public-raw (second broken)
+          ;; Trim leading whitespace/newlines while preserving indentation structure
+          public (string/replace public-raw #"^\s*\n+" "")]
       [private public]
       )
-    ["" s])
+    ["" (string/replace s #"^\s*\n+" "")])
   )
 
 (defn exported-workspace [card page-data]
@@ -52,6 +54,10 @@
         editor-id (str "editor" id)  ;; ID for the editor section
         show-editor-id (str "show-editor" id)  ;; ID for the show editor button
         [private public] (process-script (:source_data card))
+        
+        ;; Calculate number of rows for textarea based on content
+        lines (count (string/split-lines public))
+        rows (max 10 (min lines 30))
         
         ;; Serialize page data as an EDN string that can be embedded directly in the script
         page-data-str (pr-str page-data)
@@ -94,13 +100,13 @@
 (defn " fn-name " []
   (let [_ (.log js/console \"Running workspace \" \"" id "\")\n"
           "     public-src (->
-               (.getElementById js/document \"" src-name  "\")
-               .-value
+                       (.getElementById js/document \"" src-name  "\")
+                       .-value
             )\n"
           "       _ (.log js/console \"Public src:\" public-src)\n"
           "       private-src (->
-               (.getElementById js/document \"" src-name-private "\")
-               .-value
+                       (.getElementById js/document \"" src-name-private "\")
+                       .-value
             )\n"
           "       ;; Page data is directly embedded as an EDN string\n"
           "       page-data-value " page-data-str "\n"
@@ -222,7 +228,7 @@ button {
 }
 </style>")
         ]
-    
+
     (hiccup/html
      [:div {:class "scittle-workspace-container"}
       ;; Add CSS styles
@@ -238,7 +244,7 @@ button {
         [:input {:type :hidden
                  :id src-name-private
                  :value private}]
-        [:textarea {:id src-name :cols 80 :rows 15}
+        [:textarea {:id src-name :cols 80 :rows rows}
          public]
         
         [:script {:type "application/x-scittle"}
@@ -305,12 +311,12 @@ button {
 (deftype PageExporter [page-store export-extension export-link-pattern]
   types/IPageExporter
 
-  (as-map [ex]
+  (exporter-as-map [ex]
     {:page-store page-store
      :export-extension export-extension
      :export-link-pattern export-link-pattern})
 
-  (report [ex]
+  (exporter-report [ex]
     (str "Export Extension :\t" (ep export-extension ) "
 Export Link Pattern :\t" (ep export-link-pattern) "
 Example Exported Link :\t" (.page-name->exported-link ex "ExamplePage")
@@ -408,7 +414,7 @@ USING DEFAULT")
           (.mkdirs api-dir)))
       
       ;; Write the RSS file
-      (spit (.toString rc-rss) (card-server/rss-recent-changes link-fn))
+    (spit (.toString rc-rss) (card-server/rss-recent-changes link-fn))
       (catch Exception e
         (println "Warning: Could not create RSS feed: " (.getMessage e))))))
 

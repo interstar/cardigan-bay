@@ -464,7 +464,7 @@ PageStore Report
           "
 PageExporter Report
 "
-          (-> (card-server/server-state) :page-exporter .report)
+          (-> (card-server/server-state) :page-exporter .exporter-report)
           "
 -----------------------------------------------------------------------------------------------
 "

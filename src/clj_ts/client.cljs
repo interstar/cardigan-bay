@@ -798,7 +798,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn process-script [src]
   (let [parts (string/split src #"//\s*PUBLIC\s*")
         private (if (> (count parts) 1) (first parts) "")
-        public (if (> (count parts) 1) (second parts) src)]
+        public-raw (if (> (count parts) 1) (second parts) src)
+        ;; Trim leading whitespace/newlines while preserving indentation structure
+        public (string/replace public-raw #"^\s*\n+" "")]
     [private public]))
 
 (defn execute-code [card private public ui-id toggle-workspace-visibility! toggle-editor-visibility! state]
@@ -868,13 +870,22 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
         toggle-workspace-visibility! (fn []
                                        (swap! state update :workspace-visible not))
         toggle-editor-visibility! (fn []
-                                    (swap! state update :editor-visible not))]
+                                    (swap! state update :editor-visible not))
+        
+        ;; Calculate optimal textarea rows based on line count
+        calculate-rows (fn [text]
+                         (let [lines (count (string/split-lines text))
+                               min-rows 10
+                               max-rows 30]
+                           (max min-rows (min lines max-rows))))]
     
     (fn [card]
       (let [[private public] (process-script (get card "source_data"))
             ;; Initialize state src if it's the first render
             _ (when (= (:src @state) (get card "source_data"))
-                (swap! state assoc :src public))]
+                (swap! state assoc :src public))
+            ;; Calculate rows based on content
+            rows (calculate-rows (:src @state))]
         [:div.workspace-container
          ;; Add a div for custom UI (always visible)
          [:div {:id ui-id :class "workspace-ui"}]
@@ -886,6 +897,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
             (when (:editor-visible @state)
               [:div.workspace-editor-section
                [:textarea.workspace-editor {:value (:src @state)
+                                            :rows rows
                                             :on-change #(swap! state assoc :src (.. % -target -value))}]
                [:div.workspace-buttons
                 [:button.workspace-run {:on-click #(let [result (execute-code card private (:src @state) ui-id toggle-workspace-visibility! toggle-editor-visibility! state)]
@@ -1088,7 +1100,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
            {:class "card"
             :on-click on-click-for-links}
            inner]]
-         
+
          [card-bar card]
          ]))))
 
@@ -1112,7 +1124,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
           (js/console.log "ERROR")
           (js/console.log (str e))
           (js/alert e))))]
-   
+
    [:div
     (try
       (let [cards (-> @db :system-cards)]
@@ -1241,6 +1253,6 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
          interactive-elements #{"textarea" "input" "select" "button"}]
      ;; Only handle keypress events if they're not from an interactive element
      (when-not (contains? interactive-elements target-tag-name)
-       (js/console.log "KEYPRESS EVENT")
-       (let [kc (.-charCode e)]
+   (js/console.log "KEYPRESS EVENT")
+   (let [kc (.-charCode e)]
          (js/console.log "pressed " (.-charCode e)))))))

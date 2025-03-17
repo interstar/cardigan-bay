@@ -1,30 +1,10 @@
 (ns clj-ts.common
   (:require [clojure.string :as string]
-            #?(:clj [markdown.core :as md])
+            #?(:clj [markdown.core :as md]
+               :cljs [markdown.core :as md])
             #?(:clj [hasch.core :refer [uuid5 edn-hash]]
                :cljs [hasch.core :refer [uuid5 edn-hash]])
-            [clj-ts.command-line :as command-line]
             [clj-ts.embed-templates :as templates]))
-
-
-
-;; Helpful for print debugging ... diffs two strings
-(defn replace-whitespace [char]
-  (if (Character/isWhitespace char)
-    "_"
-    (str char)))
-
-(defn diff-strings [str1 str2]
-  (let [len1 (count str1)
-        len2 (count str2)
-        min-len (min len1 len2)]
-    (apply str
-           (map (fn [ch1 ch2]
-                  (if (= ch1 ch2)
-                    (replace-whitespace ch1)
-                    (str "[" (replace-whitespace ch1) (replace-whitespace ch2) "]")))
-                (take min-len str1)
-                (take min-len str2)))))
 
 
 
@@ -44,21 +24,21 @@
         rex #"^:(\S+)"
         data (string/replace-first card rex "")]
     (if
-      (not (re-find rex card))
+     (not (re-find rex card))
       {:source_type :markdown
        :source_data  card
        :hash (hash-it card)}
       {:source_type (->> c (re-find rex) second keyword)
        :source_data data
-       :hash (hash-it data)} ) ))
+       :hash (hash-it data)})))
 
 
 (defn raw-text->card-maps [raw]
   (->> raw split-by-hyphens
-       (map raw-card-text->card-map )))
+       (map raw-card-text->card-map)))
 
 
-(defn package-card [id source-type render-type source-data server-prepared-data render-context ]
+(defn package-card [id source-type render-type source-data server-prepared-data render-context]
   {:source_type source-type
    :render_type render-type
    :source_data source-data
@@ -71,7 +51,7 @@
 (defn card->raw [{:keys [source_type source_data]}]
   (if (= source_type :markdown)
     source_data
-    (str source_type "\n\n" (string/trim source_data) )) )
+    (str source_type "\n\n" (string/trim source_data))))
 
 
 (defn card-is-blank? [{:keys [source_data]}]
@@ -93,7 +73,7 @@
 (defn find-card-by-hash
   "Take a list of cards and return the one that matches hash or nil"
   [cards hash]
-  (let [results (filter #(match-hash % hash) cards )]
+  (let [results (filter #(match-hash % hash) cards)]
     (if (> (count results) 0)
       (first results)
       nil)))
@@ -101,8 +81,7 @@
 (defn remove-card-by-hash
   "Take a list of cards and return the list without the card that matches hash"
   [cards hash]
-  (remove #(match-hash % hash) cards)
-   )
+  (remove #(match-hash % hash) cards))
 
 (defn replace-card
   "Replace the first card that matches p with new-card. If no card matches, return cards unchanged"
@@ -112,8 +91,7 @@
         after (rest (drop-while un-p cards))]
     (if (= 0 (count (filter p cards)))
       cards
-      (concat before [new-card] after)
-      )))
+      (concat before [new-card] after))))
 
 
 (defn move-card-up
@@ -129,8 +107,7 @@
                            [c]
                            [(last before)]
                            after))]
-          res
-          ))))
+          res))))
 
 (defn move-card-down
   "Move a card (id by hash) one down"
@@ -145,9 +122,7 @@
                            [(first after)]
                            [c]
                            (rest after)))]
-          res
-          )))
-  )
+          res))))
 
 
 
@@ -160,12 +135,12 @@
 ;; Rendering / special Markup
 
 (defn auto-links [text]
-    (string/replace text #"(http(s)?\\/\\/(\S+))"
-                    (str "<a href=\"$1\">$1</a>")))
+  (string/replace text #"(http(s)?\\/\\/(\S+))"
+                  (str "<a href=\"$1\">$1</a>")))
 
 (defn double-bracket-links [text]
   (string/replace text #"\[\[(.+?)\]\]"
-           (str "<span class=\"wikilink\" data=\"$1\">$1</span>")))
+                  (str "<span class=\"wikilink\" data=\"$1\">$1</span>")))
 
 
 (defn tag [t s] (str "<" t ">" s "</" t ">"))
@@ -175,26 +150,23 @@
 
 
 (defn double-comma-table [raw]
-  (loop [lines (string/split-lines raw) in-table false build [  ] ]
+  (loop [lines (string/split-lines raw) in-table false build []]
     (if (empty? lines)
       (if in-table
         (str (string/join "\n" build)
              "\n</table></div>")
-        (string/join "\n" build) )
+        (string/join "\n" build))
 
-        (let [line (first lines)]
-          (if (string/includes? line ",,")
-            (let [items (string/split line #",,")
-                  row (tr (apply str (for [i items] (td i))))]
-              (if in-table
-                (recur (rest lines) true (conj build row))
-                (recur (rest lines) true (conj build "<div class=\"embed_div\"><table class='double-comma-table'>" row))))
+      (let [line (first lines)]
+        (if (string/includes? line ",,")
+          (let [items (string/split line #",,")
+                row (tr (apply str (for [i items] (td i))))]
             (if in-table
-              (recur (rest lines) false (conj build "</table></div>" line ) )
-              (recur (rest lines) false (conj build line )))
-            )
-          ))
-    ))
+              (recur (rest lines) true (conj build row))
+              (recur (rest lines) true (conj build "<div class=\"embed_div\"><table class='double-comma-table'>" row))))
+          (if in-table
+            (recur (rest lines) false (conj build "</table></div>" line))
+            (recur (rest lines) false (conj build line))))))))
 
 
 (defn md->html [s]
@@ -204,28 +176,6 @@
       (auto-links)
       (double-bracket-links)))
 
-;; Cards with commands
-
-(defn contains-commands? [card]
-  (let [{:keys [source_type source_data]} (raw-card-text->card-map card)
-        lines (string/split-lines source_data)]
-    (if
-        (some command-line/command-line? lines) true false)))
-
-
-
-(defn gather-all-commands [card]
-  (let [{:keys [source_type source_data]} (raw-card-text->card-map card)
-        lines (string/split-lines source_data)
-        pseq (command-line/parsed-seq lines)
-        ]
-    (conj pseq
-          {:type source_type
-           :stripped (string/join "\n" (:non-commands pseq) )}
-          )
-    ))
-
-;;;
 
 ;;; BOILERPLATE
 

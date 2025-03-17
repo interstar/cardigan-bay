@@ -39,7 +39,7 @@
 )
 
 (defprotocol IPageExporter
-  (as-map [ex])
+  (exporter-as-map [ex])
   (page-name->export-file-path [ex page-name])
   (export-path [ex])
   (page-name->exported-link [ex page-name])
@@ -48,5 +48,5 @@
   (load-main-css [ex])
   (api-path [ex])
   (export-media-dir [ex])
-  (report [ex])
+  (exporter-report [ex])
   )
