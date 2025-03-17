@@ -804,12 +804,25 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (defn execute-code [card private public ui-id toggle-workspace-visibility! toggle-editor-visibility!]
   (let [page-data (:page-data @db)
         _ (js/console.log "Executing with page data:" (clj->js page-data))
+        ui-element (.getElementById js/document ui-id)
+        ;; Create a consistent API object for both environments
+        cb-api {:page-data page-data
+                :ui-element ui-element
+                :ui-element-id ui-id
+                :hide-workspace (fn [] (toggle-workspace-visibility!))
+                :show-workspace (fn [] (toggle-workspace-visibility!))
+                :toggle-workspace (fn [] (toggle-workspace-visibility!))
+                :hide-editor (fn [] (toggle-editor-visibility!))
+                :show-editor (fn [] (toggle-editor-visibility!))
+                :toggle-editor (fn [] (toggle-editor-visibility!))}
         src (str private " " public)
         result (try
                  (sci/eval-string
                   src
                   {:bindings {'replace replace
+                              'cb cb-api
                               'page-data page-data
+                              'ui-element ui-element
                               'ui-element-id ui-id  ;; Pass the UI element ID to the script
                               'hide-workspace (fn [] (toggle-workspace-visibility!))
                               'show-workspace (fn [] (toggle-workspace-visibility!))
@@ -858,17 +871,23 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                [:div.workspace-buttons
                 [:button.workspace-run {:on-click #(let [result (execute-code card private (:src @state) ui-id toggle-workspace-visibility! toggle-editor-visibility!)]
                                                      (swap! state assoc :output (if (string? result) result (str result))))} "Run"]
-                [:button.workspace-hide-editor {:on-click toggle-editor-visibility!} "Hide Editor"]]])
+                [:button.workspace-hide-editor {:on-click #(do
+                                                            (swap! state assoc :editor-visible false)
+                                                            (toggle-editor-visibility!))} "Hide Editor"]]])
             
             ;; Output section (always visible when workspace is visible)
             [:div.workspace-output {:dangerouslySetInnerHTML {:__html (:output @state)}}]])
          
          ;; Show buttons (only visible when respective elements are hidden)
          (when (not (:workspace-visible @state))
-           [:button.workspace-show {:on-click toggle-workspace-visibility!} "Show Workspace"])
+           [:button.workspace-show {:on-click #(do
+                                                (swap! state assoc :workspace-visible true)
+                                                (toggle-workspace-visibility!))} "Show Workspace"])
          
          (when (and (:workspace-visible @state) (not (:editor-visible @state)))
-           [:button.workspace-show-editor {:on-click toggle-editor-visibility!} "Show Editor"])]))))
+           [:button.workspace-show-editor {:on-click #(do
+                                                       (swap! state assoc :editor-visible true)
+                                                       (toggle-editor-visibility!))} "Show Editor"])]))))
 
 ;; Update CSS styles for the workspace
 (def workspace-styles

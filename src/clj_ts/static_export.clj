@@ -50,163 +50,179 @@
         ui-id (str "ui" id)  ;; Unique ID for custom UI
         workspace-id (str "workspace" id)  ;; ID for the workspace container
         editor-id (str "editor" id)  ;; ID for the editor section
-        show-workspace-id (str "show-workspace" id)  ;; ID for the show workspace button
         show-editor-id (str "show-editor" id)  ;; ID for the show editor button
         [private public] (process-script (:source_data card))
+        
+        ;; Serialize page data as an EDN string that can be embedded directly in the script
         page-data-str (pr-str page-data)
-
-        final-script (str "(defn " fn-name " []
-          (let [public-src (->
+        
+        final-script (str "(defn " fn-name " []\n"
+          "  (let [public-src (->
                        (.getElementById js/document \"" src-name  "\")
                        .-value
-                    )
-               private-src (->
+                    )\n"
+          "       private-src (->
                        (.getElementById js/document \"" src-name-private "\")
                        .-value
-                    )
-               page-data (cljs.reader/read-string \"" (string/replace page-data-str "\"" "\\\"") "\")
-               workspace-element (.getElementById js/document \"" workspace-id "\")
-               editor-element (.getElementById js/document \"" editor-id "\")
-               show-workspace-button (.getElementById js/document \"" show-workspace-id "\")
-               show-editor-button (.getElementById js/document \"" show-editor-id "\")
-               hide-workspace (fn [] 
-                               (set! (.. workspace-element -style -display) \"none\")
-                               (set! (.. show-workspace-button -style -display) \"block\"))
-               show-workspace (fn [] 
-                               (set! (.. workspace-element -style -display) \"block\")
-                               (set! (.. show-workspace-button -style -display) \"none\"))
-               toggle-workspace (fn []
+                    )\n"
+          "       ;; Page data is directly embedded as an EDN string\n"
+          "       page-data-value " page-data-str "\n"
+          "       workspace-element (.getElementById js/document \"" workspace-id "\")\n"
+          "       editor-element (.getElementById js/document \"" editor-id "\")\n"
+          "       show-editor-button (.getElementById js/document \"" show-editor-id "\")\n"
+          "       ui-element (.getElementById js/document \"" ui-id "\")\n"
+          "       hide-workspace-fn (fn [] 
+                               (set! (.. workspace-element -style -display) \"none\"))\n"
+          "       show-workspace-fn (fn [] 
+                               (set! (.. workspace-element -style -display) \"block\"))\n"
+          "       toggle-workspace-fn (fn []
                                  (if (= (.. workspace-element -style -display) \"none\")
-                                   (show-workspace)
-                                   (hide-workspace)))
-               hide-editor (fn []
+                                   (show-workspace-fn)
+                                   (hide-workspace-fn)))\n"
+          "       hide-editor-fn (fn []
                             (set! (.. editor-element -style -display) \"none\")
-                            (set! (.. show-editor-button -style -display) \"block\"))
-               show-editor (fn []
+                            (set! (.. show-editor-button -style -display) \"block\"))\n"
+          "       show-editor-fn (fn []
                             (set! (.. editor-element -style -display) \"block\")
-                            (set! (.. show-editor-button -style -display) \"none\"))
-               toggle-editor (fn []
+                            (set! (.. show-editor-button -style -display) \"none\"))\n"
+          "       toggle-editor-fn (fn []
                               (if (= (.. editor-element -style -display) \"none\")
-                                (show-editor)
-                                (hide-editor)))
-               src (str private-src \" \" public-src)
-               result (js/scittle.core.eval_string src {:bindings {'page-data page-data
-                                                                  'ui-element-id \"" ui-id "\"
-                                                                  'hide-workspace hide-workspace
-                                                                  'show-workspace show-workspace
-                                                                  'toggle-workspace toggle-workspace
-                                                                  'hide-editor hide-editor
-                                                                  'show-editor show-editor
-                                                                  'toggle-editor toggle-editor
-                                                                  '*print-fn* (fn [& args] 
-                                                                                (.log js/console (clojure.string/join \" \" args)))
-                                                                  'println (fn [& args] 
-                                                                             (let [s (clojure.string/join \" \" args)]
-                                                                               (.log js/console s)
-                                                                               s))}})
-               out (-> (.getElementById js/document \"" output-name  "\")
+                                (show-editor-fn)
+                                (hide-editor-fn)))\n"
+          "       print-fn (fn [& args] (.log js/console (clojure.string/join \" \" args)))\n"
+          "       println-fn (fn [& args] 
+                            (let [s (clojure.string/join \" \" args)]
+                              (.log js/console s)
+                              s))\n"
+          "       ;; Create a consistent API object for both environments\n"
+          "       cb-obj {:page-data page-data-value\n"
+          "           :ui-element ui-element\n"
+          "           :ui-element-id \"" ui-id "\"\n"
+          "           :hide-workspace hide-workspace-fn\n"
+          "           :show-workspace show-workspace-fn\n"
+          "           :toggle-workspace toggle-workspace-fn\n"
+          "           :hide-editor hide-editor-fn\n"
+          "           :show-editor show-editor-fn\n"
+          "           :toggle-editor toggle-editor-fn}\n"
+          "       ;; Create a prefix to inject at the beginning of the user's script\n"
+          "       cb-prefix (str \"(def cb {:page-data \" (pr-str page-data-value) \"\n"
+          "                         :ui-element (.getElementById js/document \\\"" ui-id "\\\")\n"
+          "                         :ui-element-id \\\"" ui-id "\\\"\n"
+          "                         :hide-workspace (fn [] (set! (.. (.getElementById js/document \\\"" workspace-id "\\\") -style -display) \\\"none\\\"))\n"
+          "                         :show-workspace (fn [] (set! (.. (.getElementById js/document \\\"" workspace-id "\\\") -style -display) \\\"block\\\"))\n"
+          "                         :toggle-workspace (fn [] (if (= (.. (.getElementById js/document \\\"" workspace-id "\\\") -style -display) \\\"none\\\")\n"
+          "                                               (set! (.. (.getElementById js/document \\\"" workspace-id "\\\") -style -display) \\\"block\\\")\n"
+          "                                               (set! (.. (.getElementById js/document \\\"" workspace-id "\\\") -style -display) \\\"none\\\")))\n"
+          "                         :hide-editor (fn [] (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"none\\\")\n"
+          "                                         (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"block\\\"))\n"
+          "                         :show-editor (fn [] (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"block\\\")\n"
+          "                                         (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"none\\\"))\n"
+          "                         :toggle-editor (fn [] (if (= (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"none\\\")\n"
+          "                                            (do (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"block\\\")\n"
+          "                                                (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"none\\\"))\n"
+          "                                            (do (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"none\\\")\n"
+          "                                                (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"block\\\"))))})\\n\")\n"
+          "       ;; Combine the prefix with the user's script\n"
+          "       modified-src (str cb-prefix private-src \" \" public-src)\n"
+          "       result (try\n"
+          "                (js/scittle.core.eval_string modified-src {:bindings {'page-data page-data-value\n"
+          "                                                          'ui-element ui-element\n"
+          "                                                          'ui-element-id \"" ui-id "\"\n"
+          "                                                          '*print-fn* print-fn\n"
+          "                                                          'println println-fn}})\n"
+          "                (catch :default e\n"
+          "                  (str \"Error: \" (.-message e))))\n"
+          "       out (-> (.getElementById js/document \"" output-name  "\")
                        .-innerHTML
-                       (set! result) )
-
-
-]
-           (.log js/console result)
-
-            ))
-")
+                       (set! result) )\n"
+          "\n"
+          "]\n"
+          "   (.log js/console result)\n"
+          "\n"
+          "    ))\n")
         vname (str ".-" fn-name)
         set (str "(set! (" vname " js/window) " fn-name ")")
         
         ;; CSS styles for the workspace
-        workspace-styles (str "<style>
-          .scittle-workspace-container {
-            margin: 10px 0;
-            font-family: sans-serif;
-          }
-          
-          .workspace-ui {
-            margin-bottom: 15px;
-          }
-          
-          .scittle-workspace {
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 15px;
-          }
-          
-          .workspace-editor-section {
-            margin-bottom: 10px;
-          }
-          
-          .scittle-workspace textarea {
-            width: 100%;
-            min-height: 150px;
-            font-family: monospace;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            resize: vertical;
-          }
-          
-          .workspace-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-          }
-          
-          .workspace-buttons button {
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            border: none;
-          }
-          
-          .workspace-buttons button:first-child {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: bold;
-          }
-          
-          .workspace-buttons button:nth-child(2) {
-            background-color: #ff9800;
-            color: white;
-          }
-          
-          #" show-workspace-id " {
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 10px;
-            display: none;
-          }
-          
-          #" show-editor-id " {
-            background-color: #ff9800;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 10px;
-            display: none;
-          }
-          
-          #" output-name " {
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            min-height: 50px;
-          }
-        </style>")]
+        workspace-styles (str "<style>\n"
+          ".scittle-workspace-container {\n"
+          "  margin: 10px 0;\n"
+          "  font-family: sans-serif;\n"
+          "}\n"
+          "\n"
+          ".workspace-ui {\n"
+          "  margin-bottom: 15px;\n"
+          "}\n"
+          "\n"
+          ".scittle-workspace {\n"
+          "  background-color: #f5f5f5;\n"
+          "  border: 1px solid #ddd;\n"
+          "  border-radius: 4px;\n"
+          "  padding: 10px;\n"
+          "  margin-bottom: 15px;\n"
+          "}\n"
+          "\n"
+          ".workspace-editor-section {\n"
+          "  margin-bottom: 10px;\n"
+          "}\n"
+          "\n"
+          ".scittle-workspace textarea {\n"
+          "  width: 100%;\n"
+          "  min-height: 150px;\n"
+          "  font-family: monospace;\n"
+          "  padding: 8px;\n"
+          "  border: 1px solid #ccc;\n"
+          "  border-radius: 4px;\n"
+          "  margin-bottom: 10px;\n"
+          "  resize: vertical;\n"
+          "}\n"
+          "\n"
+          ".workspace-buttons {\n"
+          "  display: flex;\n"
+          "  gap: 10px;\n"
+          "  margin-bottom: 10px;\n"
+          "}\n"
+          "\n"
+          ".workspace-buttons button {\n"
+          "  padding: 8px 16px;\n"
+          "  border-radius: 4px;\n"
+          "  cursor: pointer;\n"
+          "  border: none;\n"
+          "}\n"
+          "\n"
+          ".workspace-buttons button:first-child {\n"
+          "  background-color: #4CAF50;\n"
+          "  color: white;\n"
+          "  font-weight: bold;\n"
+          "}\n"
+          "\n"
+          ".workspace-buttons button:nth-child(2) {\n"
+          "  background-color: #ff9800;\n"
+          "  color: white;\n"
+          "}\n"
+          "\n"
+          "#" show-editor-id " {\n"
+          "  background-color: #ff9800;\n"
+          "  color: white;\n"
+          "  border: none;\n"
+          "  padding: 8px 16px;\n"
+          "  border-radius: 4px;\n"
+          "  cursor: pointer;\n"
+          "  font-weight: bold;\n"
+          "  margin-bottom: 10px;\n"
+          "  display: none;\n"
+          "}\n"
+          "\n"
+          "#" output-name " {\n"
+          "  background-color: white;\n"
+          "  border: 1px solid #ddd;\n"
+          "  border-radius: 4px;\n"
+          "  padding: 10px;\n"
+          "  min-height: 50px;\n"
+          "}\n"
+          "</style>")
+        
+        ]
 
     (hiccup/html
      [:div {:class "scittle-workspace-container"}
@@ -225,6 +241,7 @@
                  :value private}]
         [:textarea {:id src-name :cols 80 :rows 15}
          public]
+        
         [:script {:type "application/x-scittle"}
          "\n"
          final-script
@@ -233,20 +250,16 @@
          "\n"]
         [:div {:class "workspace-buttons"}
          [:button {:onclick (str fn-name "()")} "Run"]
-         [:button {:onclick "document.getElementById('" editor-id "').style.display='none'; document.getElementById('" show-editor-id "').style.display='block';"} 
+         [:button {:onclick (str fn-name "(); document.getElementById('" editor-id "').style.display='none'; document.getElementById('" show-editor-id "').style.display='block';")} 
           "Hide Editor"]]]
        
        ;; Output section (always visible when workspace is visible)
        [:div {:id output-name}]]
       
-      ;; Button to show workspace (initially hidden)
-      [:button {:id show-workspace-id 
-                :onclick "document.getElementById('" workspace-id "').style.display='block'; document.getElementById('" show-workspace-id "').style.display='none';"}
-       "Show Workspace"]
-      
       ;; Button to show editor (initially hidden)
       [:button {:id show-editor-id
-                :onclick "document.getElementById('" editor-id "').style.display='block'; document.getElementById('" show-editor-id "').style.display='none';"}
+                :style "display: none;"
+                :onclick (str fn-name "(); document.getElementById('" editor-id "').style.display='block'; document.getElementById('" show-editor-id "').style.display='none';")}
        "Show Editor"]]))
   )
 
