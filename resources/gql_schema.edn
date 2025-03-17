@@ -39,7 +39,7 @@
     :ip {:type String}
     :start_page_name {:type String}
     :system_cards {:type (list :Card)}
-
+    :page_data {:type String}
     }}
 
   :SearchResult
