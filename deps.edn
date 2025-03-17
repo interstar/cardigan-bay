@@ -7,6 +7,7 @@
         reagent/reagent {:mvn/version "0.8.0-alpha2"}
         org.clojure/core.async {:mvn/version "0.4.490"}
         io.replikativ/hasch {:mvn/version "0.3.7"}
+        garden/garden {:mvn/version "1.3.10"}
         org.babashka/sci {:mvn/version "0.3.2"}}
 
  :aliases
