@@ -378,14 +378,18 @@ USING DEFAULT")
     (let [from-stream (.media-files-as-new-directory-stream page-store)
           to (.media-export-path page-store)]
       (try
+        ;; Ensure the media directory exists
+        (let [media-dir (.toFile to)]
+          (when (not (.exists media-dir))
+            (println "Creating media directory: " (.toString to))
+            (.mkdirs media-dir)))
+        
+        ;; Copy the media files
         (doseq [file from-stream]
           (let [new-file (new java.io.FileOutputStream (.toFile (.resolve to (.getFileName file))))]
             (println "copying " (str file) " to " (str new-file))
-            (java.nio.file.Files/copy file new-file)
-            ))
-        (catch Exception e (println (str "Something went wrong " e))))
-
-      ))
+            (java.nio.file.Files/copy file new-file)))
+        (catch Exception e (println (str "Something went wrong with media export: " e))))))
 
   )
 
@@ -398,18 +402,32 @@ USING DEFAULT")
   (let [api-path (-> server-state :page-exporter .api-path)
         rc-rss (.resolve api-path "rc-rss.xml")
         link-fn (fn [p-name]
-                  (str (:site-url server-state) p-name)) ]
-    (spit (.toString rc-rss) (card-server/rss-recent-changes link-fn))
-    ))
+                  (str (:site-url server-state) p-name))]
+    ;; Ensure the api directory exists
+    (try
+      (let [api-dir (.toFile api-path)]
+        (when (not (.exists api-dir))
+          (println "Creating API directory: " (.toString api-path))
+          (.mkdirs api-dir)))
+      
+      ;; Write the RSS file
+      (spit (.toString rc-rss) (card-server/rss-recent-changes link-fn))
+      (catch Exception e
+        (println "Warning: Could not create RSS feed: " (.getMessage e))))))
 
 (defn export-main-css [server-state main-css]
-  (let [
-        css-path (.resolve (-> server-state :page-exporter .export-path)  "main.css" )]
+  (let [css-path (.resolve (-> server-state :page-exporter .export-path) "main.css")]
     (println (str "Exporting main.css to " css-path))
     (try
+      ;; Ensure the export directory exists
+      (let [export-dir (.getParent (.toFile css-path))]
+        (when (not (.exists export-dir))
+          (println "Creating export directory: " (.toString (.getParent css-path)))
+          (.mkdirs export-dir)))
+      
+      ;; Write the CSS file
       (spit (.toString css-path) main-css)
-      (catch Exception e (println "Something went wrong ... " e)))
-    ))
+      (catch Exception e (println "Something went wrong with CSS export: " e)))))
 
 (defn export-page [page-name server-state tpl]
   (let [ps (:page-store server-state)
@@ -444,7 +462,18 @@ USING DEFAULT")
         ]
     (println "Exporting " page-name)
     (println "Outfile = " file-name)
-    (spit file-name page)
+    (try
+      ;; Ensure the export directory exists
+      (let [export-file (java.io.File. file-name)
+            export-dir (.getParentFile export-file)]
+        (when (not (.exists export-dir))
+          (println "Creating export directory: " (.toString export-dir))
+          (.mkdirs export-dir))
+        
+        ;; Write the page file
+        (spit file-name page))
+      (catch Exception e
+        (println "Error exporting page: " page-name " - " (.getMessage e))))
 ))
 
 
