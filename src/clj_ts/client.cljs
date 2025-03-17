@@ -1073,10 +1073,23 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
               (str "UNKNOWN TYPE ( " rtype " ) " data))
 
             ]
-        [:div {:class :card-outer :on-click on-click-for-links}
-         [:div {:class :card}
-          inner
-          ]
+        [:div {:class :card-outer}
+         [:div {:class :card-meta}
+          [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
+           (if (= (-> @state2 :toggle) "none")
+             [:img {:src "/icons/maximize-2.svg"}]
+             [:img {:src "/icons/minimize-2.svg"}]
+             )]]
+
+         [:div
+          {:style {:spacing-top "5px"
+                   :display (-> @state2 :toggle)}}
+          [:div
+           {:class "card"
+            :on-click on-click-for-links}
+           inner]]
+         
+         [card-bar card]
          ]))))
 
 
