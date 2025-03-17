@@ -56,21 +56,59 @@
         ;; Serialize page data as an EDN string that can be embedded directly in the script
         page-data-str (pr-str page-data)
         
-        final-script (str "(defn " fn-name " []\n"
-          "  (let [public-src (->
-                       (.getElementById js/document \"" src-name  "\")
-                       .-value
-                    )\n"
+        ;; Add hiccup support
+        hiccup-support "
+;; Simple hiccup implementation for Scittle
+(defn h [tag attrs & children]
+  (let [elem (.createElement js/document (name tag))]
+    ;; Add attributes
+    (when (map? attrs)
+      (doseq [[k v] attrs]
+        (.setAttribute elem (name k) v)))
+    
+    ;; Add children
+    (doseq [child children]
+      (cond
+        (vector? child) (.appendChild elem (apply h child))
+        (nil? child) nil
+        :else (.appendChild elem (.createTextNode js/document (str child)))))
+    
+    elem))
+
+(defn hiccup->dom [hiccup]
+  (if (vector? hiccup)
+    (let [tag (first hiccup)
+          attrs (if (map? (second hiccup)) (second hiccup) {})
+          children (if (map? (second hiccup)) (drop 2 hiccup) (rest hiccup))]
+      (apply h tag attrs children))
+    (.createTextNode js/document (str hiccup))))
+
+(defn render-hiccup [hiccup element]
+  (let [dom (hiccup->dom hiccup)]
+    (set! (.-innerHTML element) \"\")
+    (.appendChild element dom)))
+"
+        
+        final-script (str hiccup-support "\n\n
+;; Define the run function that will be called by the buttons
+(defn " fn-name " []
+  (let [_ (.log js/console \"Running workspace \" \"" id "\")\n"
+          "     public-src (->
+               (.getElementById js/document \"" src-name  "\")
+               .-value
+            )\n"
+          "       _ (.log js/console \"Public src:\" public-src)\n"
           "       private-src (->
-                       (.getElementById js/document \"" src-name-private "\")
-                       .-value
-                    )\n"
+               (.getElementById js/document \"" src-name-private "\")
+               .-value
+            )\n"
           "       ;; Page data is directly embedded as an EDN string\n"
           "       page-data-value " page-data-str "\n"
           "       workspace-element (.getElementById js/document \"" workspace-id "\")\n"
           "       editor-element (.getElementById js/document \"" editor-id "\")\n"
           "       show-editor-button (.getElementById js/document \"" show-editor-id "\")\n"
           "       ui-element (.getElementById js/document \"" ui-id "\")\n"
+          "       output-element (.getElementById js/document \"" output-name "\")\n"
           "       hide-workspace-fn (fn [] 
                                (set! (.. workspace-element -style -display) \"none\"))\n"
           "       show-workspace-fn (fn [] 
@@ -118,112 +156,73 @@
           "                         :show-editor (fn [] (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"block\\\")\n"
           "                                         (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"none\\\"))\n"
           "                         :toggle-editor (fn [] (if (= (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"none\\\")\n"
-          "                                            (do (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"block\\\")\n"
-          "                                                (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"none\\\"))\n"
-          "                                            (do (set! (.. (.getElementById js/document \\\"" editor-id "\\\") -style -display) \\\"none\\\")\n"
-          "                                                (set! (.. (.getElementById js/document \\\"" show-editor-id "\\\") -style -display) \\\"block\\\"))))})\\n\")\n"
-          "       ;; Combine the prefix with the user's script\n"
+          "                                            (cb :show-editor)\n"
+          "                                            (cb :hide-editor)))\n"
+          "                         })\")\n"
+          "       ;; Combine the prefix with the user's code\n"
           "       modified-src (str cb-prefix private-src \" \" public-src)\n"
+          "       _ (.log js/console \"Modified src:\" modified-src)\n"
           "       result (try\n"
-          "                (js/scittle.core.eval_string modified-src {:bindings {'page-data page-data-value\n"
-          "                                                          'ui-element ui-element\n"
-          "                                                          'ui-element-id \"" ui-id "\"\n"
-          "                                                          '*print-fn* print-fn\n"
-          "                                                          'println println-fn}})\n"
+          "                (let [eval-result (js/scittle.core.eval_string modified-src)]\n"
+          "                  (.log js/console \"Eval result:\" eval-result)\n"
+          "                  ;; Handle hiccup output\n"
+          "                  (cond\n"
+          "                    ;; If the result is a hiccup vector, render it using our hiccup implementation\n"
+          "                    (and (vector? eval-result) (keyword? (first eval-result)))\n"
+          "                    (let [dom-element (hiccup->dom eval-result)]\n"
+          "                      (set! (.-innerHTML output-element) \"\")\n"
+          "                      (.appendChild output-element dom-element)\n"
+          "                      (.-outerHTML dom-element))\n"
+          "                    \n"
+          "                    ;; Otherwise, return the result as is\n"
+          "                    :else eval-result))\n"
           "                (catch :default e\n"
+          "                  (.log js/console \"Error:\" e)\n"
           "                  (str \"Error: \" (.-message e))))\n"
-          "       out (-> (.getElementById js/document \"" output-name  "\")
-                       .-innerHTML
-                       (set! result) )\n"
-          "\n"
-          "]\n"
-          "   (.log js/console result)\n"
-          "\n"
-          "    ))\n")
-        vname (str ".-" fn-name)
-        set (str "(set! (" vname " js/window) " fn-name ")")
+          "       ]\n"
+          "    (.log js/console \"Final result:\" result)\n"
+          "    ;; Update the output element with the result if it's not already updated\n"
+          "    (when (string? result)\n"
+          "      (set! (.-innerHTML output-element) result))\n"
+          "    (when (number? result)\n"
+          "      (set! (.-innerHTML output-element) (str result)))\n"
+          "    result))\n\n"
+          ";; Make the function available to JavaScript\n"
+          "(set! (.. js/window -" fn-name ") " fn-name ")\n"
+          )
         
         ;; CSS styles for the workspace
-        workspace-styles (str "<style>\n"
-          ".scittle-workspace-container {\n"
-          "  margin: 10px 0;\n"
-          "  font-family: sans-serif;\n"
-          "}\n"
-          "\n"
-          ".workspace-ui {\n"
-          "  margin-bottom: 15px;\n"
-          "}\n"
-          "\n"
-          ".scittle-workspace {\n"
-          "  background-color: #f5f5f5;\n"
-          "  border: 1px solid #ddd;\n"
-          "  border-radius: 4px;\n"
-          "  padding: 10px;\n"
-          "  margin-bottom: 15px;\n"
-          "}\n"
-          "\n"
-          ".workspace-editor-section {\n"
-          "  margin-bottom: 10px;\n"
-          "}\n"
-          "\n"
-          ".scittle-workspace textarea {\n"
-          "  width: 100%;\n"
-          "  min-height: 150px;\n"
-          "  font-family: monospace;\n"
-          "  padding: 8px;\n"
-          "  border: 1px solid #ccc;\n"
-          "  border-radius: 4px;\n"
-          "  margin-bottom: 10px;\n"
-          "  resize: vertical;\n"
-          "}\n"
-          "\n"
-          ".workspace-buttons {\n"
-          "  display: flex;\n"
-          "  gap: 10px;\n"
-          "  margin-bottom: 10px;\n"
-          "}\n"
-          "\n"
-          ".workspace-buttons button {\n"
-          "  padding: 8px 16px;\n"
-          "  border-radius: 4px;\n"
-          "  cursor: pointer;\n"
-          "  border: none;\n"
-          "}\n"
-          "\n"
-          ".workspace-buttons button:first-child {\n"
-          "  background-color: #4CAF50;\n"
-          "  color: white;\n"
-          "  font-weight: bold;\n"
-          "}\n"
-          "\n"
-          ".workspace-buttons button:nth-child(2) {\n"
-          "  background-color: #ff9800;\n"
-          "  color: white;\n"
-          "}\n"
-          "\n"
-          "#" show-editor-id " {\n"
-          "  background-color: #ff9800;\n"
-          "  color: white;\n"
-          "  border: none;\n"
-          "  padding: 8px 16px;\n"
-          "  border-radius: 4px;\n"
-          "  cursor: pointer;\n"
-          "  font-weight: bold;\n"
-          "  margin-bottom: 10px;\n"
-          "  display: none;\n"
-          "}\n"
-          "\n"
-          "#" output-name " {\n"
-          "  background-color: white;\n"
-          "  border: 1px solid #ddd;\n"
-          "  border-radius: 4px;\n"
-          "  padding: 10px;\n"
-          "  min-height: 50px;\n"
-          "}\n"
-          "</style>")
-        
+        workspace-styles (str "<style>
+.scittle-workspace-container {
+  margin: 10px 0;
+  font-family: sans-serif;
+}
+.workspace-ui {
+  margin-bottom: 15px;
+}
+.scittle-workspace {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.workspace-editor-section {
+  margin-bottom: 15px;
+}
+textarea {
+  width: 100%;
+  font-family: monospace;
+}
+.workspace-buttons {
+  margin-top: 5px;
+}
+button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+</style>")
         ]
-
+    
     (hiccup/html
      [:div {:class "scittle-workspace-container"}
       ;; Add CSS styles
@@ -245,8 +244,6 @@
         [:script {:type "application/x-scittle"}
          "\n"
          final-script
-         "\n"
-         set
          "\n"]
         [:div {:class "workspace-buttons"}
          [:button {:onclick (str fn-name "()")} "Run"]

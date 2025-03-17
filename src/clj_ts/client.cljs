@@ -801,7 +801,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
         public (if (> (count parts) 1) (second parts) src)]
     [private public]))
 
-(defn execute-code [card private public ui-id toggle-workspace-visibility! toggle-editor-visibility!]
+(defn execute-code [card private public ui-id toggle-workspace-visibility! toggle-editor-visibility! state]
   (let [page-data (:page-data @db)
         _ (js/console.log "Executing with page data:" (clj->js page-data))
         ui-element (.getElementById js/document ui-id)
@@ -812,32 +812,48 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                 :hide-workspace (fn [] (toggle-workspace-visibility!))
                 :show-workspace (fn [] (toggle-workspace-visibility!))
                 :toggle-workspace (fn [] (toggle-workspace-visibility!))
-                :hide-editor (fn [] (toggle-editor-visibility!))
-                :show-editor (fn [] (toggle-editor-visibility!))
+                :hide-editor (fn [] 
+                               (when (:editor-visible @state)
+                                 (toggle-editor-visibility!)))
+                :show-editor (fn [] 
+                               (when (not (:editor-visible @state))
+                                 (toggle-editor-visibility!)))
                 :toggle-editor (fn [] (toggle-editor-visibility!))}
         src (str private " " public)
         result (try
-                 (sci/eval-string
-                  src
-                  {:bindings {'replace replace
-                              'cb cb-api
-                              'page-data page-data
-                              'ui-element ui-element
-                              'ui-element-id ui-id  ;; Pass the UI element ID to the script
-                              'hide-workspace (fn [] (toggle-workspace-visibility!))
-                              'show-workspace (fn [] (toggle-workspace-visibility!))
-                              'toggle-workspace (fn [] (toggle-workspace-visibility!))
-                              'hide-editor (fn [] (toggle-editor-visibility!))
-                              'show-editor (fn [] (toggle-editor-visibility!))
-                              'toggle-editor (fn [] (toggle-editor-visibility!))
-                              '*print-fn* (fn [& args] 
-                                            (js/console.log (apply str args)))
-                              'println (fn [& args] 
-                                         (let [s (apply str args)]
-                                           (js/console.log s)
-                                           s))}
-                   :classes {'js goog/global
-                             :allow :all}})
+                 (let [eval-result (sci/eval-string
+                                    src
+                                    {:bindings {'replace replace
+                                                'cb cb-api
+                                                'page-data page-data
+                                                'ui-element ui-element
+                                                'ui-element-id ui-id  ;; Pass the UI element ID to the script
+                                                'hide-workspace (fn [] (toggle-workspace-visibility!))
+                                                'show-workspace (fn [] (toggle-workspace-visibility!))
+                                                'toggle-workspace (fn [] (toggle-workspace-visibility!))
+                                                'hide-editor (fn [] 
+                                                               (when (:editor-visible @state)
+                                                                 (toggle-editor-visibility!)))
+                                                'show-editor (fn [] 
+                                                               (when (not (:editor-visible @state))
+                                                                 (toggle-editor-visibility!)))
+                                                'toggle-editor (fn [] (toggle-editor-visibility!))
+                                                '*print-fn* (fn [& args] 
+                                                              (js/console.log (apply str args)))
+                                                'println (fn [& args] 
+                                                           (let [s (apply str args)]
+                                                             (js/console.log s)
+                                                             s))}
+                                     :classes {'js goog/global
+                                               :allow :all}})]
+                   ;; Handle hiccup output
+                   (cond
+                     ;; If the result is a hiccup vector, render it as hiccup
+                     (and (vector? eval-result) (keyword? (first eval-result)))
+                     (r/render-component eval-result (js/document.createElement "div"))
+                     
+                     ;; Otherwise, return the result as is
+                     :else eval-result))
                  (catch :default e
                    (str "Error: " (.-message e))))]
     result))
@@ -855,7 +871,10 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                                     (swap! state update :editor-visible not))]
     
     (fn [card]
-      (let [[private public] (process-script (get card "source_data"))]
+      (let [[private public] (process-script (get card "source_data"))
+            ;; Initialize state src if it's the first render
+            _ (when (= (:src @state) (get card "source_data"))
+                (swap! state assoc :src public))]
         [:div.workspace-container
          ;; Add a div for custom UI (always visible)
          [:div {:id ui-id :class "workspace-ui"}]
@@ -866,28 +885,34 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
             ;; Editor section (can be hidden independently)
             (when (:editor-visible @state)
               [:div.workspace-editor-section
-               [:textarea.workspace-editor {:value public
+               [:textarea.workspace-editor {:value (:src @state)
                                             :on-change #(swap! state assoc :src (.. % -target -value))}]
                [:div.workspace-buttons
-                [:button.workspace-run {:on-click #(let [result (execute-code card private (:src @state) ui-id toggle-workspace-visibility! toggle-editor-visibility!)]
-                                                     (swap! state assoc :output (if (string? result) result (str result))))} "Run"]
-                [:button.workspace-hide-editor {:on-click #(do
-                                                            (swap! state assoc :editor-visible false)
-                                                            (toggle-editor-visibility!))} "Hide Editor"]]])
+                [:button.workspace-run {:on-click #(let [result (execute-code card private (:src @state) ui-id toggle-workspace-visibility! toggle-editor-visibility! state)]
+                                                     (swap! state assoc :output (cond
+                                                                                  ;; If result is a DOM element (from hiccup rendering)
+                                                                                  (instance? js/HTMLElement result)
+                                                                                  (let [output-html (.-outerHTML result)]
+                                                                                    output-html)
+                                                                                  
+                                                                                  ;; If result is a string
+                                                                                  (string? result)
+                                                                                  result
+                                                                                  
+                                                                                  ;; Otherwise convert to string
+                                                                                  :else
+                                                                                  (str result))))} "Run"]
+                [:button.workspace-hide-editor {:on-click #(swap! state assoc :editor-visible false)} "Hide Editor"]]])
             
             ;; Output section (always visible when workspace is visible)
             [:div.workspace-output {:dangerouslySetInnerHTML {:__html (:output @state)}}]])
          
          ;; Show buttons (only visible when respective elements are hidden)
          (when (not (:workspace-visible @state))
-           [:button.workspace-show {:on-click #(do
-                                                (swap! state assoc :workspace-visible true)
-                                                (toggle-workspace-visibility!))} "Show Workspace"])
+           [:button.workspace-show {:on-click #(swap! state assoc :workspace-visible true)} "Show Workspace"])
          
          (when (and (:workspace-visible @state) (not (:editor-visible @state)))
-           [:button.workspace-show-editor {:on-click #(do
-                                                       (swap! state assoc :editor-visible true)
-                                                       (toggle-editor-visibility!))} "Show Editor"])]))))
+           [:button.workspace-show-editor {:on-click #(swap! state assoc :editor-visible true)} "Show Editor"])]))))
 
 ;; Update CSS styles for the workspace
 (def workspace-styles
@@ -973,14 +998,21 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
   )
 
 (defn on-click-for-links [e]
-  (let [tag (-> e .-target)
-                    classname (.getAttribute tag "class")
-                    data (.getAttribute tag "data")
-                    x (-> @db :dirty)]
-
-                (if (= classname "wikilink")
-                  (go-new! data)))
-  )
+  (let [target (-> e .-target)
+        target-tag-name (-> target .-tagName string/lower-case)
+        interactive-elements #{"textarea" "input" "select" "button"}]
+    ;; Ignore clicks on interactive elements
+    (when-not (contains? interactive-elements target-tag-name)
+      (let [wikilink-el (loop [el target]
+                          (cond
+                            (nil? el) nil
+                            (= (.getAttribute el "class") "wikilink") el
+                            :else (recur (.-parentElement el))))]
+        (when wikilink-el
+          (let [data (.getAttribute wikilink-el "data")]
+            ;; Stop propagation only for wiki link clicks
+            (.stopPropagation e)
+            (go-new! data)))))))
 
 (defn one-card [card]
   (let [
@@ -1027,7 +1059,13 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
               (inner-html (str data))
 
               ":hiccup"
-              "THIS SHOULD BE HICCUP RENDERED"
+              (try
+                (let [hiccup-data (read-string data)]
+                  (if (vector? hiccup-data)
+                    hiccup-data
+                    [:div "Invalid hiccup data: " (str data)]))
+                (catch :default e
+                  [:div "Error parsing hiccup: " (.-message e)]))
 
               ":workspace"
               [workspace card]
@@ -1035,26 +1073,10 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
               (str "UNKNOWN TYPE ( " rtype " ) " data))
 
             ]
-        [:div {:class :card-outer}
-
-         [:div {:class :card-meta}
-          [:span {:on-click toggle! :style {:size "smaller" :float "right"}}
-           (if (= (-> @state2 :toggle) "none")
-             [:img {:src "/icons/maximize-2.svg"}]
-             [:img {:src "/icons/minimize-2.svg"}]
-             )]]
-
-         [:div
-          {:style {:spacing-top "5px"
-                   :display (-> @state2 :toggle)}}
-          [:div
-           {:class "card"
-            :on-click on-click-for-links
-
-            }
-
-           inner ]]
-         [card-bar card]
+        [:div {:class :card-outer :on-click on-click-for-links}
+         [:div {:class :card}
+          inner
+          ]
          ]))))
 
 
@@ -1065,46 +1087,35 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
     (try
       (let [cards (-> @db :cards)]
         (for [card (filter not-blank? cards)]
-
           (try
-
             ^{:key (get card "hash")} [one-card card] ; Add a key based on the card's hash
-
             (catch :default e
               [:div {:class :card-outer}
                [:div {:class "card"}
                 [:h4 "Error"]
-                (str e)]]))          )
-        )
+                (str e)]]))))
       (catch :default e
         (do
           (js/console.log "ERROR")
           (js/console.log (str e))
-          (js/alert e))))
-
-    ]
+          (js/alert e))))]
+   
    [:div
     (try
       (let [cards (-> @db :system-cards)]
         (for [card cards]
-          [one-card card]
-          )
-        )
+          ^{:key (get card "hash")} [one-card card] ; Add a key based on the card's hash
+          ))
       (catch :default e
-        (js/alert e)))]
-   ])
+        (js/alert e)))]])
 
 
 (defn transcript []
   [:div {:class "transcript"
          :dangerouslySetInnerHTML {:__html (-> @db :transcript)}
-         :on-click on-click-for-links
-
-         }
-   ])
+         :on-click on-click-for-links}])
 
 (defn main-container []
-
   [:div
    [:div
     (condp = (-> @db :mode)
@@ -1112,7 +1123,11 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
       :editing
       [:div {:class "edit-box"}
        [:textarea
-        {:id "edit-field" :cols 80 :rows 40 :width "90%"
+        {:id "edit-field" 
+         :cols 80 
+         :rows 40 
+         :width "90%"
+         :value (-> @db :raw)
          :on-key-press
          (fn [e]
            (js/console.log "KEYPRESS ON TEXTAREA")
@@ -1127,8 +1142,8 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                  (swap! db assoc
                         :mode :editing)
                  (-> js/document (.getElementById "edit-field") (.focus) )))))
-         }
-        (-> @db :raw)]]
+         :on-change #(swap! db assoc :raw (-> % .-target .-value))
+         }]]
 
       :viewing
       [:div
@@ -1209,9 +1224,10 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 (js/document.addEventListener
  "keypress"
  (fn [e]
-   (js/console.log "KEYPRESS EVENT")
-   (let [kc (.-charCode e)]
-
-     (js/console.log "pressed " (.-charCode e))
-
-     )))
+   (let [target-tag-name (-> e .-target .-tagName string/lower-case)
+         interactive-elements #{"textarea" "input" "select" "button"}]
+     ;; Only handle keypress events if they're not from an interactive element
+     (when-not (contains? interactive-elements target-tag-name)
+       (js/console.log "KEYPRESS EVENT")
+       (let [kc (.-charCode e)]
+         (js/console.log "pressed " (.-charCode e)))))))
