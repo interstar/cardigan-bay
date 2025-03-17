@@ -1,0 +1,32 @@
+# Build outputs
+target/
+resources/clj_ts/main.js
+resources/clj_ts/main.out/
+deploy/
+
+# Clojure/ClojureScript caches
+.cpcache/
+.clj-kondo/.cache/
+.lsp/.cache/
+
+# Editor specific files
+.calva/
+.vscode/
+.idea/
+*.iml
+.nrepl-port
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Local configuration overrides
+local-config.edn 
