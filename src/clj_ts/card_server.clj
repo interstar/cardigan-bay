@@ -225,6 +225,18 @@
     evaluated
     ))
 
+(defn server-eval-hiccup
+  "Evaluate Clojure code that returns hiccup, then convert to HTML"
+  [data page-data]
+  (try
+    (let [result (sci/eval-string data {:bindings {'page-data page-data}})]
+      (if (and (vector? result) (keyword? (first result)))
+        (html result)
+        (str "<div class='error'>Code did not return valid hiccup. Got: " 
+             (with-out-str (pprint result)) "</div>")))
+    (catch Exception e
+      (str "<div class='error'><h3>Error evaluating code</h3><pre>" 
+           (exception-stack e) "</pre></div>"))))
 
 (defn server-custom-script
   "Evaluate a script from system/custom/ with arguments"
@@ -504,6 +516,12 @@ Bookmarked " timestamp  ": <" url ">
          (common/package-card i :evalmd :markdown source_data 
                              (server-eval source_data 
                                          (or (:page-data render-context) {})) 
+                             render-context)
+
+         :evalhiccup
+         (common/package-card i :evalhiccup :html source_data
+                             (server-eval-hiccup source_data
+                                               (or (:page-data render-context) {}))
                              render-context)
 
          :workspace
