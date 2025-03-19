@@ -42,6 +42,63 @@
                :port 4545}))
 
 
+;; Nav and History Functions - Defined early to avoid unresolved symbol errors
+
+(declare load-page!)
+
+(defn go-new! [p-name]
+  (do
+    ;; Don't reload or update history if we're already on this page
+    (when (not= p-name (:current-page @db))
+      (let [current-page (-> @db :current-page)
+            new-past (conj (-> @db :past) current-page)]
+        (load-page! p-name new-past [])
+        (swap! db assoc :mode :viewing)
+        ;; Add entry to browser history with both the page and navigation stacks
+        (.pushState js/history 
+                  (clj->js {:page p-name 
+                            :previous current-page
+                            :past new-past
+                            :future []})
+                  ""
+                  (str "#" p-name))))
+    ;; Always ensure we're in viewing mode, even if navigating to same page
+    (swap! db assoc :mode :viewing)))
+
+(defn back! []
+  (when (seq (:past @db))
+    (let [prev-page (-> @db :past last)
+          new-past (pop (-> @db :past))
+          new-future (conj (-> @db :future) (-> @db :current-page))
+          current-page (-> @db :current-page)]
+      (load-page! prev-page new-past new-future)
+      ;; Update browser history without triggering a popstate event
+      (.replaceState js/history 
+                    (clj->js {:page prev-page
+                             :previous current-page
+                             :past new-past
+                             :future new-future})
+                    ""
+                    (str "#" prev-page)))))
+
+(defn forward! [p-name]
+  (when (and p-name (seq (:future @db)))
+    (let [new-past (conj (-> @db :past) (-> @db :current-page))
+          new-future (pop (-> @db :future))
+          current-page (-> @db :current-page)]
+      (load-page! p-name new-past new-future)
+      ;; Update browser history without triggering a popstate event
+      (.replaceState js/history 
+                    (clj->js {:page p-name
+                             :previous current-page
+                             :past new-past
+                             :future new-future})
+                    ""
+                    (str "#" p-name)))))
+
+(defn reload! []
+  (load-page! (:current-page @db) (-> @db :past) (-> @db :future)))
+
 ;; PageStore
 
 
@@ -238,22 +295,40 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ;; Nav and History
 
-(defn go-new! [p-name]
-  (do
-    (load-page! p-name (conj (-> @db :past) (-> @db :current-page))  [])
-    (swap! db assoc :mode :viewing)
-    ))
+(defn handle-popstate [e]
+  (let [raw-state (.-state e)
+        state (when raw-state (js->clj raw-state :keywordize-keys true))
+        page (when (map? state) (:page state))
+        prev-pages (when (map? state) (:past state []))
+        next-pages (when (map? state) (:future state []))]
+    (js/console.log "Popstate event:" (clj->js state) "page:" page 
+                    "past:" (clj->js prev-pages)
+                    "future:" (clj->js next-pages))
+    (when (and page 
+               (not= page (:current-page @db))
+               (not= (:mode @db) :editing)) ; Don't navigate while editing
+      ;; Update both the current page and the navigation stacks
+      (swap! db assoc :past (vec prev-pages))
+      (swap! db assoc :future (vec next-pages))
+      (load-page! page (vec prev-pages) (vec next-pages)))))
 
-(defn forward! [p-name]
-  (load-page! p-name (conj (-> @db :past) (-> @db :current-page)) (pop (-> @db :future)) )
-  )
+;; Register the popstate handler when the app loads
+(.addEventListener js/window "popstate" handle-popstate)
 
-(defn reload! []
-  (load-page! (:current-page @db) (-> @db :past) (-> @db :future)))
-
-(defn back! []
-  (load-page! (-> @db :past last) (pop (-> @db :past)) (conj (-> @db :future) (-> @db :current-page))  ))
-
+;; Add an initial history entry for the start page
+(let [history-state (.-state js/history)
+      start-page (or (:current-page @db) "HelloWorld")
+      page-from-hash (when (not= "" (-> js/window .-location .-hash))
+                       (subs (-> js/window .-location .-hash) 1))]
+  (when (or (nil? history-state) 
+            (= history-state "null") 
+            (= (js->clj history-state) {}))
+    (.replaceState js/history 
+                  (clj->js {:page (or page-from-hash start-page)
+                           :past []
+                           :future []})
+                  ""
+                  (str "#" (or page-from-hash start-page)))))
 
 ;; Process page
 
@@ -291,11 +366,32 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ;; RUN
 
-(let [start-page
-      (.send XhrIo
-      "/startpage"
-      (fn [e]
-        (-> e .-target .getResponseText .toString go-new!)))])
+(let [page-from-hash (when (not= "" (-> js/window .-location .-hash))
+                       (subs (-> js/window .-location .-hash) 1))]
+  (.send XhrIo
+    "/startpage"
+    (fn [e]
+      (let [server-start-page (-> e .-target .getResponseText .toString)
+            target-page (if (and page-from-hash (not= "" page-from-hash))
+                          page-from-hash
+                          server-start-page)]
+        (js/console.log "Loading initial page:" target-page 
+                        "from hash:" page-from-hash 
+                        "server start:" server-start-page)
+        ;; Initialize history with the target page
+        (let [history-state (.-state js/history)]
+          (when (or (nil? history-state) 
+                    (= history-state "null") 
+                    (= (js->clj history-state) {}))
+            (.replaceState js/history 
+                          (clj->js {:page target-page
+                                   :past []
+                                   :future []})
+                          ""
+                          (str "#" target-page))))
+        ;; Load the page without pushing new history state
+        (load-page! target-page [] [])
+        (swap! db assoc :mode :viewing)))))
 
 
 
@@ -945,6 +1041,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
           (let [data (.getAttribute wikilink-el "data")]
             ;; Stop propagation only for wiki link clicks
             (.stopPropagation e)
+            ;; Use go-new! instead of direct manipulation to ensure browser history is updated
             (go-new! data)))))))
 
 (defn render-data-type [data]
