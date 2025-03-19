@@ -1,0 +1,60 @@
+# Future Enhancements for Cardigan Bay
+
+## Fix Content Security Policy (CSP) Warning for Bookmarklet
+
+### Issue
+The current implementation of the "Bookmark to this Wiki" link in the footer uses a `javascript:` URL, which triggers Content Security Policy warnings:
+
+```
+Content-Security-Policy: The page's settings blocked an inline script (script-src-elem) from being executed because it violates the following directive: "script-src 'self' 'unsafe-eval' 'nonce-mjtwq9inuhY=' [...]"
+```
+
+While the functionality still works, these warnings pollute the browser console and represent a technical security issue that modern browsers flag.
+
+### Proposed Solution
+Implement a custom CSP middleware that specifically allows the bookmarklet link to use inline JavaScript:
+
+1. Create a custom middleware function that adds or modifies the CSP header:
+   ```clojure
+   (defn custom-csp-middleware [handler]
+     (fn [request]
+       (let [response (handler request)
+             nonce (str (java.util.UUID/randomUUID))]
+         (-> response
+             (update-in [:headers "Content-Security-Policy"]
+                        (fn [existing-csp]
+                          (str "script-src 'self' 'unsafe-eval' 'nonce-" nonce "'; "
+                               "script-src-elem 'self' 'unsafe-eval' 'nonce-" nonce "' '#wiki-bookmarklet'; "
+                               "object-src 'none'")))))))
+   ```
+
+2. Add an ID to the bookmarklet link in the footer:
+   ```clojure
+   [:a {:href (str "javascript:(function(){window.location='http://localhost:" 
+                   (-> @db :port) 
+                   "/api/bookmarklet?url='+encodeURIComponent(document.URL);})();")
+        :id "wiki-bookmarklet"}
+    "Bookmark to this Wiki"]
+   ```
+
+3. Add the middleware to the application's middleware stack.
+
+### Benefits
+- Maintains the convenient user experience of having the bookmarklet available on every page
+- Eliminates CSP warnings in the browser console
+- Properly addresses security concerns while still providing the functionality
+- Aligns with modern web security best practices
+
+### Priority
+Low - The current implementation works functionally despite the warnings, so this is a technical improvement rather than a critical fix.
+
+### Alternative Approaches
+If the middleware approach proves difficult:
+
+1. Move the bookmarklet to a dedicated page with different CSP settings
+2. Use a click handler that shows instructions instead of directly providing the javascript: URL
+3. Accept the warnings as a known issue with documentation
+
+### Related Documentation
+- [MDN Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+- [CSP script-src directive](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) 
