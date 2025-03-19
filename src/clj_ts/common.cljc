@@ -124,8 +124,21 @@
                            (rest after)))]
           res))))
 
+(defn move-card-to-top
+  "Move a card (id by hash) to the top of the list"
+  [cards hash]
+  (let [c (find-card-by-hash cards hash)]
+    (if (nil? c) cards
+        (let [others (remove #(match-hash % hash) cards)]
+          (concat [c] others)))))
 
-
+(defn move-card-to-bottom
+  "Move a card (id by hash) to the bottom of the list"
+  [cards hash]
+  (let [c (find-card-by-hash cards hash)]
+    (if (nil? c) cards
+        (let [others (remove #(match-hash % hash) cards)]
+          (concat others [c])))))
 
 
 (defn cards->raw [cards]

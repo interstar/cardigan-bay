@@ -829,10 +829,13 @@ If you would *like* to create a page with this name, simply click the [Edit] but
 (defn reorder-card [page-name hash direction]
   (let [ps (.page-store (server-state))
         cards (.get-page-as-card-maps ps page-name)
-        new-cards (if (= "up" direction)
-          (common/move-card-up cards hash)
-          (common/move-card-down cards hash))
-        ]
+        new-cards (condp = direction
+                    "up" (common/move-card-up cards hash)
+                    "down" (common/move-card-down cards hash)
+                    "top" (common/move-card-to-top cards hash)
+                    "bottom" (common/move-card-to-bottom cards hash)
+                    ;; Default case (unknown direction) - return cards unchanged
+                    cards)]
     (write-page-to-file! page-name (common/cards->raw new-cards))))
 
 
