@@ -490,7 +490,9 @@ Bookmarked " timestamp  ": <" url ">
 
          :data
          (let [the-data (read-string source_data)]
-           (common/package-card i :data :raw source_data (pr-str the-data) render-context))
+           (common/package-card i :data :data source_data 
+                              (with-out-str (pprint the-data))
+                              render-context))
 
          :evalraw
          (common/package-card i :evalraw :raw source_data 

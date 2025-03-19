@@ -926,85 +926,6 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
          (when (and (:workspace-visible @state) (not (:editor-visible @state)))
            [:button.workspace-show-editor {:on-click #(swap! state assoc :editor-visible true)} "Show Editor"])]))))
 
-;; Update CSS styles for the workspace
-(def workspace-styles
-  (css/css
-   [:.workspace-container
-    {:margin "10px 0"
-     :font-family "sans-serif"}]
-   
-   [:.workspace-ui
-    {:margin-bottom "15px"}]
-   
-   [:.workspace
-    {:background-color "#f5f5f5"
-     :border "1px solid #ddd"
-     :border-radius "4px"
-     :padding "10px"
-     :margin-bottom "15px"}]
-   
-   [:.workspace-editor-section
-    {:margin-bottom "10px"}]
-   
-   [:.workspace-editor
-    {:width "100%"
-     :min-height "150px"
-     :font-family "monospace"
-     :padding "8px"
-     :border "1px solid #ccc"
-     :border-radius "4px"
-     :margin-bottom "10px"
-     :resize "vertical"}]
-   
-   [:.workspace-buttons
-    {:display "flex"
-     :gap "10px"
-     :margin-bottom "10px"}]
-   
-   [:.workspace-run
-    {:background-color "#4CAF50"
-     :color "white"
-     :border "none"
-     :padding "8px 16px"
-     :border-radius "4px"
-     :cursor "pointer"
-     :font-weight "bold"}]
-   
-   [:.workspace-hide-editor
-    {:background-color "#ff9800"
-     :color "white"
-     :border "none"
-     :padding "8px 16px"
-     :border-radius "4px"
-     :cursor "pointer"}]
-   
-   [:.workspace-show
-    {:background-color "#2196F3"
-     :color "white"
-     :border "none"
-     :padding "8px 16px"
-     :border-radius "4px"
-     :cursor "pointer"
-     :font-weight "bold"
-     :margin-bottom "10px"}]
-   
-   [:.workspace-show-editor
-    {:background-color "#ff9800"
-     :color "white"
-     :border "none"
-     :padding "8px 16px"
-     :border-radius "4px"
-     :cursor "pointer"
-     :font-weight "bold"
-     :margin-bottom "10px"}]
-   
-   [:.workspace-output
-    {:background-color "white"
-     :border "1px solid #ddd"
-     :border-radius "4px"
-     :padding "10px"
-     :min-height "50px"}]))
-
 (defn card-top-bar [card]
 
   )
@@ -1026,6 +947,18 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
             (.stopPropagation e)
             (go-new! data)))))))
 
+(defn render-data-type [data]
+  ;; Render data type using the .data-card class defined in external CSS
+  ;; The data is already pretty-printed on the server
+  [:div {:class "data-card" 
+         :dangerouslySetInnerHTML {:__html (str "<pre>" 
+                                               ;; Ensure HTML entities are properly escaped
+                                               (-> data
+                                                  (string/replace "&" "&amp;")
+                                                  (string/replace "<" "&lt;")
+                                                  (string/replace ">" "&gt;"))
+                                               "</pre>")}}])
+
 (defn one-card [card]
   (let [
         inner-html
@@ -1041,48 +974,53 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
               (swap! state2 #(conj % {:toggle "none"})))))
 
         ]
-    ;;(js/console.log (pr-str card))
-
     (fn [card]
       (let [rtype (get card "render_type")
             data (get card "server_prepared_data")
+            
             inner
             (condp = rtype
-
               ":code"
               (inner-html (str "<code>" data "</code>"))
 
               ":raw"
               (inner-html (str "<pre>" data "</pre>"))
 
-              ":markdown"
-              (inner-html (card->html card))
+              ":data"
+              (render-data-type data)
+              
+              (condp = rtype
+                ":markdown"
+                (inner-html (card->html card))
 
-              ":manual-copy"
-              (inner-html
-               (str "<div class='manual-copy'>"
-                    (card->html card)
-                    "</div>"))
+                ":manual-copy"
+                (inner-html
+                 (str "<div class='manual-copy'>"
+                      (card->html card)
+                      "</div>"))
 
-              ":html"
-              (inner-html (str data))
+                ":html"
+                (inner-html (str data))
 
-              ":stamp"
-              (inner-html (str data))
+                ":stamp"
+                (inner-html (str data))
 
-              ":hiccup"
-              (try
-                (let [hiccup-data (read-string data)]
-                  (if (vector? hiccup-data)
-                    hiccup-data
-                    [:div "Invalid hiccup data: " (str data)]))
-                (catch :default e
-                  [:div "Error parsing hiccup: " (.-message e)]))
+                ":hiccup"
+                (try
+                  (let [hiccup-data (read-string data)]
+                    (if (vector? hiccup-data)
+                      hiccup-data
+                      [:div "Invalid hiccup data: " (str data)]))
+                  (catch :default e
+                    [:div "Error parsing hiccup: " (.-message e)]))
 
-              ":workspace"
-              [workspace card]
+                ":workspace"
+                [workspace card]
 
-              (str "UNKNOWN TYPE ( " rtype " ) " data))
+                ;; Handle any other cases that might be data cards
+                (if (and (string? rtype) (= (subs rtype 0 5) ":data"))
+                  (render-data-type data)
+                  (str "UNKNOWN TYPE ( " rtype " ) " data))))
 
             ]
         [:div {:class :card-outer}
@@ -1195,16 +1133,12 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 ; Main page
 (defn content []
   [:div
-   ;; Add workspace styles to the page
-   [:style (css/css workspace-styles)]
-   
+   ;; Removing workspace styles which are now in external CSS files
    [top-menu]
-   [:div {:class "navbar-spacer"}
-    ]
+   [:div {:class "navbar-spacer"}]
    [:div {:class "headerbar"}
     [nav-bar]]
    [:div {:class "main-container"}
-
     [:div {:class "context-box"}
      [:h2
       (if (= (-> @db :mode) :transcript)
@@ -1214,12 +1148,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
          [:span {:class "tslink"}
           [:a {:href (str
                       (string/replace (-> @db :site-url) #"/$" "")
-                      "/" (-> @db :current-page))} " (public)" ]]]) ]
-
+                      "/" (-> @db :current-page))} " (public)"]]])]
      [:div [tool-bar]]
-
-     [main-container]
-     ]
+     [main-container]]
     [:div {:class "footer"}
      [:span
       [:span (-> @db :wiki-name) " || " ]

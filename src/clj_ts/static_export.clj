@@ -24,10 +24,20 @@
               (str "<a class=\"exported-internal-link\" href=\""
                    (.page-name->exported-link pe m)"\">"
                    m "</a>")
-              (str "<em>" m "</em>"))))]
-    (string/replace text
-                    #"\[\[(.+?)\]\]"
-                    replace-link)))
+              (str "<em>" m "</em>"))))
+        replace-labeled-link
+        (fn [[_ display target]]
+          (do
+            (if (.page-exists? (.page-store pe) target)
+              (str "<a class=\"exported-internal-link\" href=\""
+                   (.page-name->exported-link pe target)"\">"
+                   display "</a>")
+              (str "<em>" display "</em>"))))]
+    (-> text
+        ;; First, handle the alternative text syntax [[display text|PageName]]
+        (string/replace #"\[\[([^\[\]|]+?)\|([^\[\]|]+?)\]\]" replace-labeled-link)
+        ;; Then, handle the traditional [[PageName]] syntax
+        (string/replace #"\[\[(.+?)\]\]" replace-link))))
 
 
 
@@ -197,35 +207,9 @@
           "(set! (.. js/window -" fn-name ") " fn-name ")\n"
           )
         
-        ;; CSS styles for the workspace
+        ;; CSS styles reference - we now use external CSS
         workspace-styles (str "<style>
-.scittle-workspace-container {
-  margin: 10px 0;
-  font-family: sans-serif;
-}
-.workspace-ui {
-  margin-bottom: 15px;
-}
-.scittle-workspace {
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-.workspace-editor-section {
-  margin-bottom: 15px;
-}
-textarea {
-  width: 100%;
-  font-family: monospace;
-}
-.workspace-buttons {
-  margin-top: 5px;
-}
-button {
-  margin-right: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
+/* Using external CSS for workspace styles */
 </style>")
         ]
 
@@ -275,6 +259,8 @@ button {
       (str "<code>" server-prepared "</code>")
       :raw
       (str "<pre>" server-prepared  "</pre>")
+      :data
+      (str "<div class='data-card'>" server-prepared "</div>")
       :workspace (exported-workspace card page-data)
       :transclude "<div class='transcluded'>" server-prepared "</div>"
       server-prepared))

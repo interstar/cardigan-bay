@@ -139,9 +139,13 @@
                   (str "<a href=\"$1\">$1</a>")))
 
 (defn double-bracket-links [text]
-  (string/replace text #"\[\[(.+?)\]\]"
-                  (str "<span class=\"wikilink\" data=\"$1\">$1</span>")))
-
+  (-> text
+      ;; First, handle the alternative text syntax [[display text|PageName]]
+      (string/replace #"\[\[([^\[\]|]+?)\|([^\[\]|]+?)\]\]"
+                      (str "<span class=\"wikilink\" data=\"$2\">$1</span>"))
+      ;; Then, handle the traditional [[PageName]] syntax
+      (string/replace #"\[\[(.+?)\]\]"
+                      (str "<span class=\"wikilink\" data=\"$1\">$1</span>"))))
 
 (defn tag [t s] (str "<" t ">" s "</" t ">"))
 (defn td [s] (tag "td" s))

@@ -28,10 +28,15 @@
 (defn extract-links [server-state page-name]
   ;(println "in extract-links " page-name)
   (let [text (pagestore/read-page server-state page-name)
-        link-seq (re-seq #"\[\[(.+?)\]\]" text)]
-    (map #(vector page-name
-                  (-> % last )  )
-         link-seq)))
+        standard-links (re-seq #"\[\[(.+?)\]\]" text)
+        labeled-links (re-seq #"\[\[([^\[\]|]+?)\|([^\[\]|]+?)\]\]" text)
+        ;; Filter out labeled links from standard links to avoid duplicates
+        standard-links-filtered (filter 
+                                 #(not (re-matches #".*\|.*" (second %))) 
+                                 standard-links)
+        standard-links-mapped (map #(vector page-name (-> % last)) standard-links-filtered)
+        labeled-links-mapped (map #(vector page-name (nth % 2)) labeled-links)]
+    (concat standard-links-mapped labeled-links-mapped)))
 
 
 

@@ -5,10 +5,16 @@ installation, look at bedrock/system/custom/main.css (or your equivalent to bedr
 
 */
 
+/* Font definitions */
+:root {
+  --body-font: 'Roboto', 'Noto', sans-serif;
+  --heading-font: 'Roboto', 'Noto', sans-serif; 
+  --monospace-font: 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', monospace;
+}
 
 body {
     font-size: 1.6rem;
-    font-family: Roboto,Noto,sans-serif;
+    font-family: var(--body-font);
     overflow-wrap: break-word;
     word-wrap: break-word;
 
@@ -30,8 +36,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.1;
-  /*font-family: Inconsolata, Verdana, Geneva, sans-serif;*/
-
+  font-family: var(--heading-font);
   font-weight: 700;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -171,39 +176,55 @@ div textarea {
   font-size: 1.1rem;
 }
 
+/* General Button Styles */
 button {
-
-    color: #666666;
-    background-color:#ffffff;
-
-    margin:3px;
-
-    background-repeat: no-repeat;
-    background-position: <left|right>;
-
-    padding: 3px;
-
-    font-size:medium;
-    text-align:top;
-    border-style:solid;
-    border-width:1;
-    border-color:#333333;
+    color: #333333;
+    background-color: #f0f4f8;
+    margin: 3px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    border: 1px solid #d0d9e1;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
-
 
 button:hover {
-   background-color: #;
+    background-color: #e4ebf2;
 }
 
+/* Primary Button Style */
+.big-btn {
+    background-color: #546e7a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
 
+.big-btn:hover {
+    background-color: #607d8b;
+}
+
+/* Secondary Button Style */
 .mini-button {
-    margin:3px;
-    padding:3px;
-    border-style:solid;
-    border-width:1;
-    border-color:#333333;
-    cursor:pointer;
+    background-color: #f0f4f8;
+    color: #333333;
+    margin: 3px;
+    padding: 4px 8px;
+    border: 1px solid #d0d9e1;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
 
+.mini-button:hover {
+    background-color: #e4ebf2;
 }
 
 .navbar {
@@ -462,4 +483,126 @@ nav ul li a:hover {
   }
 
 
+}
+
+.data-card {
+  background-color: #f0f4f8;
+  border-left: 4px solid #546e7a;
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-family: var(--monospace-font);
+  font-size: 0.9em;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  color: #333333;
+  overflow-x: auto;
+}
+
+.workspace-container {
+  margin: 10px 0;
+  font-family: var(--body-font);
+}
+  
+.workspace-ui {
+  margin-bottom: 15px;
+}
+  
+.workspace {
+  background-color: #f0f4f8;
+  border: 1px solid #d0d9e1;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+  
+.workspace-editor-section {
+  margin-bottom: 10px;
+}
+  
+.workspace-editor {
+  width: 100%;
+  min-height: 150px;
+  font-family: var(--monospace-font);
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+  
+.workspace-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+  
+.workspace-run {
+  background-color: #546e7a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.workspace-run:hover {
+  background-color: #607d8b;
+}
+  
+.workspace-hide-editor {
+  background-color: #7895a7;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.workspace-hide-editor:hover {
+  background-color: #8aa5b5;
+}
+  
+.workspace-show {
+  background-color: #546e7a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 10px;
+  transition: background-color 0.2s;
+}
+
+.workspace-show:hover {
+  background-color: #607d8b;
+}
+  
+.workspace-show-editor {
+  background-color: #4f6d7a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 10px;
+  transition: background-color 0.2s;
+}
+
+.workspace-show-editor:hover {
+  background-color: #5f7d8a;
+}
+  
+.workspace-output {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  min-height: 50px;
 }
