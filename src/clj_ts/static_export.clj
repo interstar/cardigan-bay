@@ -261,6 +261,8 @@
       (str "<pre>" server-prepared  "</pre>")
       :data
       (str "<div class='data-card'>" server-prepared "</div>")
+      :hiccup 
+      (str "<div class='hiccup-card'>" server-prepared "</div>")
       :workspace (exported-workspace card page-data)
       :transclude "<div class='transcluded'>" server-prepared "</div>"
       server-prepared))

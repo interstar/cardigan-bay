@@ -1005,15 +1005,6 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
                 ":stamp"
                 (inner-html (str data))
 
-                ":hiccup"
-                (try
-                  (let [hiccup-data (read-string data)]
-                    (if (vector? hiccup-data)
-                      hiccup-data
-                      [:div "Invalid hiccup data: " (str data)]))
-                  (catch :default e
-                    [:div "Error parsing hiccup: " (.-message e)]))
-
                 ":workspace"
                 [workspace card]
 

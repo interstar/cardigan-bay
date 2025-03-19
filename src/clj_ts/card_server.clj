@@ -512,6 +512,22 @@ Bookmarked " timestamp  ": <" url ">
          :system
          (system-card i source_data render-context)
 
+         :hiccup
+         (let [hiccup-data (try
+                             (read-string source_data)
+                             (catch Exception e
+                               [:div {:class "error"}
+                                [:h3 "Error parsing hiccup"]
+                                [:pre (exception-stack e)]]))]
+           (if (and (vector? hiccup-data) (keyword? (first hiccup-data)))
+             (common/package-card i :hiccup :html source_data 
+                                (html hiccup-data) 
+                                render-context)
+             (common/package-card i :hiccup :html source_data
+                                (str "<div class='error'>Invalid hiccup data: " 
+                                     source_data "</div>")
+                                render-context)))
+
          :embed
          (common/package-card i source_type :html source_data
                               (embed/process source_data
