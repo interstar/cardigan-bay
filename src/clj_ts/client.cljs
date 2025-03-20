@@ -368,9 +368,9 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 (let [page-from-hash (when (not= "" (-> js/window .-location .-hash))
                        (subs (-> js/window .-location .-hash) 1))]
-  (.send XhrIo
-    "/startpage"
-    (fn [e]
+      (.send XhrIo
+      "/startpage"
+      (fn [e]
       (let [server-start-page (-> e .-target .getResponseText .toString)
             target-page (if (and page-from-hash (not= "" page-from-hash))
                           page-from-hash
@@ -788,11 +788,139 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
             (.stopPropagation e)
             (go-new! data)))))))
 
+;; Helper function to process workspace script into private and public parts
+(defn process-script [src]
+  (let [parts (string/split src #"//\s*PUBLIC\s*")
+        private (if (> (count parts) 1) (first parts) "")
+        public-raw (if (> (count parts) 1) (second parts) src)
+        ;; Trim leading whitespace/newlines while preserving indentation structure
+        public (string/replace public-raw #"^\s*\n+" "")]
+    [private public]))
+
+;; Execute code in the workspace
+(defn execute-code [card private public ui-id toggle-workspace-visibility! toggle-editor-visibility! state]
+  (let [page-data (:page-data @db)
+        _ (js/console.log "Executing with page data:" (clj->js page-data))
+        ui-element (.getElementById js/document ui-id)
+        ;; Create a consistent API object for both environments
+        cb-api {:page-data page-data
+                :ui-element ui-element
+                :ui-element-id ui-id
+                :hide-workspace (fn [] (toggle-workspace-visibility!))
+                :show-workspace (fn [] (toggle-workspace-visibility!))
+                :toggle-workspace (fn [] (toggle-workspace-visibility!))
+                :hide-editor (fn [] 
+                               (when (:editor-visible @state)
+                                 (toggle-editor-visibility!)))
+                :show-editor (fn [] 
+                               (when (not (:editor-visible @state))
+                                 (toggle-editor-visibility!)))
+                :toggle-editor (fn [] (toggle-editor-visibility!))}
+        src (str private " " public)
+        result (try
+                 (let [eval-result (sci/eval-string
+                                    src
+                                    {:bindings {'replace replace
+                                                'cb cb-api
+                                                'page-data page-data
+                                                'ui-element ui-element
+                                                'ui-element-id ui-id  ;; Pass the UI element ID to the script
+                                                'hide-workspace (fn [] (toggle-workspace-visibility!))
+                                                'show-workspace (fn [] (toggle-workspace-visibility!))
+                                                'toggle-workspace (fn [] (toggle-workspace-visibility!))
+                                                'hide-editor (fn [] 
+                                                               (when (:editor-visible @state)
+                                                                 (toggle-editor-visibility!)))
+                                                'show-editor (fn [] 
+                                                               (when (not (:editor-visible @state))
+                                                                 (toggle-editor-visibility!)))
+                                                'toggle-editor (fn [] (toggle-editor-visibility!))
+                                                '*print-fn* (fn [& args] 
+                                                              (js/console.log (apply str args)))
+                                                'println (fn [& args] 
+                                                           (let [s (apply str args)]
+                                                             (js/console.log s)
+                                                             s))}
+                                     :classes {'js goog/global
+                                               :allow :all}})]
+                   ;; Handle hiccup output
+                   (cond
+                     ;; If the result is a hiccup vector, render it as hiccup
+                     (and (vector? eval-result) (keyword? (first eval-result)))
+                     (r/render-component eval-result (js/document.createElement "div"))
+                     
+                     ;; Otherwise, return the result as is
+                     :else eval-result))
+                 (catch :default e
+                   (str "Error: " (.-message e))))]
+    result))
+
 ;; Temporary workspace function implementation
 (defn workspace [card]
-  [:div.workspace-placeholder
-   [:div "Workspace Component Placeholder"]
-   [:div (str "Card: " (get card "hash"))]])
+  (let [id (-> (hash card) str (string/replace "-" ""))
+        state (r/atom {:output ""
+                       :workspace-visible true
+                       :editor-visible true
+                       :src (get card "source_data")})
+        ui-id (str id "-ui")
+        toggle-workspace-visibility! (fn []
+                                       (swap! state update :workspace-visible not))
+        toggle-editor-visibility! (fn []
+                                    (swap! state update :editor-visible not))
+        
+        ;; Calculate optimal textarea rows based on line count
+        calculate-rows (fn [text]
+                         (let [lines (count (string/split-lines text))
+                               min-rows 10
+                               max-rows 30]
+                           (max min-rows (min lines max-rows))))]
+    
+    (fn [card]
+      (let [[private public] (process-script (get card "source_data"))
+            ;; Initialize state src if it's the first render
+            _ (when (= (:src @state) (get card "source_data"))
+                (swap! state assoc :src public))
+            ;; Calculate rows based on content
+            rows (calculate-rows (:src @state))]
+        [:div.workspace-container
+         ;; Add a div for custom UI (always visible)
+         [:div {:id ui-id :class "workspace-ui"}]
+          
+         ;; Workspace content (can be hidden)
+         (when (:workspace-visible @state)
+           [:div.workspace
+            ;; Editor section (can be hidden independently)
+            (when (:editor-visible @state)
+              [:div.workspace-editor-section
+               [:textarea.workspace-editor {:value (:src @state)
+                                            :rows rows
+                                            :on-change #(swap! state assoc :src (.. % -target -value))}]
+               [:div.workspace-buttons
+                [:button.workspace-run {:on-click #(let [result (execute-code card private (:src @state) ui-id toggle-workspace-visibility! toggle-editor-visibility! state)]
+                                                     (swap! state assoc :output (cond
+                                                                                  ;; If result is a DOM element (from hiccup rendering)
+                                                                                  (instance? js/HTMLElement result)
+                                                                                  (let [output-html (.-outerHTML result)]
+                                                                                    output-html)
+                                                                                  
+                                                                                  ;; If result is a string
+                                                                                  (string? result)
+                                                                                  result
+                                                                                  
+                                                                                  ;; Otherwise convert to string
+                                                                                  :else
+                                                                                  (str result))))} "Run"]
+                [:button.workspace-hide-editor {:on-click #(swap! state assoc :editor-visible false)} "Hide Editor"]]])
+            
+            ;; Output section (always visible when workspace is visible)
+            [:div.workspace-output {:dangerouslySetInnerHTML {:__html (:output @state)}}]])
+          
+         ;; Show buttons (only visible when respective elements are hidden)
+         (when (not (:workspace-visible @state))
+           [:button.workspace-show {:on-click #(swap! state assoc :workspace-visible true)} "Show Workspace"])
+          
+         (when (and (:workspace-visible @state) (not (:editor-visible @state)))
+           [:button.workspace-show-editor {:on-click #(swap! state assoc :editor-visible true)} "Show Editor"])]))))
 
 ;; Render data card content
 (defn render-data-type [data]
@@ -841,8 +969,8 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
    [:span.card-action-button
     {:on-click #(card-reorder! (-> @db :current-page) (get card "hash") "down")
      :title "Move down"}
-    [:img {:src "/icons/chevrons-down.png"}]]
-   
+           [:img {:src "/icons/chevrons-down.png"}]]
+
    ;; Move to bottom button
    [:span.card-action-button
     {:on-click #(card-reorder! (-> @db :current-page) (get card "hash") "bottom")
@@ -856,7 +984,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
     :style {:size "smaller" :float "right" :margin-left "auto"}
     :title "Toggle card options"}
    (if visible?
-     [:img {:src "/icons/eye-off.png"}]
+             [:img {:src "/icons/eye-off.png"}]
      [:img {:src "/icons/eye.png"}])])
 
 ;; Toggle button for showing/hiding card content
@@ -871,60 +999,60 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
 
 ;; Card info panel showing ID, hash, and types
 (defn card-info-panel [card]
-  [:div
-   [:span "ID: " (get card "id")] " | "
+        [:div
+         [:span "ID: " (get card "id")] " | "
    [:span.mini-button
     {:on-click #(clip-hash (-> @db :current-page) (get card "hash"))}
     "Hash: " (get card "hash")] " | Source type: "
-   [:span (get card "source_type")] " | Render type: "
+         [:span (get card "source_type")] " | Render type: "
    [:span (get card "render_type")]])
 
 ;; Card send panel for moving a card to another page
 (defn card-send-panel [card sendval]
   [:div.send-to-bar
-   [:h4 "Send to Another Page"]
+         [:h4 "Send to Another Page"]
    [:div.send-to-inner
     [:input {:name "hash" :id "sendhash" :type "hidden" :value (get card "hash")}]
     [:input {:name "from" :id "sendcurrent" :type "hidden" :value (-> @db :current-page)}]
-    [:input {:type "text"
-             :id "sendto-inputbox"
-             :value @sendval
-             :on-change #(reset! sendval (-> % .-target .-value))}]
-    
+          [:input {:type "text"
+                  :id "sendto-inputbox"
+                  :value @sendval
+                  :on-change #(reset! sendval (-> % .-target .-value))}]
+
     [:button {:on-click #(card-send-to-page!
-                          (-> @db :current-page)
-                          (get card "hash")
+                       (-> @db :current-page)
+                       (get card "hash")
                           @sendval)}
      "Send"]]])
 
 ;; Card edit panel for editing card content
 (defn card-edit-panel [card toggle-fn text-val]
   [:div.edit-card
-   [:h4 "Edit Card"]
-   [:div
-    [:span
+         [:h4 "Edit Card"]
+         [:div
+          [:span
      [:button.big-btn
       {:on-click (fn [e]
                    (toggle-fn e)
-                   (reload!))}
-      [:img {:src "/icons/x.png"}] " Cancel"]
+                       (reload!))}
+            [:img {:src "/icons/x.png"}] " Cancel"]
      [:button.big-btn
       {:on-click (fn [e]
-                   (swap! db assoc :mode :viewing)
+                         (swap! db assoc :mode :viewing)
                    (toggle-fn e)
-                   (save-card!
-                    (-> @db :current-page)
-                    (get card "hash")
-                    (get card "source_type")
-                    (-> js/document
+                         (save-card!
+                          (-> @db :current-page)
+                          (get card "hash")
+                          (get card "source_type")
+                          (-> js/document
                         (.getElementById (str "edit-" (get card "hash")))
                         .-value)))}
       [:img {:src "/icons/save.png"}] " Save"]]]
-   [:div
-    [:textarea {:id (str "edit-" (get card "hash"))
-                :rows 10
-                :width "100%"
-                :value @text-val
+         [:div
+[:textarea {:id (str "edit-" (get card "hash"))
+            :rows 10
+            :width "100%"
+            :value @text-val
                 :on-change #(reset! text-val (-> % .-target .-value))}]]])
 
 ;; Card bar component for additional card actions and options
@@ -1031,7 +1159,7 @@ text_search(query_string:\\\"" cleaned-query "\\\"){     result_text }
         (for [card cards]
           (try
             ^{:key (get card "hash")} [one-card card]
-            (catch :default e
+      (catch :default e
               (js/console.error "Error rendering system card:" e)
               [:div {:class :card-outer}
                [:div {:class "card"}
